@@ -155,7 +155,7 @@ class Invocation:
                 )
                 print(f"Arguments: {self.args}")
                 raise e
-            if not self.outs:
+            if self.outs is None:
                 raise ABException(f"{self.name} didn't set self.outs")
 
             # Destack the variable and invocation frame.
@@ -519,6 +519,9 @@ def main():
     parser.add_argument("-t", "--targets", action="append")
     parser.add_argument("-v", "--vars", action="append")
     args = parser.parse_args()
+    args.vars = args.vars or []
+    if not args.targets:
+            raise ABException("no targets supplied")
 
     global outputFp
     outputFp = open(args.output, "wt")
