@@ -13,7 +13,5 @@ jobs:
     - uses: actions/checkout@v2
       with:
         repository: 'davidgiven/ab'
-    - name: apt
-      run: sudo apt update && sudo apt install python3-hamcrest
     - name: make
       run: make -j2
