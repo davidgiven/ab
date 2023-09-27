@@ -20,7 +20,6 @@ targets = {}
 unmaterialisedTargets = set()
 materialisingStack = []
 outputFp = None
-currentVars = None
 cwdStack = [""]
 
 sys.path += ["."]
@@ -74,29 +73,6 @@ class ParameterList(Sequence):
         return f"<PList: {self.data}>"
 
 
-def Vars(parent=None):
-    data = {}
-
-    class VarsImpl:
-        def __setattr__(self, k, v):
-            data[k] = v
-
-        def __getattr__(self, k):
-            if k in data:
-                return data[k]
-            if parent:
-                return getattr(parent, k)
-            return ParameterList()
-
-        def __repr__(self):
-            return f"<Vars-{id(self)}: {data} -> {parent}>"
-
-        __setitem__ = __setattr__
-        __getitem__ = __getattr__
-
-    return VarsImpl()
-
-
 class Invocation:
     name = None
     callback = None
@@ -104,8 +80,6 @@ class Invocation:
     ins = None
     outs = None
     binding = None
-    vars = None
-    varsettings = None
 
     def materialise(self, replacing=False):
         if self in unmaterialisedTargets:
@@ -122,25 +96,17 @@ class Invocation:
 
             self.args = {}
             for k, v in self.binding.arguments.items():
-                t = self.types.get(k, None)
-                if t:
-                    v = t(v).convert(self)
-                self.args[k] = v
-
-            # Create a new variable frame and set any variables.
-
-            global currentVars
-            self.vars = Vars(self.callerVars)
-            oldVars = currentVars
-            currentVars = self.vars
-
-            if self.varsettings:
-                for k, v in self.varsettings.items():
-                    if k.startswith("+"):
-                        k = k[1:]
-                        self.vars[k] = self.vars[k] + flatten(v)
-                    else:
-                        self.vars[k] = ParameterList(v)
+                if k != "kwargs":
+                    t = self.types.get(k, None)
+                    if t:
+                        v = t(v).convert(self)
+                    self.args[k] = v
+                else:
+                    for kk, vv in v.items():
+                        t = self.types.get(kk, None)
+                        if t:
+                            vv = t(vv).convert(self)
+                        self.args[kk] = vv
 
             # Actually call the callback.
 
@@ -157,9 +123,6 @@ class Invocation:
             if self.outs is None:
                 raise ABException(f"{self.name} didn't set self.outs")
 
-            # Destack the variable and invocation frame.
-
-            currentVars = oldVars
             if self in unmaterialisedTargets:
                 unmaterialisedTargets.remove(self)
 
@@ -203,11 +166,7 @@ def Rule(func):
         i.cwd = cwd
         i.types = func.__annotations__
         i.callback = func
-        i.callerVars = currentVars
-        i.varsettings = kwargs.get("vars", None)
         setattr(i, func.__name__, SimpleNamespace())
-
-        kwargs.pop("vars", None)
 
         i.binding = sig.bind(name=name, self=i, **kwargs)
         i.binding.apply_defaults()
@@ -343,24 +302,12 @@ def emit(*args):
 def templateexpand(s, invocation):
     class Converter:
         def __getitem__(self, key):
-            if key == "vars":
-                return invocation.vars
             f = filenamesof(invocation.args[key])
             if isinstance(f, Sequence):
                 f = ParameterList(f)
             return f
 
     return eval("f%r" % s, invocation.callback.__globals__, Converter())
-
-
-def emitter_begin():
-    emit("hide = @")
-    emit(".DELETE_ON_ERROR:")
-    emit(".SECONDARY:")
-
-
-def emitter_end():
-    pass
 
 
 def emitter_rule(name, ins, outs, deps=[]):
@@ -373,7 +320,7 @@ def emitter_rule(name, ins, outs, deps=[]):
 
 
 def emitter_label(s):
-    emit("\t$(hide)echo", s)
+    emit("\t$(hide)", "echo", s)
 
 
 def emitter_exec(cs):
@@ -396,6 +343,7 @@ def simplerule(
     deps: Targets = [],
     commands=[],
     label="RULE",
+    **kwargs,
 ):
     self.ins = ins
     self.outs = outs
@@ -423,6 +371,7 @@ def normalrule(
     label="RULE",
     objdir=None,
     commands=[],
+    **kwargs,
 ):
     objdir = objdir or join("$(OBJ)", name)
 
@@ -433,6 +382,7 @@ def normalrule(
         outs=[join(objdir, f) for f in outs],
         label=label,
         commands=commands,
+        **kwargs,
     )
 
 
@@ -493,10 +443,6 @@ def main():
 
     global outputFp
     outputFp = open(args.output, "wt")
-    emitter_begin()
-
-    global currentVars
-    currentVars = Vars()
 
     for k in ("Rule", "Targets", "load", "filenamesof", "stripext"):
         defaultGlobals[k] = globals()[k]
@@ -512,7 +458,6 @@ def main():
         if t not in targets:
             raise ABException("target %s is not defined" % t)
         targets[t].materialise()
-    emitter_end()
 
 
 main()
