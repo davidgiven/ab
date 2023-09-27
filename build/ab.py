@@ -20,7 +20,6 @@ targets = {}
 unmaterialisedTargets = set()
 materialisingStack = []
 outputFp = None
-emitter = None
 currentVars = None
 cwdStack = [""]
 
@@ -354,67 +353,38 @@ def templateexpand(s, invocation):
     return eval("f%r" % s, invocation.callback.__globals__, Converter())
 
 
-class MakeEmitter:
-    def begin(self):
-        emit("hide = @")
-        emit(".DELETE_ON_ERROR:")
-        emit(".SECONDARY:")
+def emitter_begin():
+    emit("hide = @")
+    emit(".DELETE_ON_ERROR:")
+    emit(".SECONDARY:")
 
-    def end(self):
-        pass
 
-    def var(self, name, value):
-        # Don't let emit insert spaces.
-        emit(name + "=" + value)
+def emitter_end():
+    pass
 
-    def rule(self, name, ins, outs, deps=[]):
-        ins = filenamesof(ins)
-        if outs:
-            outs = filenamesof(outs)
-            emit(".PHONY:", name)
-            emit(name, ":", outs, deps)
-            emit(outs, "&:", ins, deps)
-        else:
-            emit(name, ":", ins, deps)
 
-    def label(self, s):
-        emit("\t$(hide)echo", s)
+def emitter_rule(name, ins, outs, deps=[]):
+    ins = filenamesof(ins)
+    if outs:
+        outs = filenamesof(outs)
+        emit(".PHONY:", name)
+        emit(outs, ":", name, ";")
+    emit(name, ":", ins, deps)
 
-    def exec(self, cs):
-        for c in cs:
-            emit("\t$(hide)", c)
+
+def emitter_label(s):
+    emit("\t$(hide)echo", s)
+
+
+def emitter_exec(cs):
+    for c in cs:
+        emit("\t$(hide)", c)
 
 
 def unmake(*ss):
     return [
         re.sub(r"\$\(([^)]*)\)", r"$\1", s) for s in flatten(filenamesof(ss))
     ]
-
-
-class NinjaEmitter:
-    def begin(self):
-        emit("rule build")
-        emit(" command = $command")
-
-    def end(self):
-        pass
-
-    def var(self, name, value):
-        # Don't let emit insert spaces.
-        emit(name + "=" + unmake(value)[0])
-
-    def rule(self, name, ins, outs, deps=[]):
-        if outs:
-            emit("build", name, ": phony", unmake(outs, deps))
-            emit("build", unmake(outs), ": build", unmake(ins))
-        else:
-            emit("build", name, ": phony", unmake(ins, deps))
-
-    def label(self, s):
-        emit(" description=", s)
-
-    def exec(self, cs):
-        emit(" command=", " && ".join(unmake(cs)))
 
 
 @Rule
@@ -429,8 +399,8 @@ def simplerule(
 ):
     self.ins = ins
     self.outs = outs
-    emitter.rule(self.name, filenamesof(ins, deps), outs)
-    emitter.label(templateexpand("{label} {name}", self))
+    emitter_rule(self.name, filenamesof(ins, deps), outs)
+    emitter_label(templateexpand("{label} {name}", self))
     cs = []
 
     for out in filenamesof(outs):
@@ -440,7 +410,7 @@ def simplerule(
 
     for c in commands:
         cs += [templateexpand(c, self)]
-    emitter.exec(cs)
+    emitter_exec(cs)
 
 
 @Rule
@@ -468,13 +438,13 @@ def normalrule(
 
 @Rule
 def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
-    emitter.rule(
+    emitter_rule(
         self.name,
         flatten(items.values()),
         filenamesof(items.keys()),
         filenamesof(deps),
     )
-    emitter.label(f"EXPORT {self.name}")
+    emitter_label(f"EXPORT {self.name}")
 
     cs = []
     self.ins = items.values()
@@ -494,7 +464,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
         cs += ["cp %s %s" % (srcs[0], destf)]
         self.outs += [destf]
 
-    emitter.exec(cs)
+    emitter_exec(cs)
 
 
 def loadbuildfile(filename):
@@ -517,26 +487,13 @@ def main():
     parser.add_argument("-o", "--output")
     parser.add_argument("files", nargs="+")
     parser.add_argument("-t", "--targets", action="append")
-    parser.add_argument("-v", "--vars", action="append")
     args = parser.parse_args()
-    args.vars = args.vars or []
     if not args.targets:
-            raise ABException("no targets supplied")
+        raise ABException("no targets supplied")
 
     global outputFp
     outputFp = open(args.output, "wt")
-
-    global emitter
-    if args.mode == "make":
-        emitter = MakeEmitter()
-    else:
-        emitter = NinjaEmitter()
-    emitter.begin()
-
-    for v in flatten([a.split(",") for a in args.vars]):
-        e = os.getenv(v)
-        if e:
-            emitter.var(v, e)
+    emitter_begin()
 
     global currentVars
     currentVars = Vars()
@@ -555,7 +512,7 @@ def main():
         if t not in targets:
             raise ABException("target %s is not defined" % t)
         targets[t].materialise()
-    emitter.end()
+    emitter_end()
 
 
 main()
