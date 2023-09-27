@@ -7,7 +7,7 @@ TESTS = ["simple", "dependency"]
 def test(self, name, test: Target):
     normalrule(
         replaces=self,
-        ins=["./" + self.localname + ".py"],
+        ins=["./" + self.localname + "_test.py"],
         outs=["log"],
         deps=["build/ab.py", "build/c.py"],
         commands=[

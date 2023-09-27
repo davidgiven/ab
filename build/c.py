@@ -3,7 +3,6 @@ from build.ab2 import (
     Targets,
     normalrule,
     filenamesof,
-    filenameof,
     stripext,
     flatten,
 )
