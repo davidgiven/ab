@@ -1,0 +1,19 @@
+name: C/C++ CI
+
+on: [push]
+
+concurrency: 
+  group: environment-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: 'davidgiven/ab'
+    - name: apt
+      run: sudo apt update && sudo apt install python3-hamcrest
+    - name: make
+      run: make -j2
