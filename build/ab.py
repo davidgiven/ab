@@ -431,9 +431,6 @@ def load(filename):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-m", "--mode", choices=["make", "ninja"], default="make"
-    )
     parser.add_argument("-o", "--output")
     parser.add_argument("files", nargs="+")
     parser.add_argument("-t", "--targets", action="append")

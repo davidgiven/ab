@@ -19,7 +19,7 @@ build-files = $(shell find . -name 'build.py') build/*.py config.py
 $(OBJ)/build.mk: Makefile $(build-files)
 	@echo AB
 	@mkdir -p $(OBJ)
-	$(hide) $(PYTHON) -X pycache_prefix=$(OBJ) build/ab.py -m make -t +all -o $@ \
+	$(hide) $(PYTHON) -X pycache_prefix=$(OBJ) build/ab.py -t +all -o $@ \
 		build.py
 
 -include $(OBJ)/build.mk
