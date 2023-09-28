@@ -80,6 +80,8 @@ def findsources(name, srcs, deps, cflags, filerule):
                     cflags=cflags,
                 )
             ]
+        else:
+            ins += [f]
     return ins
 
 

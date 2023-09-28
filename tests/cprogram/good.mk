@@ -18,9 +18,9 @@ tests/cprogram+cprogram/implicitcfile.c : tests/cprogram/implicitcfile.c
 	$(hide) $(CC) -c -o $(OBJ)/tests/cprogram+cprogram/implicitcfile.c/implicitcfile.o tests/cprogram/implicitcfile.c $(CFLAGS) -cprogram-cflag
 .PHONY: tests/cprogram+cprogram
 $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram : tests/cprogram+cprogram ;
-tests/cprogram+cprogram : $(OBJ)/tests/cprogram+cprogram/implicitcfile.c/implicitcfile.o
+tests/cprogram+cprogram : $(OBJ)/tests/cprogram+cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cprogram+cfile.o
 	$(hide) echo CLINK tests/cprogram+cprogram
 	$(hide) mkdir -p $(OBJ)/tests/cprogram+cprogram
-	$(hide) $(CC) -o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cprogram/implicitcfile.c/implicitcfile.o 
+	$(hide) $(CC) -o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cprogram+cfile.o 
 tests/cprogram+all : $(OBJ)/tests/cprogram+cfile/cprogram+cfile.o $(OBJ)/tests/cprogram+cxxfile/cprogram+cxxfile.o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram
 	$(hide) echo EXPORT tests/cprogram+all
