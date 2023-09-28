@@ -1,2 +1,2 @@
 tests/simple+all :
-	$(hide) echo EXPORT tests/simple+all
+	$(hide) $(ECHO) EXPORT tests/simple+all

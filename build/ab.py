@@ -320,7 +320,7 @@ def emitter_rule(name, ins, outs, deps=[]):
 
 
 def emitter_label(s):
-    emit("\t$(hide)", "echo", s)
+    emit("\t$(hide)", "$(ECHO)", s)
 
 
 def emitter_exec(cs):
