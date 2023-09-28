@@ -1,4 +1,4 @@
-from build.ab2 import Rule
+from build.ab import Rule
 import os
 import subprocess
 

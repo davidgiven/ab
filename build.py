@@ -1,4 +1,4 @@
-from build.ab2 import export, normalrule
+from build.ab import export, normalrule
 
 normalrule(
         name="distribution",

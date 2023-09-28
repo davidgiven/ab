@@ -1,3 +1,3 @@
-from build.ab2 import export
+from build.ab import export
 
 export(name="all", items={}, deps=[])

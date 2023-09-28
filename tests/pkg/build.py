@@ -1,4 +1,4 @@
-from build.ab2 import export
+from build.ab import export
 from build.pkg import package
 
 package(name="pkg", package="missing")

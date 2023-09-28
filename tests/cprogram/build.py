@@ -1,4 +1,4 @@
-from build.ab2 import export
+from build.ab import export
 from build.c import cfile, cxxfile, cprogram
 
 cfile(name="cfile", srcs=["./cfile.c"], cflags=["-cflag"])

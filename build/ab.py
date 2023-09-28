@@ -445,8 +445,8 @@ def main():
         defaultGlobals[k] = globals()[k]
 
     global __name__
-    sys.modules["build.ab2"] = sys.modules[__name__]
-    __name__ = "build.ab2"
+    sys.modules["build.ab"] = sys.modules[__name__]
+    __name__ = "build.ab"
 
     for f in args.files:
         loadbuildfile(f)
