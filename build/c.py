@@ -117,7 +117,12 @@ def clibrary(
 def programimpl(
     self, name, srcs, deps, cflags, ldflags, commands, label, filerule, kind
 ):
-    libraries = [d.outs for d in deps if hasattr(d, "clibrary")]
+    libraries = [d for d in deps if hasattr(d, "clibrary")]
+    for library in libraries:
+        if library.clibrary.cflags:
+            cflags += library.clibrary.cflags
+        if library.clibrary.ldflags:
+            ldflags += library.clibrary.ldflags
 
     for f in filenamesof(srcs):
         if f.endswith(".h"):
@@ -125,7 +130,8 @@ def programimpl(
 
     normalrule(
         replaces=self,
-        ins=findsources(name, srcs, deps, cflags, filerule),
+        ins=findsources(name, srcs, deps, cflags, filerule)
+        + filenamesof(libraries),
         outs=[basename(name)],
         label=label,
         commands=commands,

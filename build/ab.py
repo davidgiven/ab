@@ -420,9 +420,8 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
 
     if self.outs:
         emit("clean::")
-        emit("\t$(hide) rm -f "+(" ".join(self.outs)))
+        emit("\t$(hide) rm -f " + (" ".join(self.outs)))
     self.outs += filenamesof(deps)
-
 
 
 def loadbuildfile(filename):

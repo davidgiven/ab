@@ -1,4 +1,5 @@
 from build.ab import Rule
+from types import SimpleNamespace
 import os
 import subprocess
 
@@ -40,11 +41,11 @@ def get_ldflags(name):
 
 @Rule
 def package(self, name, package=None):
+    self.clibrary = SimpleNamespace()
+    self.clibrary.cflags = []
+    self.clibrary.ldflags = []
     if has_package(package):
-        self.library = {
-            "cflags": [get_cflags(package)],
-            "cxxflags": [get_cflags(package)],
-            "ldflags": [get_ldflags(package)],
-        }
+        self.clibrary.cflags = [get_cflags(package)]
+        self.clibrary.ldflags = [get_ldflags(package)]
 
     self.outs = []

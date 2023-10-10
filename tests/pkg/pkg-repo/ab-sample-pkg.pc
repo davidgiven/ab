@@ -1,0 +1,13 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib/x86_64-linux-gnu
+sharedlibdir=${libdir}
+includedir=${prefix}/include
+
+Name: ab-sample-pkg
+Description: Sample package for AB tests
+Version: 1.2.3
+
+Requires:
+Libs: --libs-flag
+Cflags: --c-flag

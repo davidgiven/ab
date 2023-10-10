@@ -8,14 +8,18 @@ cprogram(
     name="cprogram",
     srcs=["./implicitcfile.c", "+cfile"],
     cflags=["-cprogram-cflag"],
-    ldflags=["-ldflag"]
+    ldflags=["-ldflag"],
 )
 
 cxxprogram(
     name="cxxprogram",
     srcs=["./implicitcxxfile.cc", "+cxxfile"],
     cflags=["-cxxprogram-cflag"],
-    ldflags=["-ldflag"]
+    ldflags=["-ldflag"],
 )
 
-export(name="all", items={}, deps=["+cfile", "+cxxfile", "+cprogram", "+cxxprogram"])
+export(
+    name="all",
+    items={},
+    deps=["+cfile", "+cxxfile", "+cprogram", "+cxxprogram"],
+)

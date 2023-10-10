@@ -6,6 +6,8 @@ AR ?= ar
 CFLAGS ?= -g -Og
 LDFLAGS ?= -g
 hide = @
+PKG_CONFIG ?= pkg-config
+export PKG_CONFIG
 
 .SECONDARY:
 
