@@ -1,6 +1,9 @@
 export OBJ = .obj
 
-include build/ab.mk
+.PHONY: all
+all: +all
+	
+clean::
+	rm distribution.tar.xz
 
-.DELETE_ON_ERROR:
-.SECONDARY:
+include build/ab.mk

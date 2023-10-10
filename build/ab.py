@@ -315,8 +315,10 @@ def emitter_rule(name, ins, outs, deps=[]):
     if outs:
         outs = filenamesof(outs)
         emit(".PHONY:", name)
-        emit(outs, ":", name, ";")
-    emit(name, ":", ins, deps)
+        emit(name, ":", outs, ";")
+        emit(outs, "&:", ins, deps)
+    else:
+        emit(name, ":", ins, deps)
 
 
 def emitter_label(s):

@@ -7,6 +7,8 @@ CFLAGS ?= -g -Og
 LDFLAGS ?= -g
 hide = @
 
+.SECONDARY:
+
 ifndef ECHO
 T := $(shell $(MAKE) $(MAKECMDGOALS) --no-print-directory \
       -nrRf $(firstword $(MAKEFILE_LIST)) \
@@ -18,9 +20,7 @@ endif
 
 export PYTHONHASHSEED = 1
 
-all: +all
-	
-clean:
+clean::
 	@echo [-/-] CLEAN
 	$(hide) rm -rf $(OBJ) bin
 
