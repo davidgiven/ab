@@ -2,16 +2,19 @@ name: C/C++ CI
 
 on: [push]
 
-concurrency: 
-  group: environment-${{ github.head_ref }}
-  cancel-in-progress: true
-
 jobs:
   build-linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        repository: 'davidgiven/ab'
+    - uses: actions/checkout@v3
+
     - name: make
-      run: make -j2
+      run: make
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ github.event.repository.name }}.${{ github.sha }}
+        path: |
+          distribution.tar.xz
+
