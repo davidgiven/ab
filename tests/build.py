@@ -17,7 +17,7 @@ def test(self, name, test: Target):
             "python3 -X pycache_prefix=$(OBJ) build/ab.py -t tests/"
             + self.localname
             + "+all -o {outs[0]} {ins[0]}",
-            "diff -uN {outs[0]} {ins[1]} || (echo 'Use this command to update the good file:' && echo cp {outs[0]} {ins[1]} && false)",
+            "diff -uN {ins[1]} {outs[0]} || (echo 'Use this command to update the good file:' && echo cp {outs[0]} {ins[1]} && false)",
         ],
         label="TEST",
     )

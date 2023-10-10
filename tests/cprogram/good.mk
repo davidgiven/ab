@@ -21,8 +21,20 @@ tests/cprogram+cprogram : $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram ;
 $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram &: $(OBJ)/tests/cprogram+cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cprogram+cfile.o
 	$(hide) $(ECHO) CLINK tests/cprogram+cprogram
 	$(hide) mkdir -p $(OBJ)/tests/cprogram+cprogram
-	$(hide) $(CC) -o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cprogram+cfile.o 
-tests/cprogram+all : $(OBJ)/tests/cprogram+cfile/cprogram+cfile.o $(OBJ)/tests/cprogram+cxxfile/cprogram+cxxfile.o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram
+	$(hide) $(CC) -o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cprogram+cfile.o -ldflag
+.PHONY: tests/cprogram+cxxprogram/implicitcxxfile.cc
+tests/cprogram+cxxprogram/implicitcxxfile.cc : $(OBJ)/tests/cprogram+cxxprogram/implicitcxxfile.cc/implicitcxxfile.o ;
+$(OBJ)/tests/cprogram+cxxprogram/implicitcxxfile.cc/implicitcxxfile.o &: tests/cprogram/implicitcxxfile.cc
+	$(hide) $(ECHO) CXX tests/cprogram+cxxprogram/implicitcxxfile.cc
+	$(hide) mkdir -p $(OBJ)/tests/cprogram+cxxprogram/implicitcxxfile.cc
+	$(hide) $(CXX) -c -o $(OBJ)/tests/cprogram+cxxprogram/implicitcxxfile.cc/implicitcxxfile.o tests/cprogram/implicitcxxfile.cc $(CFLAGS) -cxxprogram-cflag
+.PHONY: tests/cprogram+cxxprogram
+tests/cprogram+cxxprogram : $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram ;
+$(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram &: $(OBJ)/tests/cprogram+cxxprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram+cxxfile/cprogram+cxxfile.o
+	$(hide) $(ECHO) CXXLINK tests/cprogram+cxxprogram
+	$(hide) mkdir -p $(OBJ)/tests/cprogram+cxxprogram
+	$(hide) $(CXX) -o $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram $(OBJ)/tests/cprogram+cxxprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram+cxxfile/cprogram+cxxfile.o -ldflag
+tests/cprogram+all : $(OBJ)/tests/cprogram+cfile/cprogram+cfile.o $(OBJ)/tests/cprogram+cxxfile/cprogram+cxxfile.o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram
 	$(hide) $(ECHO) EXPORT tests/cprogram+all
 AB_LOADED = 1
 
