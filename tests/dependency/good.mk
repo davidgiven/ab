@@ -10,3 +10,5 @@ out2 &:
 tests/dependency+all : outa ;
 outa &: out1 out2
 	$(hide) $(ECHO) RULE tests/dependency+all
+AB_LOADED = 1
+

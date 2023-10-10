@@ -24,3 +24,5 @@ $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram &: $(OBJ)/tests/cprogram+cprogr
 	$(hide) $(CC) -o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cprogram+cfile.o 
 tests/cprogram+all : $(OBJ)/tests/cprogram+cfile/cprogram+cfile.o $(OBJ)/tests/cprogram+cxxfile/cprogram+cxxfile.o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram
 	$(hide) $(ECHO) EXPORT tests/cprogram+all
+AB_LOADED = 1
+

@@ -400,7 +400,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
 
     cs = []
     self.ins = items.values()
-    self.outs = filenamesof(deps)
+    self.outs = []
     for dest, src in items.items():
         destf = filenameof(dest)
         dir = dirname(destf)
@@ -417,6 +417,12 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
         self.outs += [destf]
 
     emitter_exec(cs)
+
+    if self.outs:
+        emit("clean::")
+        emit("\t$(hide) rm -f "+(" ".join(self.outs)))
+    self.outs += filenamesof(deps)
+
 
 
 def loadbuildfile(filename):
@@ -457,6 +463,7 @@ def main():
         if t not in targets:
             raise ABException("target %s is not defined" % t)
         targets[t].materialise()
+    emit("AB_LOADED = 1\n")
 
 
 main()
