@@ -3,10 +3,13 @@ from types import SimpleNamespace
 import os
 import subprocess
 
-emit("""
+emit(
+    """
 PKG_CONFIG ?= pkg-config
 PACKAGES = $(shell $(PKG_CONFIG) --list-package-names)
-""")
+"""
+)
+
 
 @Rule
 def package(self, name, package=None, fallback: Target = None):
@@ -19,7 +22,9 @@ def package(self, name, package=None, fallback: Target = None):
         emit(f"$(error Required package '{package}' not installed.)")
     emit("else")
     emit(f"PACKAGE_CFLAGS_{package} = $(shell $(PKG_CONFIG) --cflags {package}")
-    emit(f"PACKAGE_LDFLAGS_{package} = $(shell $(PKG_CONFIG) --ldflags {package}")
+    emit(
+        f"PACKAGE_LDFLAGS_{package} = $(shell $(PKG_CONFIG) --ldflags {package}"
+    )
     emit(f"PACKAGE_DEP_{package} = ")
     emit("endif")
 
