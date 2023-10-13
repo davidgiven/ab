@@ -13,7 +13,7 @@ $(OBJ)/tests/clibrary+clibrary/lib2.cc/lib2.o &: tests/clibrary/lib2.cc tests/cl
 .PHONY: tests/clibrary+clibrary
 tests/clibrary+clibrary : $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a $(OBJ)/tests/clibrary+clibrary/library.h ;
 $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a $(OBJ)/tests/clibrary+clibrary/library.h &: $(OBJ)/tests/clibrary+clibrary/lib1.c/lib1.o $(OBJ)/tests/clibrary+clibrary/lib2.cc/lib2.o
-	$(hide) $(ECHO) AR tests/clibrary+clibrary
+	$(hide) $(ECHO) LIB tests/clibrary+clibrary
 	$(hide) mkdir -p $(OBJ)/tests/clibrary+clibrary
 	$(hide) $(AR) cqs $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a $(OBJ)/tests/clibrary+clibrary/lib1.c/lib1.o $(OBJ)/tests/clibrary+clibrary/lib2.cc/lib2.o
 	$(hide) cp tests/clibrary/library.h $(OBJ)/tests/clibrary+clibrary/tests/clibrary/library.h
@@ -25,7 +25,7 @@ $(OBJ)/tests/clibrary+cprogram/prog.c/prog.o &: tests/clibrary/prog.c $(OBJ)/tes
 	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary+cprogram/prog.c/prog.o tests/clibrary/prog.c $(CFLAGS) -I$(OBJ)/tests/clibrary+clibrary
 .PHONY: tests/clibrary+cprogram
 tests/clibrary+cprogram : $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram ;
-$(OBJ)/tests/clibrary+cprogram/clibrary+cprogram &: $(OBJ)/tests/clibrary+cprogram/prog.c/prog.o $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a
+$(OBJ)/tests/clibrary+cprogram/clibrary+cprogram &: $(OBJ)/tests/clibrary+cprogram/prog.c/prog.o $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a $(OBJ)/tests/clibrary+clibrary/library.h
 	$(hide) $(ECHO) CLINK tests/clibrary+cprogram
 	$(hide) mkdir -p $(OBJ)/tests/clibrary+cprogram
 	$(hide) $(CC) -o $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram $(OBJ)/tests/clibrary+cprogram/prog.c/prog.o $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a 

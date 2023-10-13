@@ -150,9 +150,9 @@ def programimpl(
         ins=(
             findsources(name, srcs, deps, cflags, filerule)
             + [f for f in filenamesof(libraries) if f.endswith(".a")]
-            + deps
         ),
         outs=[basename(name)],
+        deps=deps,
         label=label,
         commands=commands,
         ldflags=ldflags,

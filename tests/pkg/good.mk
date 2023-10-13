@@ -35,7 +35,7 @@ tests/pkg+cprogram : $(OBJ)/tests/pkg+cprogram/pkg+cprogram ;
 $(OBJ)/tests/pkg+cprogram/pkg+cprogram &: $(OBJ)/tests/pkg+cprogram/cfile.c/cfile.o $(PACKAGE_DEP_missing) $(PACKAGE_DEP_ab-sample-pkg)
 	$(hide) $(ECHO) CLINK tests/pkg+cprogram
 	$(hide) mkdir -p $(OBJ)/tests/pkg+cprogram
-	$(hide) $(CC) -o $(OBJ)/tests/pkg+cprogram/pkg+cprogram $(OBJ)/tests/pkg+cprogram/cfile.c/cfile.o $(PACKAGE_DEP_missing) $(PACKAGE_DEP_ab-sample-pkg) $(PACKAGE_LDFLAGS_missing) $(PACKAGE_LDFLAGS_ab-sample-pkg)
+	$(hide) $(CC) -o $(OBJ)/tests/pkg+cprogram/pkg+cprogram $(OBJ)/tests/pkg+cprogram/cfile.c/cfile.o $(PACKAGE_LDFLAGS_missing) $(PACKAGE_LDFLAGS_ab-sample-pkg)
 tests/pkg+all : $(OBJ)/tests/pkg+cprogram/pkg+cprogram
 	$(hide) $(ECHO) EXPORT tests/pkg+all
 AB_LOADED = 1
