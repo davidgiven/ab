@@ -1,51 +1,31 @@
-from build.ab import Rule
+from build.ab import Rule, emit, Target
 from types import SimpleNamespace
 import os
 import subprocess
 
-_package_present = {}
-_package_cflags = {}
-_package_ldflags = {}
-_pkgconfig = os.getenv("PKG_CONFIG")
-
-
-def has_package(name):
-    global _package_present
-    if name not in _package_present:
-        r = subprocess.run(
-            f"{_pkgconfig} --exists {name}", shell=True, capture_output=True
-        )
-        _package_present[name] = True if r.returncode == 0 else False
-    return _package_present[name]
-
-
-def get_cflags(name):
-    global _package_cflags
-    if name not in _package_cflags:
-        r = subprocess.run(
-            f"{_pkgconfig} --cflags {name}", shell=True, capture_output=True
-        )
-        _package_cflags[name] = r.stdout.decode("utf-8").strip()
-    return _package_cflags[name]
-
-
-def get_ldflags(name):
-    global _package_ldflags
-    if name not in _package_ldflags:
-        r = subprocess.run(
-            f"{_pkgconfig} --libs {name}", shell=True, capture_output=True
-        )
-        _package_ldflags[name] = r.stdout.decode("utf-8").strip()
-    return _package_ldflags[name]
-
+emit("""
+PKG_CONFIG ?= pkg-config
+PACKAGES = $(shell $(PKG_CONFIG) --list-package-names)
+""")
 
 @Rule
-def package(self, name, package=None):
-    self.clibrary = SimpleNamespace()
-    self.clibrary.cflags = []
-    self.clibrary.ldflags = []
-    if has_package(package):
-        self.clibrary.cflags = [get_cflags(package)]
-        self.clibrary.ldflags = [get_ldflags(package)]
+def package(self, name, package=None, fallback: Target = None):
+    emit("ifneq ($(filter %s, $(PACKAGES)),)" % package)
+    if fallback:
+        emit(f"PACKAGE_CFLAGS_{package} =", fallback.clibrary.cflags)
+        emit(f"PACKAGE_LDFLAGS_{package} = ", fallback.clibrary.ldflags)
+        emit(f"PACKAGE_DEP_{package} = ", fallback.name)
+    else:
+        emit(f"$(error Required package '{package}' not installed.)")
+    emit("else")
+    emit(f"PACKAGE_CFLAGS_{package} = $(shell $(PKG_CONFIG) --cflags {package}")
+    emit(f"PACKAGE_LDFLAGS_{package} = $(shell $(PKG_CONFIG) --ldflags {package}")
+    emit(f"PACKAGE_DEP_{package} = ")
+    emit("endif")
 
-    self.outs = []
+    self.clibrary = SimpleNamespace()
+    self.clibrary.cflags = [f"$(PACKAGE_CFLAGS_{package})"]
+    self.clibrary.ldflags = [f"$(PACKAGE_LDFLAGS_{package})"]
+
+    self.ins = []
+    self.outs = [f"$(PACKAGE_DEP_{package})"]

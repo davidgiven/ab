@@ -12,7 +12,7 @@ def test(self, name, test: Target):
             "./" + self.localname + "/good.mk",
         ],
         outs=["log"],
-        deps=["build/ab.py", "build/c.py"],
+        deps=["build/ab.py", "build/c.py", "build/pkg.py"],
         commands=[
             "PKG_CONFIG_PATH=tests/pkg/pkg-repo python3 -X pycache_prefix=$(OBJ) build/ab.py -t tests/"
             + self.localname
