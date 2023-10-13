@@ -29,13 +29,19 @@ ECHO = echo [$C/$T]
 endif
 endif
 
+.PHONY: update-ab
+update-ab:
+	@echo "Press RETURN to update ab from the repository, or CTRL+C to cancel." \
+		&& read a \
+		&& (curl -L https://github.com/davidgiven/ab/releases/download/dev/distribution.tar.xz | tar xvJf -) \
+		&& echo "Done."
 
-export PYTHONHASHSEED = 1
-
+.PHONY: clean
 clean::
 	@echo [-/-] CLEAN
 	$(hide) rm -rf $(OBJ) bin
 
+export PYTHONHASHSEED = 1
 build-files = $(shell find . -name 'build.py') build/*.py config.py
 $(OBJ)/build.mk: Makefile $(build-files)
 	@echo "[-/-] AB"
