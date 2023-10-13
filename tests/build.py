@@ -1,6 +1,6 @@
 from build.ab import normalrule, Rule, Target, export
 
-TESTS = ["simple", "dependency", "cprogram", "pkg"]
+TESTS = ["simple", "dependency", "cprogram", "pkg", "clibrary"]
 
 
 @Rule

@@ -1,10 +1,11 @@
+from os.path import basename, join
 from build.ab import (
     Rule,
     Targets,
     normalrule,
     filenamesof,
     stripext,
-    flatten,
+    ABException,
 )
 from os.path import *
 
@@ -92,26 +93,44 @@ def clibrary(
     srcs: Targets = [],
     deps: Targets = [],
     hdrs: Targets = [],
+    hdrprefix=None,
     cflags=[],
     commands=["$(AR) cqs {outs[0]} {ins}"],
     label="AR",
 ):
+    objdir = join("$(OBJ)", name)
+    if not srcs and not hdrs:
+        raise ABException(
+            "clibrary contains no sources and no exported headers"
+        )
+
+    libraries = [d for d in deps if hasattr(d, "clibrary")]
+    for library in libraries:
+        if library.clibrary.cflags:
+            cflags += library.clibrary.cflags
+        if library.clibrary.ldflags:
+            ldflags += library.clibrary.ldflags
+
     for f in filenamesof(srcs):
         if f.endswith(".h"):
             deps += [f]
 
+    c = commands if srcs else []
+    hdrouts = []
+    for hdr in filenamesof(hdrs):
+        c += ["cp %s %s" % (hdr, join(objdir, hdr))]
+        hdrouts += [basename(hdr)]
+
     normalrule(
         replaces=self,
-        ins=findsources(name, srcs, deps, cfile),
-        outs=[basename(name) + ".a"],
+        ins=findsources(name, srcs, deps + hdrs, cflags, cfile),
+        outs=[basename(name) + ".a"] + hdrouts,
         label=label,
-        commands=commands,
+        commands=c,
     )
 
-    dirs = set([dirname(f) for f in filenamesof(hdrs)])
-
-    self.clibrary.hdrs = hdrs
-    self.clibrary.dirs = dirs
+    self.clibrary.ldflags = []
+    self.clibrary.cflags = ["-I" + objdir]
 
 
 def programimpl(
@@ -124,14 +143,14 @@ def programimpl(
         if library.clibrary.ldflags:
             ldflags += library.clibrary.ldflags
 
-    for f in filenamesof(srcs):
-        if f.endswith(".h"):
-            deps += [f]
+    deps += [f for f in filenamesof(srcs) if f.endswith(".h")]
 
     normalrule(
         replaces=self,
-        ins=findsources(name, srcs, deps, cflags, filerule)
-        + filenamesof(libraries),
+        ins=(
+            findsources(name, srcs, deps, cflags, filerule)
+            + [f for f in filenamesof(libraries) if f.endswith(".a")]
+        ),
         outs=[basename(name)],
         label=label,
         commands=commands,

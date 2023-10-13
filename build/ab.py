@@ -351,13 +351,14 @@ def simplerule(
     self.outs = outs
     emitter_rule(self.name, filenamesof(ins, deps), outs)
     emitter_label(templateexpand("{label} {name}", self))
-    cs = []
 
+    dirs = set()
     for out in filenamesof(outs):
         dir = dirname(out)
         if dir:
-            cs += ["mkdir -p " + dir]
+            dirs.add(dir)
 
+        cs = [("mkdir -p %s" % dir) for dir in dirs]
     for c in commands:
         cs += [templateexpand(c, self)]
     emitter_exec(cs)
