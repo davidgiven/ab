@@ -94,23 +94,23 @@ class Invocation:
 
             # Perform type conversion to the declared rule parameter types.
 
-            self.args = {}
-            for k, v in self.binding.arguments.items():
-                if k != "kwargs":
-                    t = self.types.get(k, None)
-                    if t:
-                        v = t(v).convert(self)
-                    self.args[k] = v
-                else:
-                    for kk, vv in v.items():
-                        t = self.types.get(kk, None)
-                        if t:
-                            vv = t(vv).convert(self)
-                        self.args[kk] = vv
-
-            # Actually call the callback.
-
             try:
+                self.args = {}
+                for k, v in self.binding.arguments.items():
+                    if k != "kwargs":
+                        t = self.types.get(k, None)
+                        if t:
+                            v = t(v).convert(self)
+                        self.args[k] = v
+                    else:
+                        for kk, vv in v.items():
+                            t = self.types.get(kk, None)
+                            if t:
+                                vv = t(vv).convert(self)
+                            self.args[kk] = vv
+
+                # Actually call the callback.
+
                 cwdStack.append(self.cwd)
                 self.callback(**self.args)
                 cwdStack.pop()
@@ -120,6 +120,7 @@ class Invocation:
                 )
                 print(f"Arguments: {self.args}")
                 raise e
+
             if self.outs is None:
                 raise ABException(f"{self.name} didn't set self.outs")
 
@@ -227,7 +228,7 @@ def flatten(*xs):
 
 def fileinvocation(s):
     i = Invocation()
-    i.name = "(anonymous)"
+    i.name = s
     i.outs = [s]
     targets[s] = i
     return i
@@ -246,7 +247,7 @@ def targetof(s, cwd):
     if s.startswith("+"):
         s = cwd + s
     if s.startswith("./"):
-        s = join(cwd, s)
+        s = normpath(join(cwd, s))
     if s.startswith("$"):
         return fileinvocation(s)
 
@@ -270,17 +271,30 @@ def targetsof(*xs, cwd):
 
 
 def filenamesof(*xs):
-    fs = []
+    s = []
     for t in flatten(xs):
         if type(t) == str:
-            fs += [t]
+            t = normpath(t)
+            if t not in s:
+                s += [t]
         else:
-            fs += [normpath(f) for f in t.outs]
-    return fs
+            for f in [normpath(f) for f in t.outs]:
+                if f not in s:
+                    s += [f]
+    return s
 
 
 def targetnamesof(*xs):
-    return [x.name for x in flatten(xs)]
+    s = []
+    for x in flatten(xs):
+        if type(x) == str:
+            x = normpath(x)
+            if x not in s:
+                s += [x]
+        else:
+            if x.name not in s:
+                s += [x.name]
+    return list(s)
 
 
 def filenameof(x):
@@ -302,6 +316,8 @@ def emit(*args):
 def templateexpand(s, invocation):
     class Converter:
         def __getitem__(self, key):
+            if key == "self":
+                return invocation
             f = filenamesof(invocation.args[key])
             if isinstance(f, Sequence):
                 f = ParameterList(f)
@@ -311,14 +327,9 @@ def templateexpand(s, invocation):
 
 
 def emitter_rule(name, ins, outs, deps=[]):
-    ins = filenamesof(ins)
-    if outs:
-        outs = filenamesof(outs)
-        emit(".PHONY:", name)
-        emit(name, ":", outs, ";")
-        emit(outs, "&:", ins, deps)
-    else:
-        emit(name, ":", ins, deps)
+    emit("")
+    emit(".PHONY:", name)
+    emit(name, outs, "&:", targetnamesof(ins), targetnamesof(deps))
 
 
 def emitter_label(s):
@@ -349,14 +360,15 @@ def simplerule(
 ):
     self.ins = ins
     self.outs = outs
-    emitter_rule(self.name, filenamesof(ins, deps), outs)
+    self.deps = deps
+    emitter_rule(self.name, ins + deps, outs)
     emitter_label(templateexpand("{label} {name}", self))
 
-    dirs = set()
+    dirs = []
     for out in filenamesof(outs):
         dir = dirname(out)
-        if dir:
-            dirs.add(dir)
+        if dir and dir not in dirs:
+            dirs += [dir]
 
         cs = [("mkdir -p %s" % dir) for dir in dirs]
     for c in commands:
@@ -378,6 +390,7 @@ def normalrule(
 ):
     objdir = objdir or join("$(OBJ)", name)
 
+    self.normalrule.objdir = objdir
     simplerule(
         replaces=self,
         ins=ins,

@@ -11,13 +11,15 @@ def test(self, name, test: Target):
             "./" + self.localname + "/build.py",
             "./" + self.localname + "/good.mk",
         ],
-        outs=["log"],
+        outs=["build.mk"],
         deps=["build/ab.py", "build/c.py", "build/pkg.py"],
         commands=[
             "PKG_CONFIG_PATH=tests/pkg/pkg-repo python3 -X pycache_prefix=$(OBJ) build/ab.py -t tests/"
             + self.localname
-            + "+all -o {outs[0]} {ins[0]}",
-            "diff -uN {ins[1]} {outs[0]} || (echo 'Use this command to update the good file:' && echo cp {outs[0]} {ins[1]} && false)",
+            + "+all -o {outs[0]}.bad {ins[0]}"
+            + " || (rm -f {outs} && false)",
+            "diff -uN {ins[1]} {outs[0]}.bad || (echo 'Use this command to update the good file:' && echo cp {outs[0]}.bad {ins[1]} && false)",
+            "mv {outs[0]}.bad {outs[0]}",
         ],
         label="TEST",
     )

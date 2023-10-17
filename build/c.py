@@ -1,21 +1,21 @@
 from os.path import basename, join
 from build.ab import (
+    ABException,
     Rule,
     Targets,
-    normalrule,
+    TargetsMap,
+    filenameof,
+    flatten,
     filenamesof,
+    normalrule,
     stripext,
-    ABException,
 )
 from os.path import *
 
 
 def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
-    if not name:
-        name = filenamesof(srcs)[1]
-
     dirs = []
-    for d in deps:
+    for d in deps + srcs:
         for f in filenamesof(d):
             if f.endswith(".h"):
                 dirs += [dirname(f)]
@@ -24,18 +24,18 @@ def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
         except:
             pass
 
-    includeflags = set(["-I" + f for f in filenamesof(dirs)])
+    includeflags = ["-I" + f for f in set(filenamesof(dirs))]
 
-    outleaf = stripext(basename(name)) + suffix
+    outleaf = stripext(basename(filenameof(srcs[0]))) + suffix
 
-    r = normalrule(
+    normalrule(
         replaces=self,
         ins=srcs,
         deps=deps,
         outs=[outleaf],
         label=label,
         commands=commands,
-        cflags=cflags,
+        cflags=cflags + includeflags,
     )
 
 
@@ -70,20 +70,27 @@ def cxxfile(
 
 
 def findsources(name, srcs, deps, cflags, filerule):
-    ins = []
-    for f in filenamesof(srcs):
-        if f.endswith(".c") or f.endswith(".cc") or f.endswith(".cpp"):
-            ins += [
-                filerule(
-                    name=name + "/" + basename(filenamesof(f)[0]),
-                    srcs=[f],
-                    deps=deps,
-                    cflags=cflags,
-                )
-            ]
+    objs = []
+    for s in flatten(srcs):
+        ff = [
+            f
+            for f in filenamesof(s)
+            if f.endswith(".c") or f.endswith(".cc") or f.endswith(".cpp")
+        ]
+        if ff:
+            for f in ff:
+                objs += [
+                    filerule(
+                        name=join(name, f),
+                        srcs=[f],
+                        deps=deps,
+                        cflags=cflags,
+                    )
+                ]
         else:
-            ins += [f]
-    return ins
+            if s not in objs:
+                objs += [s]
+    return objs
 
 
 @Rule
@@ -92,8 +99,7 @@ def clibrary(
     name,
     srcs: Targets = [],
     deps: Targets = [],
-    hdrs: Targets = [],
-    hdrprefix=None,
+    hdrs: TargetsMap = {},
     cflags=[],
     commands=["$(AR) cqs {outs[0]} {ins}"],
     label="LIB",
@@ -115,18 +121,33 @@ def clibrary(
         if f.endswith(".h"):
             deps += [f]
 
-    c = commands if srcs else []
+    cs = []
+    hdrins = list(hdrs.values())
     hdrouts = []
-    for hdr in filenamesof(hdrs):
-        c += ["cp %s %s" % (hdr, join(objdir, hdr))]
-        hdrouts += [basename(hdr)]
+    for dest, src in hdrs.items():
+        destf = join(objdir, filenameof(dest))
+        dir = dirname(destf)
+        if dir:
+            cs += ["mkdir -p " + dir]
+
+        s = filenamesof(src)
+        if len(s) != 1:
+            raise ABException(
+                "a dependency of an export must have exactly one output file"
+            )
+
+        cs += ["cp %s %s" % (s[0], destf)]
+        hdrouts += [destf]
+
+    actualsrcs = findsources(name, srcs, deps + hdrins, cflags, cfile)
+    cs += commands if actualsrcs else []
 
     normalrule(
         replaces=self,
-        ins=findsources(name, srcs, deps + hdrs, cflags, cfile),
+        ins=actualsrcs,
         outs=[basename(name) + ".a"] + hdrouts,
         label=label,
-        commands=c,
+        commands=cs,
     )
 
     self.clibrary.ldflags = []
