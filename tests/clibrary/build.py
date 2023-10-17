@@ -33,7 +33,7 @@ assert_that(
     filenamesof(rl.outs),
     contains_inanyorder(
         "$(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a",
-        "$(OBJ)/tests/clibrary+clibrary/$(OBJ)/tests/clibrary+clibrary/library.h",
+        "$(OBJ)/tests/clibrary+clibrary/library.h",
     ),
 )
 

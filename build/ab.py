@@ -209,7 +209,7 @@ class TargetsMap(Type):
         value = self.value
         if type(value) is dict:
             return {
-                targetof(k, cwd=invocation.cwd): targetof(v, cwd=invocation.cwd)
+                k: targetof(v, cwd=invocation.cwd)
                 for k, v in value.items()
             }
         raise ABException(f"wanted a dict of targets, got a {type(value)}")

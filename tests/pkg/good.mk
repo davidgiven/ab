@@ -4,10 +4,9 @@ PACKAGES = $(shell $(PKG_CONFIG) --list-package-names)
 
 
 .PHONY: tests/pkg+fallbacklib
-tests/pkg+fallbacklib $(OBJ)/tests/pkg+fallbacklib/pkg+fallbacklib.a $(OBJ)/tests/pkg+fallbacklib/$(OBJ)/tests/pkg+fallbacklib/fallback.h &:
+tests/pkg+fallbacklib $(OBJ)/tests/pkg+fallbacklib/pkg+fallbacklib.a $(OBJ)/tests/pkg+fallbacklib/fallback.h &:
 	$(hide) $(ECHO) LIB tests/pkg+fallbacklib
 	$(hide) mkdir -p $(OBJ)/tests/pkg+fallbacklib
-	$(hide) mkdir -p $(OBJ)/tests/pkg+fallbacklib/$(OBJ)/tests/pkg+fallbacklib
 	$(hide) mkdir -p $(OBJ)/tests/pkg+fallbacklib
 	$(hide) cp tests/pkg/fallback.h $(OBJ)/tests/pkg+fallbacklib/fallback.h
 ifneq ($(filter missing, $(PACKAGES)),)

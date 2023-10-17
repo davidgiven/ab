@@ -125,7 +125,7 @@ def clibrary(
     hdrins = list(hdrs.values())
     hdrouts = []
     for dest, src in hdrs.items():
-        destf = join(objdir, filenameof(dest))
+        destf = join(objdir, dest)
         dir = dirname(destf)
         if dir:
             cs += ["mkdir -p " + dir]
@@ -137,7 +137,7 @@ def clibrary(
             )
 
         cs += ["cp %s %s" % (s[0], destf)]
-        hdrouts += [destf]
+        hdrouts += [dest]
 
     actualsrcs = findsources(name, srcs, deps + hdrins, cflags, cfile)
     cs += commands if actualsrcs else []
