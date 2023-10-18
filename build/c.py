@@ -81,7 +81,7 @@ def findsources(name, srcs, deps, cflags, filerule):
             for f in ff:
                 objs += [
                     filerule(
-                        name=join(name, f),
+                        name=join(name, f.removeprefix("$(OBJ)/")),
                         srcs=[f],
                         deps=deps,
                         cflags=cflags,

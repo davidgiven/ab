@@ -39,7 +39,7 @@ tests/pkg+cprogram $(OBJ)/tests/pkg+cprogram/pkg+cprogram &: tests/pkg+cprogram/
 	$(hide) $(CC) -o $(OBJ)/tests/pkg+cprogram/pkg+cprogram $(OBJ)/tests/pkg+cprogram/tests/pkg/cfile.c/cfile.o $(PACKAGE_LDFLAGS_missing) $(PACKAGE_LDFLAGS_ab-sample-pkg)
 
 .PHONY: tests/pkg+all
-tests/pkg+all &: $(OBJ)/tests/pkg+cprogram/pkg+cprogram
+tests/pkg+all &: tests/pkg+cprogram
 	$(hide) $(ECHO) EXPORT tests/pkg+all
 AB_LOADED = 1
 

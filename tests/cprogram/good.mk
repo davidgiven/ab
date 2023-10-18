@@ -36,7 +36,7 @@ tests/cprogram+cxxprogram $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram &
 	$(hide) $(CXX) -o $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o -ldflag
 
 .PHONY: tests/cprogram+all
-tests/cprogram+all &: $(OBJ)/tests/cprogram+cfile/cfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram
+tests/cprogram+all &: tests/cprogram+cfile tests/cprogram+cxxfile tests/cprogram+cprogram tests/cprogram+cxxprogram
 	$(hide) $(ECHO) EXPORT tests/cprogram+all
 AB_LOADED = 1
 

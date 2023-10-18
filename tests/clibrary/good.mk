@@ -32,7 +32,7 @@ tests/clibrary+cprogram $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram &: test
 	$(hide) $(CC) -o $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram $(OBJ)/tests/clibrary+cfile/prog.o $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a 
 
 .PHONY: tests/clibrary+all
-tests/clibrary+all &: $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram
+tests/clibrary+all &: tests/clibrary+cprogram
 	$(hide) $(ECHO) EXPORT tests/clibrary+all
 AB_LOADED = 1
 

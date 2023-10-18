@@ -209,8 +209,7 @@ class TargetsMap(Type):
         value = self.value
         if type(value) is dict:
             return {
-                k: targetof(v, cwd=invocation.cwd)
-                for k, v in value.items()
+                k: targetof(v, cwd=invocation.cwd) for k, v in value.items()
             }
         raise ABException(f"wanted a dict of targets, got a {type(value)}")
 
@@ -406,9 +405,9 @@ def normalrule(
 def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
     emitter_rule(
         self.name,
-        flatten(items.values()),
-        filenamesof(items.keys()),
-        filenamesof(deps),
+        targetnamesof(items.values()),
+        targetnamesof(items.keys()),
+        targetnamesof(deps),
     )
     emitter_label(f"EXPORT {self.name}")
 
@@ -434,8 +433,8 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
 
     if self.outs:
         emit("clean::")
-        emit("\t$(hide) rm -f " + (" ".join(self.outs)))
-    self.outs += filenamesof(deps)
+        emit("\t$(hide) rm -f " + (" ".join(filenamesof(self.outs))))
+    self.outs += deps
 
 
 def loadbuildfile(filename):
