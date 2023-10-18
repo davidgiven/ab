@@ -328,7 +328,11 @@ def templateexpand(s, invocation):
 def emitter_rule(name, ins, outs, deps=[]):
     emit("")
     emit(".PHONY:", name)
-    emit(name, outs, "&:", targetnamesof(ins), targetnamesof(deps))
+    if outs:
+        emit(name, ":", outs)
+        emit(outs, "&:", targetnamesof(ins), targetnamesof(deps))
+    else:
+        emit(name, "&:", targetnamesof(ins), targetnamesof(deps))
 
 
 def emitter_label(s):
