@@ -7,7 +7,7 @@ from types import SimpleNamespace
 emit(
     """
 PROTOC ?= protoc
-ifneq ($(filter protobuf, $(PACKAGES)),)
+ifeq ($(filter protobuf, $(PACKAGES)),)
 $(error Required package 'protobuf' not installed.)"
 endif
 """

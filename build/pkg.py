@@ -6,26 +6,26 @@ import subprocess
 emit(
     """
 PKG_CONFIG ?= pkg-config
-PACKAGES = $(shell $(PKG_CONFIG) --list-package-names)
+PACKAGES := $(shell $(PKG_CONFIG) --list-package-names)
 """
 )
 
 
 @Rule
 def package(self, name, package=None, fallback: Target = None):
-    emit("ifneq ($(filter %s, $(PACKAGES)),)" % package)
+    emit("ifeq ($(filter %s, $(PACKAGES)),)" % package)
     if fallback:
-        emit(f"PACKAGE_CFLAGS_{package} =", fallback.clibrary.cflags)
-        emit(f"PACKAGE_LDFLAGS_{package} = ", fallback.clibrary.ldflags)
-        emit(f"PACKAGE_DEP_{package} = ", fallback.name)
+        emit(f"PACKAGE_CFLAGS_{package} :=", fallback.clibrary.cflags)
+        emit(f"PACKAGE_LDFLAGS_{package} := ", fallback.clibrary.ldflags)
+        emit(f"PACKAGE_DEP_{package} := ", fallback.name)
     else:
         emit(f"$(error Required package '{package}' not installed.)")
     emit("else")
-    emit(f"PACKAGE_CFLAGS_{package} = $(shell $(PKG_CONFIG) --cflags {package}")
+    emit(f"PACKAGE_CFLAGS_{package} := $(shell $(PKG_CONFIG) --cflags {package}")
     emit(
-        f"PACKAGE_LDFLAGS_{package} = $(shell $(PKG_CONFIG) --ldflags {package}"
+        f"PACKAGE_LDFLAGS_{package} := $(shell $(PKG_CONFIG) --ldflags {package}"
     )
-    emit(f"PACKAGE_DEP_{package} = ")
+    emit(f"PACKAGE_DEP_{package} := ")
     emit("endif")
 
     self.clibrary = SimpleNamespace()

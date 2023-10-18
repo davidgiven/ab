@@ -1,10 +1,10 @@
 
 PKG_CONFIG ?= pkg-config
-PACKAGES = $(shell $(PKG_CONFIG) --list-package-names)
+PACKAGES := $(shell $(PKG_CONFIG) --list-package-names)
 
 
 PROTOC ?= protoc
-ifneq ($(filter protobuf, $(PACKAGES)),)
+ifeq ($(filter protobuf, $(PACKAGES)),)
 $(error Required package 'protobuf' not installed.)"
 endif
 
