@@ -277,7 +277,7 @@ def filenamesof(*xs):
             if t not in s:
                 s += [t]
         else:
-            for f in [normpath(f) for f in t.outs]:
+            for f in [normpath(f) for f in filenamesof(t.outs)]:
                 if f not in s:
                     s += [f]
     return s
@@ -293,7 +293,7 @@ def targetnamesof(*xs):
         else:
             if x.name not in s:
                 s += [x.name]
-    return list(s)
+    return s
 
 
 def filenameof(x):
@@ -329,10 +329,14 @@ def emitter_rule(name, ins, outs, deps=[]):
     emit("")
     emit(".PHONY:", name)
     if outs:
-        emit(name, ":", outs)
-        emit(outs, "&:", targetnamesof(ins), targetnamesof(deps))
+        emit(name, ":", filenamesof(outs), ";")
+        emit(filenamesof(outs), "&:", filenamesof(ins), filenamesof(deps))
     else:
-        emit(name, "&:", targetnamesof(ins), targetnamesof(deps))
+        emit(name, "&:", filenamesof(ins), filenamesof(deps))
+
+
+def emitter_endrule(name):
+    pass
 
 
 def emitter_label(s):
@@ -377,6 +381,7 @@ def simplerule(
     for c in commands:
         cs += [templateexpand(c, self)]
     emitter_exec(cs)
+    emitter_endrule(self.name)
 
 
 @Rule
@@ -407,14 +412,6 @@ def normalrule(
 
 @Rule
 def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
-    emitter_rule(
-        self.name,
-        targetnamesof(items.values()),
-        targetnamesof(items.keys()),
-        targetnamesof(deps),
-    )
-    emitter_label(f"EXPORT {self.name}")
-
     cs = []
     self.ins = items.values()
     self.outs = []
@@ -433,12 +430,17 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
         cs += ["cp %s %s" % (srcs[0], destf)]
         self.outs += [destf]
 
+    emitter_rule(self.name, items.values(), self.outs, deps)
+    emitter_label(f"EXPORT {self.name}")
+
     emitter_exec(cs)
 
     if self.outs:
         emit("clean::")
         emit("\t$(hide) rm -f " + (" ".join(filenamesof(self.outs))))
     self.outs += deps
+
+    emitter_endrule(self.name)
 
 
 def loadbuildfile(filename):
