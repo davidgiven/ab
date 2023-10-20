@@ -35,14 +35,14 @@ tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb
 $(OBJ)/tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb.cc/test2.pb.o &: $(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb.cc $(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.h
 	$(hide) $(ECHO) CC tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb.cc
 	$(hide) mkdir -p $(OBJ)/tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb.cc
-	$(hide) $(CC) -c -o $(OBJ)/tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb.cc/test2.pb.o $(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb.cc $(CFLAGS) -I$(OBJ)/tests/protobuf+protolib_c_srcs -I$(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf
+	$(hide) $(CC) -c -o $(OBJ)/tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb.cc/test2.pb.o $(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb.cc $(CFLAGS) -I$(OBJ)/tests/protobuf+protolib_c_srcs
 
 .PHONY: tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc
 tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc : $(OBJ)/tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc/test.pb.o ;
 $(OBJ)/tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc/test.pb.o &: $(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc $(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.h
 	$(hide) $(ECHO) CC tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc
 	$(hide) mkdir -p $(OBJ)/tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc
-	$(hide) $(CC) -c -o $(OBJ)/tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc/test.pb.o $(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc $(CFLAGS) -I$(OBJ)/tests/protobuf+protolib_c_srcs -I$(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf
+	$(hide) $(CC) -c -o $(OBJ)/tests/protobuf+protolib_c/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc/test.pb.o $(OBJ)/tests/protobuf+protolib_c_srcs/tests/protobuf/test.pb.cc $(CFLAGS) -I$(OBJ)/tests/protobuf+protolib_c_srcs
 
 .PHONY: tests/protobuf+protolib_c
 tests/protobuf+protolib_c : $(OBJ)/tests/protobuf+protolib_c/protobuf+protolib_c.a $(OBJ)/tests/protobuf+protolib_c/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf+protolib_c/tests/protobuf/test.pb.h ;

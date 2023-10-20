@@ -24,8 +24,6 @@ def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
         except:
             pass
 
-    includeflags = ["-I" + f for f in set(filenamesof(dirs))]
-
     outleaf = stripext(basename(filenameof(srcs[0]))) + suffix
 
     normalrule(
@@ -35,7 +33,7 @@ def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
         outs=[outleaf],
         label=label,
         commands=commands,
-        cflags=cflags + includeflags,
+        cflags=cflags,
     )
 
 

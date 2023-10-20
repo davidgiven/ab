@@ -4,14 +4,14 @@ tests/clibrary+clibrary/tests/clibrary/lib1.c : $(OBJ)/tests/clibrary+clibrary/t
 $(OBJ)/tests/clibrary+clibrary/tests/clibrary/lib1.c/lib1.o &: tests/clibrary/lib1.c tests/clibrary/library.h
 	$(hide) $(ECHO) CC tests/clibrary+clibrary/tests/clibrary/lib1.c
 	$(hide) mkdir -p $(OBJ)/tests/clibrary+clibrary/tests/clibrary/lib1.c
-	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary+clibrary/tests/clibrary/lib1.c/lib1.o tests/clibrary/lib1.c $(CFLAGS) -Itests/clibrary
+	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary+clibrary/tests/clibrary/lib1.c/lib1.o tests/clibrary/lib1.c $(CFLAGS) 
 
 .PHONY: tests/clibrary+clibrary/tests/clibrary/lib2.cc
 tests/clibrary+clibrary/tests/clibrary/lib2.cc : $(OBJ)/tests/clibrary+clibrary/tests/clibrary/lib2.cc/lib2.o ;
 $(OBJ)/tests/clibrary+clibrary/tests/clibrary/lib2.cc/lib2.o &: tests/clibrary/lib2.cc tests/clibrary/library.h
 	$(hide) $(ECHO) CC tests/clibrary+clibrary/tests/clibrary/lib2.cc
 	$(hide) mkdir -p $(OBJ)/tests/clibrary+clibrary/tests/clibrary/lib2.cc
-	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary+clibrary/tests/clibrary/lib2.cc/lib2.o tests/clibrary/lib2.cc $(CFLAGS) -Itests/clibrary
+	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary+clibrary/tests/clibrary/lib2.cc/lib2.o tests/clibrary/lib2.cc $(CFLAGS) 
 
 .PHONY: tests/clibrary+clibrary
 tests/clibrary+clibrary : $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a $(OBJ)/tests/clibrary+clibrary/library.h ;
@@ -27,7 +27,7 @@ tests/clibrary+cfile : $(OBJ)/tests/clibrary+cfile/prog.o ;
 $(OBJ)/tests/clibrary+cfile/prog.o &: tests/clibrary/prog.c $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a $(OBJ)/tests/clibrary+clibrary/library.h
 	$(hide) $(ECHO) CC tests/clibrary+cfile
 	$(hide) mkdir -p $(OBJ)/tests/clibrary+cfile
-	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary+cfile/prog.o tests/clibrary/prog.c $(CFLAGS) -I$(OBJ)/tests/clibrary+clibrary
+	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary+cfile/prog.o tests/clibrary/prog.c $(CFLAGS) 
 
 .PHONY: tests/clibrary+cprogram
 tests/clibrary+cprogram : $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram ;
