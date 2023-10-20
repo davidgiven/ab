@@ -14,16 +14,6 @@ from os.path import *
 
 
 def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
-    dirs = []
-    for d in deps + srcs:
-        for f in filenamesof(d):
-            if f.endswith(".h"):
-                dirs += [dirname(f)]
-        try:
-            dirs += d.clibrary.dirs
-        except:
-            pass
-
     outleaf = stripext(basename(filenameof(srcs[0]))) + suffix
 
     normalrule(
