@@ -92,7 +92,6 @@ def clibrary(
     commands=["$(AR) cqs {outs[0]} {ins}"],
     label="LIB",
 ):
-    objdir = join("$(OBJ)", name)
     if not srcs and not hdrs:
         raise ABException(
             "clibrary contains no sources and no exported headers"
@@ -109,37 +108,63 @@ def clibrary(
         if f.endswith(".h"):
             deps += [f]
 
-    cs = []
+    hdrcs = []
     hdrins = list(hdrs.values())
     hdrouts = []
+    i = 0
     for dest, src in hdrs.items():
-        destf = join(objdir, dest)
-        dir = dirname(destf)
-        if dir:
-            cs += ["mkdir -p " + dir]
-
         s = filenamesof(src)
         if len(s) != 1:
             raise ABException(
                 "a dependency of an export must have exactly one output file"
             )
 
-        cs += ["cp %s %s" % (s[0], destf)]
+        hdrcs += ["cp {ins[" + str(i) + "]} {outs[" + str(i) + "]}"]
         hdrouts += [dest]
+        i = i + 1
 
-    actualsrcs = findsources(name, srcs, deps + hdrins, cflags, cfile)
-    cs += commands if actualsrcs else []
+    if srcs:
+        nr = None
+        if hdrcs:
+            hr = normalrule(
+                name=f"{name}_hdrs",
+                ins=hdrins,
+                outs=hdrouts,
+                label="HEADERS",
+                commands=hdrcs,
+            )
+            hr.materialise()
 
-    normalrule(
-        replaces=self,
-        ins=actualsrcs,
-        outs=[basename(name) + ".a"] + hdrouts,
-        label=label,
-        commands=cs,
-    )
+        actualsrcs = findsources(
+            name,
+            srcs,
+            deps + ([f"{name}_hdrs"] if hr else []),
+            cflags + ([f"-I{hr.normalrule.objdir}"] if hr else []),
+            cfile,
+        )
 
-    self.clibrary.ldflags = []
-    self.clibrary.cflags = ["-I" + objdir]
+        normalrule(
+            replaces=self,
+            ins=actualsrcs,
+            outs=[basename(name) + ".a"],
+            label=label,
+            commands=commands if actualsrcs else [],
+        )
+
+        self.clibrary.ldflags = []
+        self.clibrary.cflags = ["-I" + hr.normalrule.objdir] if hr else []
+    else:
+        r = normalrule(
+            replaces=self,
+            ins=hdrins,
+            outs=hdrouts,
+            label="HEADERS",
+            commands=hdrcs,
+        )
+        r.materialise()
+
+        self.clibrary.ldflags = []
+        self.clibrary.cflags = ["-I" + r.normalrule.objdir]
 
 
 def programimpl(
