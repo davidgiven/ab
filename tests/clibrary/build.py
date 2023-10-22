@@ -31,10 +31,7 @@ assert_that(
 )
 assert_that(
     filenamesof(rl.outs),
-    contains_inanyorder(
-        "$(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a",
-        "$(OBJ)/tests/clibrary+clibrary/library.h",
-    ),
+    contains_inanyorder("$(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a"),
 )
 
 assert_that(rf.name, equal_to("tests/clibrary+cfile"))

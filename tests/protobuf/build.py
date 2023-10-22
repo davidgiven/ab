@@ -48,7 +48,5 @@ assert_that(
     filenamesof(rec.outs),
     contains_inanyorder(
         "$(OBJ)/tests/protobuf+protolib_c/protobuf+protolib_c.a",
-        "$(OBJ)/tests/protobuf+protolib_c/tests/protobuf/test2.pb.h",
-        "$(OBJ)/tests/protobuf+protolib_c/tests/protobuf/test.pb.h",
     ),
 )
