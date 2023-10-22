@@ -3,11 +3,11 @@ from build.protobuf import proto, protocc
 from hamcrest import assert_that, empty, equal_to, contains_inanyorder
 
 re1 = proto(name="protolib", srcs=["./test.proto"])
-re2 = proto(name="protolib2", srcs=["./test2.proto"], deps="+protolib")
+re2 = proto(name="protolib2", srcs=["./test2.proto"], deps=".+protolib")
 
-rec = protocc(name="protolib_c", srcs=["+protolib2"])
+rec = protocc(name="protolib_c", srcs=[".+protolib2"])
 
-re = export(name="all", items={}, deps=["+protolib2", "+protolib_c"])
+re = export(name="all", items={}, deps=[".+protolib2", ".+protolib_c"])
 re.materialise()
 
 assert_that(re1.name, equal_to("tests/protobuf+protolib"))

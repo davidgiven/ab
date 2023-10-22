@@ -8,14 +8,14 @@ rl = clibrary(
     hdrs={"library.h": "./library.h"},
 )
 
-rf = cfile(name="cfile", srcs=["./prog.c"], deps=["+clibrary"])
+rf = cfile(name="cfile", srcs=["./prog.c"], deps=[".+clibrary"])
 
-rp = cprogram(name="cprogram", srcs=["+cfile"], deps=["+clibrary"])
+rp = cprogram(name="cprogram", srcs=[".+cfile"], deps=[".+clibrary"])
 
 re = export(
     name="all",
     items={},
-    deps=["+cprogram"],
+    deps=[".+cprogram"],
 )
 
 re.materialise()

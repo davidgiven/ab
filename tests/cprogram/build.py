@@ -32,7 +32,7 @@ assert_that(
 
 rp = cprogram(
     name="cprogram",
-    srcs=["./implicitcfile.c", "+cfile"],
+    srcs=["./implicitcfile.c", ".+cfile"],
     cflags=["-cprogram-cflag"],
     ldflags=["-ldflag"],
 )
@@ -60,7 +60,7 @@ assert_that(
 
 cxxprogram(
     name="cxxprogram",
-    srcs=["./implicitcxxfile.cc", "+cxxfile"],
+    srcs=["./implicitcxxfile.cc", ".+cxxfile"],
     cflags=["-cxxprogram-cflag"],
     ldflags=["-ldflag"],
 )
@@ -68,5 +68,5 @@ cxxprogram(
 export(
     name="all",
     items={},
-    deps=["+cfile", "+cxxfile", "+cprogram", "+cxxprogram"],
+    deps=[".+cfile", ".+cxxfile", ".+cprogram", ".+cxxprogram"],
 )
