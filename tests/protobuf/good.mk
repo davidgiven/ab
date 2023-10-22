@@ -1,6 +1,6 @@
 
 PKG_CONFIG ?= pkg-config
-PACKAGES := $(shell $(PKG_CONFIG) --list-package-names)
+PACKAGES := $(shell $(PKG_CONFIG) --list-all | cut -d' ' -f1)
 
 
 PROTOC ?= protoc
