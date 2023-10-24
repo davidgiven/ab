@@ -11,6 +11,7 @@ from build.ab import (
     stripext,
 )
 from os.path import *
+from types import SimpleNamespace
 
 
 def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
@@ -60,38 +61,24 @@ def cxxfile(
 def findsources(name, srcs, deps, cflags, filerule):
     objs = []
     for s in flatten(srcs):
-        ff = [
-            f
-            for f in filenamesof(s)
-            if f.endswith(".c") or f.endswith(".cc") or f.endswith(".cpp")
-        ]
-        if ff:
-            for f in ff:
-                objs += [
-                    filerule(
-                        name=join(name, f.removeprefix("$(OBJ)/")),
-                        srcs=[f],
-                        deps=deps,
-                        cflags=cflags,
-                    )
-                ]
+        if hasattr(s, "cfile") or hasattr(s, "cxxfile"):
+            objs += [s]
         else:
-            if s not in objs:
-                objs += [s]
+            objs += [
+                filerule(
+                    name=join(name, f.removeprefix("$(OBJ)/")),
+                    srcs=[f],
+                    deps=deps,
+                    cflags=cflags,
+                )
+                for f in filenamesof(s)
+                if f.endswith(".c") or f.endswith(".cc") or f.endswith(".cpp")
+            ]
+
     return objs
 
 
-@Rule
-def clibrary(
-    self,
-    name,
-    srcs: Targets = [],
-    deps: Targets = [],
-    hdrs: TargetsMap = {},
-    cflags=[],
-    commands=["$(AR) cqs {outs[0]} {ins}"],
-    label="LIB",
-):
+def libraryimpl(self, name, srcs, deps, hdrs, cflags, commands, label, kind):
     if not srcs and not hdrs:
         raise ABException(
             "clibrary contains no sources and no exported headers"
@@ -124,6 +111,8 @@ def clibrary(
         hdrouts += [dest]
         i = i + 1
 
+    if not hasattr(self, "clibrary"):
+        self.clibrary = SimpleNamespace()
     if srcs:
         hr = None
         if hdrcs:
@@ -141,7 +130,7 @@ def clibrary(
             srcs,
             deps + ([f"{name}_hdrs"] if hr else []),
             cflags + ([f"-I{hr.normalrule.objdir}"] if hr else []),
-            cfile,
+            kind,
         )
 
         normalrule(
@@ -168,6 +157,38 @@ def clibrary(
         self.clibrary.cflags = ["-I" + r.normalrule.objdir]
 
 
+@Rule
+def clibrary(
+    self,
+    name,
+    srcs: Targets = [],
+    deps: Targets = [],
+    hdrs: TargetsMap = {},
+    cflags=[],
+    commands=["$(AR) cqs {outs[0]} {ins}"],
+    label="LIB",
+):
+    return libraryimpl(
+        self, name, srcs, deps, hdrs, cflags, commands, label, cfile
+    )
+
+
+@Rule
+def cxxlibrary(
+    self,
+    name,
+    srcs: Targets = [],
+    deps: Targets = [],
+    hdrs: TargetsMap = {},
+    cflags=[],
+    commands=["$(AR) cqs {outs[0]} {ins}"],
+    label="LIB",
+):
+    return libraryimpl(
+        self, name, srcs, deps, hdrs, cflags, commands, label, cxxfile
+    )
+
+
 def programimpl(
     self, name, srcs, deps, cflags, ldflags, commands, label, filerule, kind
 ):
@@ -180,12 +201,10 @@ def programimpl(
 
     deps += [f for f in filenamesof(srcs) if f.endswith(".h")]
 
+    ars = [f for f in filenamesof(libraries) if f.endswith(".a")]
     normalrule(
         replaces=self,
-        ins=(
-            findsources(name, srcs, deps, cflags, filerule)
-            + [f for f in filenamesof(libraries) if f.endswith(".a")]
-        ),
+        ins=(findsources(name, srcs, deps, cflags, filerule) + ars + ars),
         outs=[basename(name)],
         deps=deps,
         label=label,
@@ -202,9 +221,7 @@ def cprogram(
     deps: Targets = [],
     cflags=[],
     ldflags=[],
-    commands=[
-        "$(CC) -o {outs[0]} -Wl,--start-group {ins} -Wl,--end-group {ldflags}"
-    ],
+    commands=["$(CC) -o {outs[0]} {ins} {ldflags} $(LDFLAGS)"],
     label="CLINK",
 ):
     programimpl(
@@ -229,9 +246,7 @@ def cxxprogram(
     deps: Targets = [],
     cflags=[],
     ldflags=[],
-    commands=[
-        "$(CXX) -o {outs[0]} -Wl,--start-group {ins} -Wl,--end-group {ldflags}"
-    ],
+    commands=["$(CXX) -o {outs[0]} {ins} {ldflags} $(LDFLAGS)"],
     label="CXXLINK",
 ):
     programimpl(

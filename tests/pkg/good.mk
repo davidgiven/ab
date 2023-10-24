@@ -38,7 +38,7 @@ tests/pkg+cprogram : $(OBJ)/tests/pkg+cprogram/pkg+cprogram ;
 $(OBJ)/tests/pkg+cprogram/pkg+cprogram &: $(OBJ)/tests/pkg+cprogram/tests/pkg/cfile.c/cfile.o $(PACKAGE_DEP_missing) $(PACKAGE_DEP_ab-sample-pkg)
 	$(hide) $(ECHO) CLINK tests/pkg+cprogram
 	$(hide) mkdir -p $(OBJ)/tests/pkg+cprogram
-	$(hide) $(CC) -o $(OBJ)/tests/pkg+cprogram/pkg+cprogram -Wl,--start-group $(OBJ)/tests/pkg+cprogram/tests/pkg/cfile.c/cfile.o -Wl,--end-group $(PACKAGE_LDFLAGS_missing) $(PACKAGE_LDFLAGS_ab-sample-pkg)
+	$(hide) $(CC) -o $(OBJ)/tests/pkg+cprogram/pkg+cprogram $(OBJ)/tests/pkg+cprogram/tests/pkg/cfile.c/cfile.o $(PACKAGE_LDFLAGS_missing) $(PACKAGE_LDFLAGS_ab-sample-pkg) $(LDFLAGS)
 
 .PHONY: tests/pkg+all
 tests/pkg+all &: $(OBJ)/tests/pkg+cprogram/pkg+cprogram

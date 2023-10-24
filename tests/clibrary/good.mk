@@ -36,10 +36,10 @@ $(OBJ)/tests/clibrary+cfile/prog.o &: tests/clibrary/prog.c $(OBJ)/tests/clibrar
 
 .PHONY: tests/clibrary+cprogram
 tests/clibrary+cprogram : $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram ;
-$(OBJ)/tests/clibrary+cprogram/clibrary+cprogram &: $(OBJ)/tests/clibrary+cfile/prog.o $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a
+$(OBJ)/tests/clibrary+cprogram/clibrary+cprogram &: $(OBJ)/tests/clibrary+cfile/prog.o $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a
 	$(hide) $(ECHO) CLINK tests/clibrary+cprogram
 	$(hide) mkdir -p $(OBJ)/tests/clibrary+cprogram
-	$(hide) $(CC) -o $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram -Wl,--start-group $(OBJ)/tests/clibrary+cfile/prog.o $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a -Wl,--end-group 
+	$(hide) $(CC) -o $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram $(OBJ)/tests/clibrary+cfile/prog.o $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a  $(LDFLAGS)
 
 .PHONY: tests/clibrary+all
 tests/clibrary+all &: $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram

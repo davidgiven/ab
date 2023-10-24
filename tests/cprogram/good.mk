@@ -25,7 +25,7 @@ tests/cprogram+cprogram : $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram ;
 $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram &: $(OBJ)/tests/cprogram+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cfile.o
 	$(hide) $(ECHO) CLINK tests/cprogram+cprogram
 	$(hide) mkdir -p $(OBJ)/tests/cprogram+cprogram
-	$(hide) $(CC) -o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram -Wl,--start-group $(OBJ)/tests/cprogram+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cfile.o -Wl,--end-group -ldflag
+	$(hide) $(CC) -o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cfile.o -ldflag $(LDFLAGS)
 
 .PHONY: tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc
 tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc : $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o ;
@@ -39,7 +39,7 @@ tests/cprogram+cxxprogram : $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram
 $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram &: $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o
 	$(hide) $(ECHO) CXXLINK tests/cprogram+cxxprogram
 	$(hide) mkdir -p $(OBJ)/tests/cprogram+cxxprogram
-	$(hide) $(CXX) -o $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram -Wl,--start-group $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o -Wl,--end-group -ldflag
+	$(hide) $(CXX) -o $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o -ldflag $(LDFLAGS)
 
 .PHONY: tests/cprogram+all
 tests/cprogram+all &: $(OBJ)/tests/cprogram+cfile/cfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram
