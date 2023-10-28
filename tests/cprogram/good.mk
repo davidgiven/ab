@@ -21,11 +21,11 @@ $(OBJ)/tests/cprogram+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o &:
 	$(hide) $(CC) -c -o $(OBJ)/tests/cprogram+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o tests/cprogram/implicitcfile.c $(CFLAGS) -cprogram-cflag
 
 .PHONY: tests/cprogram+cprogram
-tests/cprogram+cprogram : $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram ;
-$(OBJ)/tests/cprogram+cprogram/cprogram+cprogram &: $(OBJ)/tests/cprogram+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cfile.o
+tests/cprogram+cprogram : $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram$(EXT) ;
+$(OBJ)/tests/cprogram+cprogram/cprogram+cprogram$(EXT) &: $(OBJ)/tests/cprogram+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cfile.o
 	$(hide) $(ECHO) CLINK tests/cprogram+cprogram
 	$(hide) mkdir -p $(OBJ)/tests/cprogram+cprogram
-	$(hide) $(CC) -o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cfile.o -ldflag $(LDFLAGS)
+	$(hide) $(CC) -o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram$(EXT) $(OBJ)/tests/cprogram+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram+cfile/cfile.o -ldflag $(LDFLAGS)
 
 .PHONY: tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc
 tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc : $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o ;
@@ -35,14 +35,14 @@ $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfi
 	$(hide) $(CXX) -c -o $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o tests/cprogram/implicitcxxfile.cc $(CFLAGS) -cxxprogram-cflag
 
 .PHONY: tests/cprogram+cxxprogram
-tests/cprogram+cxxprogram : $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram ;
-$(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram &: $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o
+tests/cprogram+cxxprogram : $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram$(EXT) ;
+$(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram$(EXT) &: $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o
 	$(hide) $(ECHO) CXXLINK tests/cprogram+cxxprogram
 	$(hide) mkdir -p $(OBJ)/tests/cprogram+cxxprogram
-	$(hide) $(CXX) -o $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o -ldflag $(LDFLAGS)
+	$(hide) $(CXX) -o $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram$(EXT) $(OBJ)/tests/cprogram+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o -ldflag $(LDFLAGS)
 
 .PHONY: tests/cprogram+all
-tests/cprogram+all &: $(OBJ)/tests/cprogram+cfile/cfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram
+tests/cprogram+all &: $(OBJ)/tests/cprogram+cfile/cfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram$(EXT) $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram$(EXT)
 	$(hide) $(ECHO) EXPORT tests/cprogram+all
 AB_LOADED = 1
 

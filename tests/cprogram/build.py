@@ -55,7 +55,9 @@ assert_that(
 )
 assert_that(
     filenamesof(rp.outs),
-    contains_inanyorder("$(OBJ)/tests/cprogram+cprogram/cprogram+cprogram"),
+    contains_inanyorder(
+        "$(OBJ)/tests/cprogram+cprogram/cprogram+cprogram$(EXT)"
+    ),
 )
 
 cxxprogram(

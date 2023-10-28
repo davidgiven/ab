@@ -13,6 +13,11 @@ hide = @
 PKG_CONFIG ?= pkg-config
 ECHO ?= echo
 
+ifeq ($(OS), Windows_NT)
+	EXT ?= .exe
+endif
+EXT ?=
+
 include $(OBJ)/build.mk
 
 .PHONY: update-ab
@@ -24,7 +29,7 @@ update-ab:
 
 .PHONY: clean
 clean::
-	@echo [-/-] CLEAN
+	@echo CLEAN
 	$(hide) rm -rf $(OBJ) bin
 
 export PYTHONHASHSEED = 1

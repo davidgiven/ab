@@ -61,30 +61,30 @@ def cxxfile(
 def findsources(name, srcs, deps, cflags, filerule):
     objs = []
     for s in flatten(srcs):
-        if hasattr(s, "cfile") or hasattr(s, "cxxfile"):
+        objs += [
+            filerule(
+                name=join(name, f.removeprefix("$(OBJ)/")),
+                srcs=[f],
+                deps=deps,
+                cflags=cflags,
+            )
+            for f in filenamesof(s)
+            if f.endswith(".c") or f.endswith(".cc") or f.endswith(".cpp")
+        ]
+        if any(f.endswith(".o") for f in filenamesof(s)):
             objs += [s]
-        else:
-            objs += [
-                filerule(
-                    name=join(name, f.removeprefix("$(OBJ)/")),
-                    srcs=[f],
-                    deps=deps,
-                    cflags=cflags,
-                )
-                for f in filenamesof(s)
-                if f.endswith(".c") or f.endswith(".cc") or f.endswith(".cpp")
-            ]
 
     return objs
 
 
-def libraryimpl(self, name, srcs, deps, hdrs, cflags, commands, label, kind):
+def libraryimpl(
+    self, name, srcs, deps, hdrs, cflags, ldflags, commands, label, kind
+):
     if not srcs and not hdrs:
         raise ABException(
             "clibrary contains no sources and no exported headers"
         )
 
-    ldflags = []
     libraries = [d for d in deps if hasattr(d, "clibrary")]
     for library in libraries:
         if library.clibrary.cflags:
@@ -165,11 +165,12 @@ def clibrary(
     deps: Targets = [],
     hdrs: TargetsMap = {},
     cflags=[],
+    ldflags=[],
     commands=["$(AR) cqs {outs[0]} {ins}"],
     label="LIB",
 ):
     return libraryimpl(
-        self, name, srcs, deps, hdrs, cflags, commands, label, cfile
+        self, name, srcs, deps, hdrs, cflags, ldflags, commands, label, cfile
     )
 
 
@@ -181,11 +182,12 @@ def cxxlibrary(
     deps: Targets = [],
     hdrs: TargetsMap = {},
     cflags=[],
+    ldflags=[],
     commands=["$(AR) cqs {outs[0]} {ins}"],
     label="LIB",
 ):
     return libraryimpl(
-        self, name, srcs, deps, hdrs, cflags, commands, label, cxxfile
+        self, name, srcs, deps, hdrs, cflags, ldflags, commands, label, cxxfile
     )
 
 
@@ -205,7 +207,7 @@ def programimpl(
     normalrule(
         replaces=self,
         ins=(findsources(name, srcs, deps, cflags, filerule) + ars + ars),
-        outs=[basename(name)],
+        outs=[basename(name) + "$(EXT)"],
         deps=deps,
         label=label,
         commands=commands,
