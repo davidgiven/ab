@@ -63,6 +63,6 @@ $(OBJ)/tests/protobuf+protolib_c/protobuf+protolib_c.a &: $(OBJ)/tests/protobuf+
 
 .PHONY: tests/protobuf+all
 tests/protobuf+all &: $(OBJ)/tests/protobuf+protolib2/tests/protobuf+protolib2.descriptor $(OBJ)/tests/protobuf+protolib_c/protobuf+protolib_c.a
-	$(hide) $(ECHO) EXPORT tests/protobuf+all
+	@
 AB_LOADED = 1
 

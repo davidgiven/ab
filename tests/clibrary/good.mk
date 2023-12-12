@@ -43,6 +43,6 @@ $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram$(EXT) &: $(OBJ)/tests/clibrary+
 
 .PHONY: tests/clibrary+all
 tests/clibrary+all &: $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram$(EXT)
-	$(hide) $(ECHO) EXPORT tests/clibrary+all
+	@
 AB_LOADED = 1
 

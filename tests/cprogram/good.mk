@@ -43,6 +43,6 @@ $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram$(EXT) &: $(OBJ)/tests/cprog
 
 .PHONY: tests/cprogram+all
 tests/cprogram+all &: $(OBJ)/tests/cprogram+cfile/cfile.o $(OBJ)/tests/cprogram+cxxfile/cxxfile.o $(OBJ)/tests/cprogram+cprogram/cprogram+cprogram$(EXT) $(OBJ)/tests/cprogram+cxxprogram/cprogram+cxxprogram$(EXT)
-	$(hide) $(ECHO) EXPORT tests/cprogram+all
+	@
 AB_LOADED = 1
 
