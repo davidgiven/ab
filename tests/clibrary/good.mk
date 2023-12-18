@@ -32,7 +32,7 @@ tests/clibrary+cfile : $(OBJ)/tests/clibrary+cfile/prog.o ;
 $(OBJ)/tests/clibrary+cfile/prog.o &: tests/clibrary/prog.c $(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a
 	$(hide) $(ECHO) CC tests/clibrary+cfile
 	$(hide) mkdir -p $(OBJ)/tests/clibrary+cfile
-	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary+cfile/prog.o tests/clibrary/prog.c $(CFLAGS) 
+	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary+cfile/prog.o tests/clibrary/prog.c $(CFLAGS) -I$(OBJ)/tests/clibrary+clibrary_hdrs
 
 .PHONY: tests/clibrary+cprogram
 tests/clibrary+cprogram : $(OBJ)/tests/clibrary+cprogram/clibrary+cprogram$(EXT) ;

@@ -4,6 +4,7 @@ from build.ab import (
     Rule,
     Targets,
     TargetsMap,
+    List,
     filenameof,
     flatten,
     filenamesof,
@@ -15,6 +16,11 @@ from types import SimpleNamespace
 
 
 def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
+    libraries = [d for d in deps if hasattr(d, "clibrary")]
+    for library in libraries:
+        if library.clibrary.cflags:
+            cflags += library.clibrary.cflags
+
     outleaf = stripext(basename(filenameof(srcs[0]))) + suffix
 
     normalrule(
@@ -32,9 +38,9 @@ def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
 def cfile(
     self,
     name,
-    srcs: Targets = [],
-    deps: Targets = [],
-    cflags=[],
+    srcs: Targets = None,
+    deps: Targets = None,
+    cflags: List = [],
     suffix=".o",
     commands=["$(CC) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"],
     label="CC",
@@ -46,9 +52,9 @@ def cfile(
 def cxxfile(
     self,
     name,
-    srcs: Targets = [],
-    deps: Targets = [],
-    cflags=[],
+    srcs: Targets = None,
+    deps: Targets = None,
+    cflags: List = [],
     suffix=".o",
     commands=["$(CXX) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"],
     label="CXX",
@@ -69,7 +75,11 @@ def findsources(name, srcs, deps, cflags, filerule):
                 cflags=cflags,
             )
             for f in filenamesof(s)
-            if f.endswith(".c") or f.endswith(".cc") or f.endswith(".cpp")
+            if f.endswith(".c")
+            or f.endswith(".cc")
+            or f.endswith(".cpp")
+            or f.endswith(".S")
+            or f.endswith(".s")
         ]
         if any(f.endswith(".o") for f in filenamesof(s)):
             objs += [s]
@@ -161,16 +171,26 @@ def libraryimpl(
 def clibrary(
     self,
     name,
-    srcs: Targets = [],
-    deps: Targets = [],
+    srcs: Targets = None,
+    deps: Targets = None,
     hdrs: TargetsMap = {},
-    cflags=[],
-    ldflags=[],
+    cflags: List = [],
+    ldflags: List = [],
     commands=["$(AR) cqs {outs[0]} {ins}"],
     label="LIB",
+    cfilerule=cfile,
 ):
     return libraryimpl(
-        self, name, srcs, deps, hdrs, cflags, ldflags, commands, label, cfile
+        self,
+        name,
+        srcs,
+        deps,
+        hdrs,
+        cflags,
+        ldflags,
+        commands,
+        label,
+        cfilerule,
     )
 
 
@@ -178,11 +198,11 @@ def clibrary(
 def cxxlibrary(
     self,
     name,
-    srcs: Targets = [],
-    deps: Targets = [],
+    srcs: Targets = None,
+    deps: Targets = None,
     hdrs: TargetsMap = {},
-    cflags=[],
-    ldflags=[],
+    cflags: List = [],
+    ldflags: List = [],
     commands=["$(AR) cqs {outs[0]} {ins}"],
     label="LIB",
 ):
@@ -219,12 +239,14 @@ def programimpl(
 def cprogram(
     self,
     name,
-    srcs: Targets = [],
-    deps: Targets = [],
-    cflags=[],
-    ldflags=[],
+    srcs: Targets = None,
+    deps: Targets = None,
+    cflags: List = [],
+    ldflags: List = [],
     commands=["$(CC) -o {outs[0]} {ins} {ldflags} $(LDFLAGS)"],
     label="CLINK",
+    cfilerule=cfile,
+    cfilekind="cprogram",
 ):
     programimpl(
         self,
@@ -235,8 +257,8 @@ def cprogram(
         ldflags,
         commands,
         label,
-        cfile,
-        "cprogram",
+        cfilerule,
+        cfilekind,
     )
 
 
@@ -244,10 +266,10 @@ def cprogram(
 def cxxprogram(
     self,
     name,
-    srcs: Targets = [],
-    deps: Targets = [],
-    cflags=[],
-    ldflags=[],
+    srcs: Targets = None,
+    deps: Targets = None,
+    cflags: List = [],
+    ldflags: List = [],
     commands=["$(CXX) -o {outs[0]} {ins} {ldflags} $(LDFLAGS)"],
     label="CXXLINK",
 ):
