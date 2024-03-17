@@ -9,9 +9,18 @@ CXX ?= g++
 AR ?= ar
 CFLAGS ?= -g -Og
 LDFLAGS ?= -g
-hide = @
 PKG_CONFIG ?= pkg-config
 ECHO ?= echo
+
+ifdef VERBOSE
+	hide =
+else
+	ifdef V
+		hide =
+	else
+		hide = @
+	endif
+endif
 
 ifeq ($(OS), Windows_NT)
 	EXT ?= .exe
@@ -19,6 +28,9 @@ endif
 EXT ?=
 
 include $(OBJ)/build.mk
+
+.SECONDARY:
+.DELETE_ON_ERROR:
 
 .PHONY: update-ab
 update-ab:
