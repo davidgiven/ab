@@ -1,13 +1,14 @@
 from build.ab import normalrule, Rule, Target, export
 
 TESTS = [
-    "simple",
-    "dependency",
-    "cprogram",
-    "pkg",
     "clibrary",
-    "protobuf",
+    "cprogram",
+    "dependency",
     "export",
+    "invocation",
+    "pkg",
+    "protobuf",
+    "simple",
 ]
 
 

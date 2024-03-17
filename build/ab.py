@@ -81,6 +81,12 @@ class Invocation:
     outs = None
     binding = None
 
+    def __eq__(self, other):
+        return self.name is other.name
+
+    def __hash__(self):
+        return id(self.name)
+
     def materialise(self, replacing=False):
         if self in unmaterialisedTargets:
             if not replacing and (self in materialisingStack):
