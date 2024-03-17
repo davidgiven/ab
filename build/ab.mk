@@ -33,7 +33,7 @@ clean::
 	$(hide) rm -rf $(OBJ) bin
 
 export PYTHONHASHSEED = 1
-build-files = $(shell find . -name 'build.py') build/*.py config.py
+build-files = $(shell find . -name 'build.py') $(wildcard build/*.py) $(wildcard config.py)
 $(OBJ)/build.mk: Makefile $(build-files)
 	@echo "AB"
 	@mkdir -p $(OBJ)

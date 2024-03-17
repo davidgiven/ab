@@ -19,32 +19,32 @@ re = export(
 )
 
 re.materialise()
-assert_that(re.name, equal_to("tests/clibrary+all"))
+assert_that(re.name, equal_to("tests/clibrary/+all"))
 
-assert_that(rl.name, equal_to("tests/clibrary+clibrary"))
+assert_that(rl.name, equal_to("tests/clibrary/+clibrary"))
 assert_that(
     targetnamesof(rl.ins),
     contains_inanyorder(
-        "tests/clibrary+clibrary/tests/clibrary/lib1.c",
-        "tests/clibrary+clibrary/tests/clibrary/lib2.cc",
+        "tests/clibrary/+clibrary/tests/clibrary/lib1.c",
+        "tests/clibrary/+clibrary/tests/clibrary/lib2.cc",
     ),
 )
 assert_that(
     filenamesof(rl.outs),
-    contains_inanyorder("$(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a"),
+    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary/+clibrary.a"),
 )
 
-assert_that(rf.name, equal_to("tests/clibrary+cfile"))
+assert_that(rf.name, equal_to("tests/clibrary/+cfile"))
 assert_that(targetnamesof(rf.ins), contains_inanyorder("tests/clibrary/prog.c"))
 assert_that(
-    targetnamesof(rf.deps), contains_inanyorder("tests/clibrary+clibrary")
+    targetnamesof(rf.deps), contains_inanyorder("tests/clibrary/+clibrary")
 )
 
-assert_that(rp.name, equal_to("tests/clibrary+cprogram"))
+assert_that(rp.name, equal_to("tests/clibrary/+cprogram"))
 assert_that(
     targetnamesof(rp.ins),
     contains_inanyorder(
-        "tests/clibrary+cfile",
-        "$(OBJ)/tests/clibrary+clibrary/clibrary+clibrary.a",
+        "tests/clibrary/+cfile",
+        "$(OBJ)/tests/clibrary/+clibrary/+clibrary.a",
     ),
 )

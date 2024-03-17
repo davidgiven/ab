@@ -1,5 +1,4 @@
 from build.ab import simplerule, export
-from hamcrest import assert_that, equal_to, contains_inanyorder, empty
 
 ra = simplerule(name="r1", ins=[], outs=["out1"])
 rb = simplerule(name="r2", ins=[], outs=["out2"])

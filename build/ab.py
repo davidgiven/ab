@@ -150,7 +150,7 @@ def Rule(func):
             if name.startswith("./"):
                 name = join(cwd, name)
             elif "+" not in name:
-                name = cwd + "+" + name
+                name = join(cwd, "+" + name)
 
             i.name = name
             i.localname = name.split("+")[-1]
@@ -259,9 +259,10 @@ def targetof(s, cwd):
             return fileinvocation(s)
 
     (path, target) = s.split("+", 2)
+    s = join(path, "+"+target)
     loadbuildfile(join(path, "build.py"))
     if not s in targets:
-        raise ABException(f"build file at {path} doesn't contain +{target}")
+        raise ABException(f"build file at {path} doesn't contain +{target} when trying to resolve {s}")
     i = targets[s]
     i.materialise()
     return i
@@ -478,9 +479,11 @@ def main():
         loadbuildfile(f)
 
     for t in flatten([a.split(",") for a in args.targets]):
-        if t not in targets:
-            raise ABException("target %s is not defined" % t)
-        targets[t].materialise()
+        (path, target) = t.split("+", 2)
+        s = join(path, "+"+target)
+        if s not in targets:
+            raise ABException("target %s is not defined" % s)
+        targets[s].materialise()
     emit("AB_LOADED = 1\n")
 
 
