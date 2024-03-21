@@ -6,7 +6,7 @@ PACKAGES := $(shell $(PKG_CONFIG) --list-all | cut -d' ' -f1 | sort)
 .PHONY: tests/pkg/+fallbacklib
 tests/pkg/+fallbacklib : $(OBJ)/tests/pkg/+fallbacklib/fallback.h ;
 $(OBJ)/tests/pkg/+fallbacklib/fallback.h &: tests/pkg/fallback.h
-	$(hide) $(ECHO) HEADERS tests/pkg/+fallbacklib
+	$(hide) $(ECHO) CHEADERS tests/pkg/+fallbacklib
 	$(hide) mkdir -p $(OBJ)/tests/pkg/+fallbacklib
 	$(hide) cp tests/pkg/fallback.h $(OBJ)/tests/pkg/+fallbacklib/fallback.h
 ifeq ($(filter missing, $(PACKAGES)),)
@@ -31,7 +31,7 @@ tests/pkg/+cprogram/tests/pkg/cfile.c : $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfi
 $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c/cfile.o &: tests/pkg/cfile.c $(PACKAGE_DEP_missing) $(PACKAGE_DEP_ab-sample-pkg)
 	$(hide) $(ECHO) CC tests/pkg/+cprogram/tests/pkg/cfile.c
 	$(hide) mkdir -p $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c
-	$(hide) $(CC) -c -o $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c/cfile.o tests/pkg/cfile.c $(CFLAGS) $(PACKAGE_CFLAGS_missing) $(PACKAGE_CFLAGS_ab-sample-pkg) $(PACKAGE_CFLAGS_missing) $(PACKAGE_CFLAGS_ab-sample-pkg)
+	$(hide) $(CC) -c -o $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c/cfile.o tests/pkg/cfile.c $(CFLAGS) $(PACKAGE_CFLAGS_missing) $(PACKAGE_CFLAGS_ab-sample-pkg)
 
 .PHONY: tests/pkg/+cprogram
 tests/pkg/+cprogram : $(OBJ)/tests/pkg/+cprogram/+cprogram$(EXT) ;

@@ -33,7 +33,7 @@ $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc $(OBJ)/tests/p
 .PHONY: tests/protobuf/+protolib_c_hdrs
 tests/protobuf/+protolib_c_hdrs : $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h ;
 $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h &: $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.h
-	$(hide) $(ECHO) HEADERS tests/protobuf/+protolib_c_hdrs
+	$(hide) $(ECHO) CHEADERS tests/protobuf/+protolib_c_hdrs
 	$(hide) mkdir -p $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf
 	$(hide) cp $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test2.pb.h
 	$(hide) cp $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.h $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h

@@ -11,6 +11,8 @@ import re
 import sys
 import builtins
 import string
+import fnmatch
+import traceback
 
 defaultGlobals = {}
 targets = {}
@@ -77,6 +79,12 @@ class Invocation:
     ins = None
     outs = None
     binding = None
+    attr = None
+    attrdeps = None
+
+    def __init__(self):
+        self.attr = SimpleNamespace()
+        self.attrdeps = SimpleNamespace()
 
     def __eq__(self, other):
         return self.name is other.name
@@ -91,6 +99,7 @@ class Invocation:
                 for i in materialisingStack:
                     print(f"  {i.name}")
                 print(f"  {self.name}")
+                traceback.print_stack()
                 sys.exit(1)
 
             materialisingStack.append(self)
@@ -118,9 +127,7 @@ class Invocation:
                 self.callback(**self.args)
                 cwdStack.pop()
             except BaseException as e:
-                print(
-                    f"Error materialising {self} ({id(self)}): {self.callback}"
-                )
+                print(f"Error materialising {self}: {self.callback}")
                 print(f"Arguments: {self.args}")
                 raise e
 
@@ -131,6 +138,16 @@ class Invocation:
                 unmaterialisedTargets.remove(self)
 
             materialisingStack.pop()
+
+    def bubbleattr(self, attr, xs):
+        xs = targetsof(xs, cwd=self.cwd)
+        a = set()
+        if hasattr(self.attrdeps, attr):
+            a = getattr(self.attrdeps, attr)
+
+        for x in xs:
+            a.add(x)
+        setattr(self.attrdeps, attr, a)
 
     def __repr__(self):
         return "<Invocation %s>" % self.name
@@ -165,12 +182,11 @@ def Rule(func):
             i = replaces
             name = i.name
         else:
-            raise ABException("you must supply either name or replaces")
+            raise ABException("you must supply either 'name' or 'replaces'")
 
         i.cwd = cwd
         i.types = func.__annotations__
         i.callback = func
-        setattr(i, func.__name__, SimpleNamespace())
 
         i.binding = sig.bind(name=name, self=i, **kwargs)
         i.binding.apply_defaults()
@@ -279,10 +295,12 @@ def targetof(s, cwd):
             return fileinvocation(s)
 
     (path, target) = s.split("+", 2)
-    s = join(path, "+"+target)
+    s = join(path, "+" + target)
     loadbuildfile(join(path, "build.py"))
     if not s in targets:
-        raise ABException(f"build file at {path} doesn't contain +{target} when trying to resolve {s}")
+        raise ABException(
+            f"build file at {path} doesn't contain +{target} when trying to resolve {s}"
+        )
     i = targets[s]
     i.materialise()
     return i
@@ -303,6 +321,10 @@ def filenamesof(*xs):
     return s
 
 
+def filenamesmatchingof(xs, pattern):
+    return fnmatch.filter(filenamesof(xs), pattern)
+
+
 def targetnamesof(*xs):
     s = []
     for x in flatten(xs):
@@ -321,6 +343,23 @@ def filenameof(x):
     if len(xs) != 1:
         raise ABException("expected a single item")
     return xs[0]
+
+
+def bubbledattrsof(x, attr):
+    alltargets = set()
+    pending = set(x) if isinstance(x, Iterable) else {x}
+    while pending:
+        t = pending.pop()
+        if t not in alltargets:
+            alltargets.add(t)
+            if hasattr(t.attrdeps, attr):
+                pending.update(getattr(t.attrdeps, attr))
+
+    values = []
+    for t in alltargets:
+        if hasattr(t.attr, attr):
+            values += getattr(t.attr, attr)
+    return values
 
 
 def stripext(path):
@@ -397,6 +436,7 @@ def simplerule(
     emitter_label(templateexpand("{label} {name}", self))
 
     dirs = []
+    cs = []
     for out in filenamesof(outs):
         dir = dirname(out)
         if dir and dir not in dirs:
@@ -423,7 +463,7 @@ def normalrule(
 ):
     objdir = objdir or join("$(OBJ)", name)
 
-    self.normalrule.objdir = objdir
+    self.attr.objdir = objdir
     simplerule(
         replaces=self,
         ins=ins,
@@ -505,7 +545,7 @@ def main():
 
     for t in flatten([a.split(",") for a in args.targets]):
         (path, target) = t.split("+", 2)
-        s = join(path, "+"+target)
+        s = join(path, "+" + target)
         if s not in targets:
             raise ABException("target %s is not defined" % s)
         targets[s].materialise()

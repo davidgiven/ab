@@ -1,21 +1,25 @@
 from build.ab import export, targetnamesof, filenamesof
-from build.c import clibrary, cprogram, cfile
+from build.c import clibrary, cprogram, cfile, cheaders
 from hamcrest import assert_that, equal_to, empty, contains_inanyorder
 
-rl = clibrary(
-    name="clibrary",
-    srcs=["./lib1.c", "./lib2.cc"],
+hl = cheaders(
+    name="cheaders",
     hdrs={"library.h": "./library.h"},
+    caller_cflags=["--cheader-cflags"],
 )
 
-rf = cfile(name="cfile", srcs=["./prog.c"], deps=[".+clibrary"])
+rl = clibrary(
+    name="clibrary", srcs=["./lib1.c", "./lib2.cc"], deps=[".+cheaders"]
+)
+
+rf = cfile(name="cfile", srcs=["./prog.c"], deps=[".+cheaders"])
 
 rp = cprogram(name="cprogram", srcs=[".+cfile"], deps=[".+clibrary"])
 
 re = export(
     name="all",
     items={},
-    deps=[".+cprogram"],
+    deps=[".+cprogram", ".+cheaders"],
 )
 
 re.materialise()
@@ -37,7 +41,7 @@ assert_that(
 assert_that(rf.name, equal_to("tests/clibrary/+cfile"))
 assert_that(targetnamesof(rf.ins), contains_inanyorder("tests/clibrary/prog.c"))
 assert_that(
-    targetnamesof(rf.deps), contains_inanyorder("tests/clibrary/+clibrary")
+    targetnamesof(rf.deps), contains_inanyorder("tests/clibrary/+cheaders")
 )
 
 assert_that(rp.name, equal_to("tests/clibrary/+cprogram"))
