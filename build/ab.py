@@ -51,27 +51,6 @@ class ABException(BaseException):
     pass
 
 
-class ParameterList(Sequence):
-    def __init__(self, parent=[]):
-        self.data = parent
-
-    def __getitem__(self, i):
-        return self.data[i]
-
-    def __len__(self):
-        return len(self.data)
-
-    def __str__(self):
-        return " ".join(self.data)
-
-    def __add__(self, other):
-        newdata = self.data.copy() + other
-        return ParameterList(newdata)
-
-    def __repr__(self):
-        return f"<PList: {self.data}>"
-
-
 class Invocation:
     name = None
     callback = None
