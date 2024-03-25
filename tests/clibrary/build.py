@@ -1,8 +1,8 @@
 from build.ab import export, targetnamesof, filenamesof, targetsof
-from build.c import clibrary, cprogram, cfile, cheaders
+from build.c import clibrary, cprogram, cfile
 from hamcrest import assert_that, equal_to, empty, contains_inanyorder
 
-hl = cheaders(
+hl = clibrary(
     name="cheaders",
     hdrs={"library.h": "./library.h"},
     caller_cflags=["--cheader-cflags"],

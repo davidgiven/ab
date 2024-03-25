@@ -134,12 +134,15 @@ def libraryimpl(
     label,
     kind,
 ):
-    if not srcs and hdrs:
-        raise ABException(
-            "clibrary contains no sources (use cheaders for a header-only library)"
-        )
-
     hr = None
+    if hdrs and not srcs:
+        cheaders(
+            replaces=self,
+            hdrs=hdrs,
+            deps=filenamesmatchingof(deps, "*.h"),
+            caller_cflags=caller_cflags,
+        )
+        return
     if hdrs:
         hr = cheaders(
             name=self.localname + "_hdrs",
