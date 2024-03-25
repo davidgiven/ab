@@ -79,12 +79,14 @@ class Invocation:
     ins = None
     outs = None
     binding = None
+    traits = None
     attr = None
     attrdeps = None
 
     def __init__(self):
         self.attr = SimpleNamespace()
         self.attrdeps = SimpleNamespace()
+        self.traits = set()
 
     def __eq__(self, other):
         return self.name is other.name
@@ -99,7 +101,6 @@ class Invocation:
                 for i in materialisingStack:
                     print(f"  {i.name}")
                 print(f"  {self.name}")
-                traceback.print_stack()
                 sys.exit(1)
 
             materialisingStack.append(self)
@@ -137,6 +138,7 @@ class Invocation:
             if self in unmaterialisedTargets:
                 unmaterialisedTargets.remove(self)
 
+            self.traits.add(self.callback.__name__)
             materialisingStack.pop()
 
     def bubbleattr(self, attr, xs):
@@ -150,7 +152,7 @@ class Invocation:
         setattr(self.attrdeps, attr, a)
 
     def __repr__(self):
-        return "<Invocation %s>" % self.name
+        return "'%s'" % self.name
 
 
 def Rule(func):
@@ -266,7 +268,7 @@ def fileinvocation(s):
     return i
 
 
-def targetof(s, cwd):
+def targetof(s, cwd=None):
     if isinstance(s, Invocation):
         s.materialise()
         return s
@@ -279,10 +281,16 @@ def targetof(s, cwd):
         t.materialise()
         return t
 
-    if s.startswith(".+"):
-        s = cwd + s[1:]
-    elif s.startswith("./"):
-        s = normpath(join(cwd, s))
+    if s.startswith("."):
+        if cwd == None:
+            raise ABException(
+                "relative target names can't be used in targetof without supplying cwd"
+            )
+        if s.startswith(".+"):
+            s = cwd + s[1:]
+        elif s.startswith("./"):
+            s = normpath(join(cwd, s))
+
     elif s.endswith("/"):
         return fileinvocation(s)
     elif s.startswith("$"):
@@ -306,7 +314,7 @@ def targetof(s, cwd):
     return i
 
 
-def targetsof(*xs, cwd):
+def targetsof(*xs, cwd=None):
     return flatten([targetof(x, cwd) for x in flatten(xs)])
 
 
@@ -323,6 +331,10 @@ def filenamesof(*xs):
 
 def filenamesmatchingof(xs, pattern):
     return fnmatch.filter(filenamesof(xs), pattern)
+
+
+def targetswithtraitsof(xs, trait):
+    return [target for target in targetsof(xs) if target.traits.contains(trait)]
 
 
 def targetnamesof(*xs):

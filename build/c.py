@@ -165,6 +165,7 @@ def libraryimpl(
         label=label,
         commands=commands,
     )
+    self.outs = self.outs + (hr.outs if hr else [])
 
     self.attr.caller_ldflags = caller_ldflags
     self.bubbleattr("caller_ldflags", deps)
@@ -239,7 +240,6 @@ def programimpl(
     deps = deps + filenamesmatchingof(srcs, "*.h")
     ldflags = ldflags + bubbledattrsof(deps, "caller_ldflags")
 
-    ars = [f for f in filenamesof(deps) if f.endswith(".a")]
     cfiles = findsources(name, srcs, deps, cflags, filerule)
     normalrule(
         replaces=self,

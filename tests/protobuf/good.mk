@@ -60,7 +60,7 @@ $(OBJ)/tests/protobuf/+protolib_c/+protolib_c.a &: $(OBJ)/tests/protobuf/+protol
 	$(hide) $(AR) cqs $(OBJ)/tests/protobuf/+protolib_c/+protolib_c.a $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc/test2.pb.o $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc/test.pb.o
 
 .PHONY: tests/protobuf/+all
-tests/protobuf/+all &: $(OBJ)/tests/protobuf/+protolib2/tests/protobuf/+protolib2.descriptor $(OBJ)/tests/protobuf/+protolib_c/+protolib_c.a
+tests/protobuf/+all &: $(OBJ)/tests/protobuf/+protolib2/tests/protobuf/+protolib2.descriptor $(OBJ)/tests/protobuf/+protolib_c/+protolib_c.a $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h
 	@
 AB_LOADED = 1
 

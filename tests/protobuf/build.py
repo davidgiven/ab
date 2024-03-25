@@ -49,5 +49,7 @@ assert_that(
     filenamesof(rec.outs),
     contains_inanyorder(
         "$(OBJ)/tests/protobuf/+protolib_c/+protolib_c.a",
+        "$(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h",
+        "$(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test2.pb.h",
     ),
 )
