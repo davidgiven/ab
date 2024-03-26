@@ -18,14 +18,14 @@ tests/clibrary/+clibrary/tests/clibrary/lib1.c : $(OBJ)/tests/clibrary/+clibrary
 $(OBJ)/tests/clibrary/+clibrary/tests/clibrary/lib1.c/lib1.o &: tests/clibrary/lib1.c $(OBJ)/tests/clibrary/+cheaders/library.h
 	$(hide) $(ECHO) CC tests/clibrary/+clibrary/tests/clibrary/lib1.c
 	$(hide) mkdir -p $(OBJ)/tests/clibrary/+clibrary/tests/clibrary/lib1.c
-	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary/+clibrary/tests/clibrary/lib1.c/lib1.o tests/clibrary/lib1.c $(CFLAGS) --cheader-cflags -I$(OBJ)/tests/clibrary/+cheaders
+	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary/+clibrary/tests/clibrary/lib1.c/lib1.o tests/clibrary/lib1.c $(CFLAGS) --cheader-cflags -I$(OBJ)/tests/clibrary/+cheaders --cheader-cflags -I$(OBJ)/tests/clibrary/+cheaders
 
 .PHONY: tests/clibrary/+clibrary/tests/clibrary/lib2.cc
 tests/clibrary/+clibrary/tests/clibrary/lib2.cc : $(OBJ)/tests/clibrary/+clibrary/tests/clibrary/lib2.cc/lib2.o ;
 $(OBJ)/tests/clibrary/+clibrary/tests/clibrary/lib2.cc/lib2.o &: tests/clibrary/lib2.cc $(OBJ)/tests/clibrary/+cheaders/library.h
 	$(hide) $(ECHO) CC tests/clibrary/+clibrary/tests/clibrary/lib2.cc
 	$(hide) mkdir -p $(OBJ)/tests/clibrary/+clibrary/tests/clibrary/lib2.cc
-	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary/+clibrary/tests/clibrary/lib2.cc/lib2.o tests/clibrary/lib2.cc $(CFLAGS) --cheader-cflags -I$(OBJ)/tests/clibrary/+cheaders
+	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary/+clibrary/tests/clibrary/lib2.cc/lib2.o tests/clibrary/lib2.cc $(CFLAGS) --cheader-cflags -I$(OBJ)/tests/clibrary/+cheaders --cheader-cflags -I$(OBJ)/tests/clibrary/+cheaders
 
 .PHONY: tests/clibrary/+clibrary
 tests/clibrary/+clibrary : $(OBJ)/tests/clibrary/+clibrary/+clibrary.a ;
@@ -53,14 +53,14 @@ tests/clibrary/+clibrary2/tests/clibrary/lib1.c : $(OBJ)/tests/clibrary/+clibrar
 $(OBJ)/tests/clibrary/+clibrary2/tests/clibrary/lib1.c/lib1.o &: tests/clibrary/lib1.c $(OBJ)/tests/clibrary/+clibrary2_hdrs/library2.h
 	$(hide) $(ECHO) CC tests/clibrary/+clibrary2/tests/clibrary/lib1.c
 	$(hide) mkdir -p $(OBJ)/tests/clibrary/+clibrary2/tests/clibrary/lib1.c
-	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary/+clibrary2/tests/clibrary/lib1.c/lib1.o tests/clibrary/lib1.c $(CFLAGS) -I$(OBJ)/tests/clibrary/+clibrary2_hdrs
+	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary/+clibrary2/tests/clibrary/lib1.c/lib1.o tests/clibrary/lib1.c $(CFLAGS) -I$(OBJ)/tests/clibrary/+clibrary2_hdrs -I$(OBJ)/tests/clibrary/+clibrary2_hdrs
 
 .PHONY: tests/clibrary/+clibrary2/tests/clibrary/lib2.cc
 tests/clibrary/+clibrary2/tests/clibrary/lib2.cc : $(OBJ)/tests/clibrary/+clibrary2/tests/clibrary/lib2.cc/lib2.o ;
 $(OBJ)/tests/clibrary/+clibrary2/tests/clibrary/lib2.cc/lib2.o &: tests/clibrary/lib2.cc $(OBJ)/tests/clibrary/+clibrary2_hdrs/library2.h
 	$(hide) $(ECHO) CC tests/clibrary/+clibrary2/tests/clibrary/lib2.cc
 	$(hide) mkdir -p $(OBJ)/tests/clibrary/+clibrary2/tests/clibrary/lib2.cc
-	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary/+clibrary2/tests/clibrary/lib2.cc/lib2.o tests/clibrary/lib2.cc $(CFLAGS) -I$(OBJ)/tests/clibrary/+clibrary2_hdrs
+	$(hide) $(CC) -c -o $(OBJ)/tests/clibrary/+clibrary2/tests/clibrary/lib2.cc/lib2.o tests/clibrary/lib2.cc $(CFLAGS) -I$(OBJ)/tests/clibrary/+clibrary2_hdrs -I$(OBJ)/tests/clibrary/+clibrary2_hdrs
 
 .PHONY: tests/clibrary/+clibrary2
 tests/clibrary/+clibrary2 : $(OBJ)/tests/clibrary/+clibrary2/+clibrary2.a ;
