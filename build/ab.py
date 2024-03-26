@@ -337,6 +337,7 @@ def filenameof(x):
 
 
 def bubbledattrsof(x, attr):
+    x = targetsof(x)
     alltargets = set()
     pending = set(x) if isinstance(x, Iterable) else {x}
     while pending:
