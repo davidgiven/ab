@@ -2,6 +2,7 @@ from build.ab import (
     export,
     normalrule,
     filenamesof,
+    targetnamesof,
     Rule,
     Target,
     bubbledattrsof,
@@ -22,7 +23,7 @@ def writetext(self, name):
 
 r1 = writetext(name="r1")
 r2 = writetext(name="r2")
-re = export(name="all", deps=[".+r1", ".+r2"])
+re = export(name="all", deps=[".+r1", ".+r2", "+fortesting"])
 
 re.materialise()
 assert_that(r1.name, equal_to("tests/invocation/+r1"))

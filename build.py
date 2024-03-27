@@ -1,6 +1,12 @@
 from build.ab import export, normalrule
 
 normalrule(
+    name="fortesting",
+    outs=["out"],
+    commands=["touch {outs[0]}"],
+    label="TOUCH")
+
+normalrule(
     name="distribution",
     ins=[
         "./build/ab.py",
