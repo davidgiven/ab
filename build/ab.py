@@ -493,7 +493,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = None):
         )
         subrule.materialise()
         emit("clean::")
-        emit("\t$(hide) rm", destf)
+        emit("\t$(hide) rm -f", destf)
 
         self.ins += [subrule]
 

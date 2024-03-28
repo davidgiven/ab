@@ -24,7 +24,7 @@ $(OBJ)/.sentinels/tests/export/+all/+r1 : out1
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/export/+all
 	$(hide) touch $@
 clean::
-	$(hide) rm r1
+	$(hide) rm -f r1
 
 .PHONY: tests/export/+all/+r2
 tests/export/+all/+r2 : $(OBJ)/.sentinels/tests/export/+all/+r2
@@ -35,7 +35,7 @@ $(OBJ)/.sentinels/tests/export/+all/+r2 : out2
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/export/+all
 	$(hide) touch $@
 clean::
-	$(hide) rm r2
+	$(hide) rm -f r2
 
 .PHONY: tests/export/+all
 tests/export/+all : $(OBJ)/.sentinels/tests/export/+all
