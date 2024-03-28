@@ -4,7 +4,9 @@ PACKAGES := $(shell $(PKG_CONFIG) --list-all | cut -d' ' -f1 | sort)
 
 
 .PHONY: tests/pkg/+fallbacklib
-tests/pkg/+fallbacklib $(OBJ)/.sentinels/tests/pkg/+fallbacklib.mark $(OBJ)/tests/pkg/+fallbacklib/fallback.h &: tests/pkg/fallback.h
+tests/pkg/+fallbacklib : $(OBJ)/.sentinels/tests/pkg/+fallbacklib.mark
+$(OBJ)/.sentinels/tests/pkg/+fallbacklib.mark $(OBJ)/tests/pkg/+fallbacklib/fallback.h : tests/pkg/fallback.h
+$(OBJ)/tests/pkg/+fallbacklib/fallback.h : $(OBJ)/.sentinels/tests/pkg/+fallbacklib.mark
 	$(hide) $(ECHO) CHEADERS tests/pkg/+fallbacklib
 	$(hide) mkdir -p $(OBJ)/tests/pkg/+fallbacklib
 	$(hide) cp tests/pkg/fallback.h $(OBJ)/tests/pkg/+fallbacklib/fallback.h
@@ -28,7 +30,9 @@ PACKAGE_DEP_ab-sample-pkg :=
 endif
 
 .PHONY: tests/pkg/+cprogram/tests/pkg/cfile.c
-tests/pkg/+cprogram/tests/pkg/cfile.c $(OBJ)/.sentinels/tests/pkg/+cprogram/tests/pkg/cfile.c.mark $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c/cfile.o &: tests/pkg/cfile.c $(PACKAGE_DEP_missing) $(PACKAGE_DEP_ab-sample-pkg)
+tests/pkg/+cprogram/tests/pkg/cfile.c : $(OBJ)/.sentinels/tests/pkg/+cprogram/tests/pkg/cfile.c.mark
+$(OBJ)/.sentinels/tests/pkg/+cprogram/tests/pkg/cfile.c.mark $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c/cfile.o : tests/pkg/cfile.c $(PACKAGE_DEP_missing) $(PACKAGE_DEP_ab-sample-pkg)
+$(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c/cfile.o : $(OBJ)/.sentinels/tests/pkg/+cprogram/tests/pkg/cfile.c.mark
 	$(hide) $(ECHO) CC tests/pkg/+cprogram/tests/pkg/cfile.c
 	$(hide) mkdir -p $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c
 	$(hide) $(CC) -c -o $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c/cfile.o tests/pkg/cfile.c $(CFLAGS) $(PACKAGE_CFLAGS_missing) $(PACKAGE_CFLAGS_ab-sample-pkg)
@@ -36,7 +40,9 @@ tests/pkg/+cprogram/tests/pkg/cfile.c $(OBJ)/.sentinels/tests/pkg/+cprogram/test
 	$(hide) touch $@
 
 .PHONY: tests/pkg/+cprogram
-tests/pkg/+cprogram $(OBJ)/.sentinels/tests/pkg/+cprogram.mark $(OBJ)/tests/pkg/+cprogram/+cprogram$(EXT) &: $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c/cfile.o $(PACKAGE_DEP_missing) $(PACKAGE_DEP_ab-sample-pkg)
+tests/pkg/+cprogram : $(OBJ)/.sentinels/tests/pkg/+cprogram.mark
+$(OBJ)/.sentinels/tests/pkg/+cprogram.mark $(OBJ)/tests/pkg/+cprogram/+cprogram$(EXT) : $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c/cfile.o $(PACKAGE_DEP_missing) $(PACKAGE_DEP_ab-sample-pkg)
+$(OBJ)/tests/pkg/+cprogram/+cprogram$(EXT) : $(OBJ)/.sentinels/tests/pkg/+cprogram.mark
 	$(hide) $(ECHO) CLINK tests/pkg/+cprogram
 	$(hide) mkdir -p $(OBJ)/tests/pkg/+cprogram
 	$(hide) $(CC) -o $(OBJ)/tests/pkg/+cprogram/+cprogram$(EXT) $(OBJ)/tests/pkg/+cprogram/tests/pkg/cfile.c/cfile.o $(PACKAGE_LDFLAGS_missing) $(PACKAGE_LDFLAGS_ab-sample-pkg) $(LDFLAGS)
@@ -44,7 +50,8 @@ tests/pkg/+cprogram $(OBJ)/.sentinels/tests/pkg/+cprogram.mark $(OBJ)/tests/pkg/
 	$(hide) touch $@
 
 .PHONY: tests/pkg/+all
-tests/pkg/+all $(OBJ)/.sentinels/tests/pkg/+all.mark &: $(OBJ)/tests/pkg/+cprogram/+cprogram$(EXT)
+tests/pkg/+all : $(OBJ)/.sentinels/tests/pkg/+all.mark
+$(OBJ)/.sentinels/tests/pkg/+all.mark : $(OBJ)/tests/pkg/+cprogram/+cprogram$(EXT)
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/pkg
 	$(hide) touch $@
 AB_LOADED = 1

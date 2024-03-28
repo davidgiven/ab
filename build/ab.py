@@ -385,14 +385,17 @@ def templateexpand(s, invocation):
 def emitter_rule(rule, ins, outs, deps=[]):
     emit("")
     emit(".PHONY:", rule.name)
+    emit(rule.name, ":", rule.sentinel)
     emit(
-        rule.name,
         rule.sentinel,
         filenamesof(outs) if outs else [],
-        "&:",
+        ":",
         filenamesof(ins),
         filenamesof(deps),
     )
+
+    for f in filenamesof(outs):
+        emit(f, ":", rule.sentinel)
 
 
 def emitter_endrule(rule):
