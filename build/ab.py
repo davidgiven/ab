@@ -165,7 +165,7 @@ def Rule(func):
             raise ABException("you must supply either 'name' or 'replaces'")
 
         i.cwd = cwd
-        i.sentinel = "$(OBJ)/.sentinels/" + name
+        i.sentinel = "$(OBJ)/.sentinels/" + name + ".mark"
         i.types = func.__annotations__
         i.callback = func
         i.traits.add(func.__name__)
@@ -499,8 +499,8 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = None):
 
     emitter_rule(
         self,
-        self.outs,
         self.ins,
+        self.outs,
         [(d.outs if d.outs else d.sentinel) for d in deps],
     )
     emitter_endrule(self)
