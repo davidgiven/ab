@@ -30,7 +30,7 @@ EXT ?=
 
 include $(OBJ)/build.mk
 
-.SECONDARY:
+MAKEFLAGS += -r
 .DELETE_ON_ERROR:
 
 .PHONY: update-ab
