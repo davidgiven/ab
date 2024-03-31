@@ -7,6 +7,7 @@ $(OBJ)/.sentinels/tests/cprogram/+cfile.mark : tests/cprogram/cfile.c
 	$(hide) $(CC) -c -o $(OBJ)/tests/cprogram/+cfile/cfile.o tests/cprogram/cfile.c $(CFLAGS) -cflag
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/cprogram
 	$(hide) touch $(OBJ)/.sentinels/tests/cprogram/+cfile.mark
+.SECONDARY: $(OBJ)/tests/cprogram/+cfile/cfile.o
 $(OBJ)/tests/cprogram/+cfile/cfile.o : $(OBJ)/.sentinels/tests/cprogram/+cfile.mark ;
 
 .PHONY: tests/cprogram/+cxxfile
@@ -17,6 +18,7 @@ $(OBJ)/.sentinels/tests/cprogram/+cxxfile.mark : tests/cprogram/cxxfile.c
 	$(hide) $(CXX) -c -o $(OBJ)/tests/cprogram/+cxxfile/cxxfile.o tests/cprogram/cxxfile.c $(CFLAGS) -cxxflag
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/cprogram
 	$(hide) touch $(OBJ)/.sentinels/tests/cprogram/+cxxfile.mark
+.SECONDARY: $(OBJ)/tests/cprogram/+cxxfile/cxxfile.o
 $(OBJ)/tests/cprogram/+cxxfile/cxxfile.o : $(OBJ)/.sentinels/tests/cprogram/+cxxfile.mark ;
 
 .PHONY: tests/cprogram/+cprogram/tests/cprogram/implicitcfile.c
@@ -27,6 +29,7 @@ $(OBJ)/.sentinels/tests/cprogram/+cprogram/tests/cprogram/implicitcfile.c.mark :
 	$(hide) $(CC) -c -o $(OBJ)/tests/cprogram/+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o tests/cprogram/implicitcfile.c $(CFLAGS) -cprogram-cflag
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/cprogram/+cprogram/tests/cprogram
 	$(hide) touch $(OBJ)/.sentinels/tests/cprogram/+cprogram/tests/cprogram/implicitcfile.c.mark
+.SECONDARY: $(OBJ)/tests/cprogram/+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o
 $(OBJ)/tests/cprogram/+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o : $(OBJ)/.sentinels/tests/cprogram/+cprogram/tests/cprogram/implicitcfile.c.mark ;
 
 .PHONY: tests/cprogram/+cprogram
@@ -37,6 +40,7 @@ $(OBJ)/.sentinels/tests/cprogram/+cprogram.mark : $(OBJ)/tests/cprogram/+cprogra
 	$(hide) $(CC) -o $(OBJ)/tests/cprogram/+cprogram/+cprogram$(EXT) $(OBJ)/tests/cprogram/+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o $(OBJ)/tests/cprogram/+cfile/cfile.o -ldflag $(LDFLAGS)
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/cprogram
 	$(hide) touch $(OBJ)/.sentinels/tests/cprogram/+cprogram.mark
+.SECONDARY: $(OBJ)/tests/cprogram/+cprogram/+cprogram$(EXT)
 $(OBJ)/tests/cprogram/+cprogram/+cprogram$(EXT) : $(OBJ)/.sentinels/tests/cprogram/+cprogram.mark ;
 
 .PHONY: tests/cprogram/+cxxprogram/tests/cprogram/implicitcxxfile.cc
@@ -47,6 +51,7 @@ $(OBJ)/.sentinels/tests/cprogram/+cxxprogram/tests/cprogram/implicitcxxfile.cc.m
 	$(hide) $(CXX) -c -o $(OBJ)/tests/cprogram/+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o tests/cprogram/implicitcxxfile.cc $(CFLAGS) -cxxprogram-cflag
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/cprogram/+cxxprogram/tests/cprogram
 	$(hide) touch $(OBJ)/.sentinels/tests/cprogram/+cxxprogram/tests/cprogram/implicitcxxfile.cc.mark
+.SECONDARY: $(OBJ)/tests/cprogram/+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o
 $(OBJ)/tests/cprogram/+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o : $(OBJ)/.sentinels/tests/cprogram/+cxxprogram/tests/cprogram/implicitcxxfile.cc.mark ;
 
 .PHONY: tests/cprogram/+cxxprogram
@@ -57,6 +62,7 @@ $(OBJ)/.sentinels/tests/cprogram/+cxxprogram.mark : $(OBJ)/tests/cprogram/+cxxpr
 	$(hide) $(CXX) -o $(OBJ)/tests/cprogram/+cxxprogram/+cxxprogram$(EXT) $(OBJ)/tests/cprogram/+cxxprogram/tests/cprogram/implicitcxxfile.cc/implicitcxxfile.o $(OBJ)/tests/cprogram/+cxxfile/cxxfile.o -ldflag $(LDFLAGS)
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/cprogram
 	$(hide) touch $(OBJ)/.sentinels/tests/cprogram/+cxxprogram.mark
+.SECONDARY: $(OBJ)/tests/cprogram/+cxxprogram/+cxxprogram$(EXT)
 $(OBJ)/tests/cprogram/+cxxprogram/+cxxprogram$(EXT) : $(OBJ)/.sentinels/tests/cprogram/+cxxprogram.mark ;
 
 .PHONY: tests/cprogram/+all

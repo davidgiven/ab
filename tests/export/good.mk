@@ -5,6 +5,7 @@ $(OBJ)/.sentinels/tests/export/+r1.mark :
 	$(hide) $(ECHO) RULE tests/export/+r1
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/export
 	$(hide) touch $(OBJ)/.sentinels/tests/export/+r1.mark
+.SECONDARY: out1
 out1 : $(OBJ)/.sentinels/tests/export/+r1.mark ;
 
 .PHONY: tests/export/+r2
@@ -13,6 +14,7 @@ $(OBJ)/.sentinels/tests/export/+r2.mark :
 	$(hide) $(ECHO) RULE tests/export/+r2
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/export
 	$(hide) touch $(OBJ)/.sentinels/tests/export/+r2.mark
+.SECONDARY: out2
 out2 : $(OBJ)/.sentinels/tests/export/+r2.mark ;
 
 .PHONY: tests/export/+all/+r1
@@ -22,6 +24,7 @@ $(OBJ)/.sentinels/tests/export/+all/+r1.mark : out1
 	$(hide) cp out1 r1
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/export/+all
 	$(hide) touch $(OBJ)/.sentinels/tests/export/+all/+r1.mark
+.SECONDARY: r1
 r1 : $(OBJ)/.sentinels/tests/export/+all/+r1.mark ;
 clean::
 	$(hide) rm -f r1
@@ -33,6 +36,7 @@ $(OBJ)/.sentinels/tests/export/+all/+r2.mark : out2
 	$(hide) cp out2 r2
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/export/+all
 	$(hide) touch $(OBJ)/.sentinels/tests/export/+all/+r2.mark
+.SECONDARY: r2
 r2 : $(OBJ)/.sentinels/tests/export/+all/+r2.mark ;
 clean::
 	$(hide) rm -f r2

@@ -7,6 +7,7 @@ $(OBJ)/.sentinels/tests/invocation/+r1.mark :
 	$(hide) echo tests/invocation/+r1 > $(OBJ)/tests/invocation/+r1/r1.txt
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/invocation
 	$(hide) touch $(OBJ)/.sentinels/tests/invocation/+r1.mark
+.SECONDARY: $(OBJ)/tests/invocation/+r1/r1.txt
 $(OBJ)/tests/invocation/+r1/r1.txt : $(OBJ)/.sentinels/tests/invocation/+r1.mark ;
 
 .PHONY: tests/invocation/+r2
@@ -17,6 +18,7 @@ $(OBJ)/.sentinels/tests/invocation/+r2.mark :
 	$(hide) echo tests/invocation/+r2 > $(OBJ)/tests/invocation/+r2/r2.txt
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/invocation
 	$(hide) touch $(OBJ)/.sentinels/tests/invocation/+r2.mark
+.SECONDARY: $(OBJ)/tests/invocation/+r2/r2.txt
 $(OBJ)/tests/invocation/+r2/r2.txt : $(OBJ)/.sentinels/tests/invocation/+r2.mark ;
 
 .PHONY: +fortesting
@@ -27,6 +29,7 @@ $(OBJ)/.sentinels/+fortesting.mark :
 	$(hide) touch $(OBJ)/+fortesting/out
 	$(hide) mkdir -p $(OBJ)/.sentinels
 	$(hide) touch $(OBJ)/.sentinels/+fortesting.mark
+.SECONDARY: $(OBJ)/+fortesting/out
 $(OBJ)/+fortesting/out : $(OBJ)/.sentinels/+fortesting.mark ;
 
 .PHONY: tests/invocation/+all
@@ -43,6 +46,7 @@ $(OBJ)/.sentinels/tests/invocation/+r3.mark :
 	$(hide) echo tests/invocation/+r3 > $(OBJ)/tests/invocation/+r3/r3.txt
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/invocation
 	$(hide) touch $(OBJ)/.sentinels/tests/invocation/+r3.mark
+.SECONDARY: $(OBJ)/tests/invocation/+r3/r3.txt
 $(OBJ)/tests/invocation/+r3/r3.txt : $(OBJ)/.sentinels/tests/invocation/+r3.mark ;
 
 .PHONY: tests/invocation/+r4
@@ -53,6 +57,7 @@ $(OBJ)/.sentinels/tests/invocation/+r4.mark :
 	$(hide) echo tests/invocation/+r4 > $(OBJ)/tests/invocation/+r4/r4.txt
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/invocation
 	$(hide) touch $(OBJ)/.sentinels/tests/invocation/+r4.mark
+.SECONDARY: $(OBJ)/tests/invocation/+r4/r4.txt
 $(OBJ)/tests/invocation/+r4/r4.txt : $(OBJ)/.sentinels/tests/invocation/+r4.mark ;
 AB_LOADED = 1
 
