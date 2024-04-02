@@ -1,4 +1,3 @@
-from os.path import basename, join
 from build.ab import (
     ABException,
     List,
@@ -93,6 +92,10 @@ def cxxfile(
 
 
 def findsources(name, srcs, deps, cflags, toolchain, filerule):
+    headers = filenamesmatchingof(srcs, "*.h")
+    cflags = cflags + ["-I"+dirname(h) for h in headers]
+    deps = deps + headers
+
     objs = []
     for s in flatten(srcs):
         objs += [
@@ -297,7 +300,6 @@ def programimpl(
     kind,
 ):
     ars = filenamesmatchingof(deps, "*.a")
-    deps = deps + filenamesmatchingof(srcs, "*.h")
     ldflags = ldflags + bubbledattrsof(deps, "caller_ldflags")
 
     cfiles = findsources(name, srcs, deps, cflags, toolchain, filerule)
