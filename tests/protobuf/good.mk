@@ -67,10 +67,10 @@ $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h : $(OBJ)/.sentin
 
 .PHONY: tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc
 tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc : $(OBJ)/.sentinels/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc.mark
-$(OBJ)/.sentinels/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc.mark : $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h
+$(OBJ)/.sentinels/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc.mark : $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.h
 	$(hide) $(ECHO) CXX tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc
 	$(hide) mkdir -p $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc
-	$(hide) $(CXX) -c -o $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc/test2.pb.o $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc $(CFLAGS) -I$(OBJ)/tests/protobuf/+protolib_c_srcs -I$(OBJ)/tests/protobuf/+protolib_c_hdrs -I$(OBJ)/tests/protobuf/+protolib_c_hdrs
+	$(hide) $(CXX) -c -o $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc/test2.pb.o $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc $(CFLAGS) -I$(OBJ)/tests/protobuf/+protolib_c_srcs -I$(OBJ)/tests/protobuf/+protolib_c_hdrs -I$(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf -I$(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf -I$(OBJ)/tests/protobuf/+protolib_c_hdrs
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf
 	$(hide) touch $(OBJ)/.sentinels/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc.mark
 .SECONDARY: $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc/test2.pb.o
@@ -78,10 +78,10 @@ $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf
 
 .PHONY: tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc
 tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc : $(OBJ)/.sentinels/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc.mark
-$(OBJ)/.sentinels/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc.mark : $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h
+$(OBJ)/.sentinels/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc.mark : $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.h $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.h
 	$(hide) $(ECHO) CXX tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc
 	$(hide) mkdir -p $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc
-	$(hide) $(CXX) -c -o $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc/test.pb.o $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc $(CFLAGS) -I$(OBJ)/tests/protobuf/+protolib_c_srcs -I$(OBJ)/tests/protobuf/+protolib_c_hdrs -I$(OBJ)/tests/protobuf/+protolib_c_hdrs
+	$(hide) $(CXX) -c -o $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc/test.pb.o $(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc $(CFLAGS) -I$(OBJ)/tests/protobuf/+protolib_c_srcs -I$(OBJ)/tests/protobuf/+protolib_c_hdrs -I$(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf -I$(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf -I$(OBJ)/tests/protobuf/+protolib_c_hdrs
 	$(hide) mkdir -p $(OBJ)/.sentinels/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf
 	$(hide) touch $(OBJ)/.sentinels/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc.mark
 .SECONDARY: $(OBJ)/tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc/test.pb.o
