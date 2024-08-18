@@ -7,10 +7,14 @@ import sys
 import builtins
 import inspect
 import functools
+import copy
+import string
+from typing import Iterable
 
 cwdStack = [""]
 targets = {}
 unmaterialisedTargets = set()
+materialisingStack = []
 defaultGlobals = {}
 
 sys.path += ["."]
@@ -45,6 +49,12 @@ class ABException(BaseException):
 
 def error(message):
     raise ABException(message)
+
+
+def _deepcopy(value):
+    if isinstance(value, list):
+        return copy.deepcopy(value)
+    return value
 
 
 def Rule(func):
@@ -101,6 +111,7 @@ class Target:
 
         self.localname = self.name.split("+")[-1]
         self.traits = set()
+        self.dir = join("$(OBJDIR)",name)
 
     def __eq__(self, other):
         return self.name is other.name
@@ -108,10 +119,111 @@ class Target:
     def __hash__(self):
         return id(self.name)
 
+    def materialise(self):
+        if self not in unmaterialisedTargets:
+            return
+
+        if self in materialisingStack:
+            print("Found dependency cycle:")
+            for i in materialisingStack:
+                print(f"  {i.name}")
+            print(f"  {self.name}")
+            sys.exit(1)
+        materialisingStack.append(self)
+
+        # Perform type conversion to the declared rule parameter types.
+
+        try:
+            self.args = {}
+            for k, v in self.binding.arguments.items():
+                if k != "kwargs":
+                    t = self.types.get(k, None)
+                    if t:
+                        v = t.convert(v, self)
+                    self.args[k] = _deepcopy(v)
+                else:
+                    for kk, vv in v.items():
+                        t = self.types.get(kk, None)
+                        if t:
+                            vv = t.convert(v, self)
+                        self.args[kk] = _deepcopy(vv)
+
+            # Actually call the callback.
+
+            cwdStack.append(self.cwd)
+            self.callback(**self.args)
+            cwdStack.pop()
+        except BaseException as e:
+            print(f"Error materialising {self}: {self.callback}")
+            print(f"Arguments: {self.args}")
+            raise e
+
+        if self.outs is None:
+            raise ABException(f"{self.name} didn't set self.outs")
+
+        unmaterialisedTargets.discard(self)
+        materialisingStack.pop()
+
+    def convert(value, target):
+        return target._resolve_file(value)
+
+    def _resolve_file(self, value):
+        print(value)
+        return value
+
+class Targets:
+    def convert(value, target):
+        return [target._resolve_file(x) for x in flatten(value)]
+
 
 def loadbuildfile(filename):
     filename = filename.replace("/", ".").removesuffix(".py")
     builtins.__import__(filename)
+
+
+def flatten(items):
+    def generate(xs):
+        for x in xs:
+            if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
+                yield from generate(x)
+            else:
+                yield x
+
+    return tuple(generate(items))
+
+
+def filenamesof(items):
+    if not isinstance(items, (list, tuple)):
+        error("argument of filenamesof is not a list")
+
+    def generate(xs):
+        for x in xs:
+            if isinstance(x, Target):
+                yield from generate(x.outs)
+            else:
+                yield x
+
+    return tuple(generate(items))
+
+
+def templateexpand(s, invocation):
+    class Formatter(string.Formatter):
+        def get_field(self, name, a1, a2):
+            return (
+                eval(name, invocation.callback.__globals__, invocation.args),
+                False,
+            )
+
+        def format_field(self, value, format_spec):
+            if type(value) == str:
+                return value
+            if type(value) != list:
+                value = [value]
+            return " ".join(
+                [templateexpand(f, invocation) for f in filenamesof(value)]
+            )
+
+    return Formatter().format(s)
 
 
 def emit(*args):
@@ -119,9 +231,56 @@ def emit(*args):
     outputFp.write("\n")
 
 
+def emitter_startrule(name, ins, outs, deps=[]):
+    emit("")
+    emit(".PHONY:", name)
+    emit(name, ":", *filenamesof(outs))
+    emit(*outs, "&:", *filenamesof(ins))
+
+
+def emitter_endrule():
+    pass
+
+
+def emitter_label(s):
+    emit("\t$(hide)", "$(ECHO)", s)
+
+
+def emitter_exec(cs):
+    for c in cs:
+        emit("\t$(hide)", c)
+
+
 @Rule
-def simplerule(self, name, ins, outs, commands, label):
-    error("simplerule")
+def simplerule(
+    self,
+    name,
+    ins: Targets = [],
+    outs: Targets = [],
+    deps: Targets = [],
+    commands=[],
+    label="RULE",
+):
+    self.ins = ins
+    self.outs = outs
+    self.deps = deps
+    emitter_startrule(self.name, ins + deps, outs)
+    emitter_label(templateexpand("{label} {name}", self))
+
+    dirs = []
+    cs = []
+    for out in filenamesof(outs):
+        dir = dirname(out)
+        if dir and dir not in dirs:
+            dirs += [dir]
+
+        cs = [("mkdir -p %s" % dir) for dir in dirs]
+
+    for c in commands:
+        cs += [templateexpand(c, self)]
+
+    emitter_exec(cs)
+    emitter_endrule()
 
 
 def main():
@@ -144,7 +303,8 @@ def main():
         loadbuildfile(f)
 
     while unmaterialisedTargets:
-        unmaterialisedTargets.pop().materialise()
+        t = next(iter(unmaterialisedTargets))
+        t.materialise()
     emit("AB_LOADED = 1\n")
 
 
