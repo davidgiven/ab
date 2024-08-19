@@ -9,6 +9,7 @@ import inspect
 import functools
 import copy
 import string
+from pathlib import Path
 from typing import Iterable
 
 cwdStack = [""]
@@ -165,15 +166,68 @@ class Target:
         materialisingStack.pop()
 
     def convert(value, target):
-        return target._resolve_file(value)
+        return target.targetof(value)
 
-    def _resolve_file(self, value):
-        print(value)
-        return value
+    def targetof(self, value):
+        if isinstance(value, Path):
+            value = value.as_posix()
+        if value[0] == "=":
+            value = join(self.dir, value[1:])
+
+        if value.startswith("."):
+            # Check for local rule.
+            if value.startswith(".+"):
+                value = normpath(join(self.cwd, value[1:]))
+            # Check for local path.
+            elif value.startswith("./"):
+                value = normpath(join(self.cwd, value))
+        # Explicit directories are always raw files.
+        elif value.endswith("/"):
+            return self._filetarget(value)
+        # Anything starting with a variable expansion is always a raw file.
+        elif value.startswith("$"):
+            return self._filetarget(value)
+
+        # If this is not a rule lookup...
+        if "+" not in value:
+            # ...and if the value is pointing at a directory without a trailing /,
+            # it's a shorthand rule lookup.
+            if isdir(value):
+                value = value + "+" + basename(value)
+            # Otherwise it's an absolute file.
+            else:
+                return self._filetarget(value)
+
+        # At this point we have the fully qualified name of a rule.
+
+        if value in targets:
+            return targets[value]
+
+        # Load the new build file.
+
+        (path, target) = value.split("+", 2)
+        assert join(path, "+" + target) == value
+        loadbuildfile(join(path, "build.py"))
+        if not value in targets:
+            raise ABException(
+                f"build file at {path} doesn't contain +{target} when trying to resolve {value}"
+            )
+        t = targets[value]
+        t.materialise()
+        return t
+
+    def _filetarget(self, value):
+        if value in targets:
+            return targets[value]
+
+        t = Target(self.cwd, value)
+        t.outs = [value]
+        targets[value] = t
+        return t
 
 class Targets:
     def convert(value, target):
-        return [target._resolve_file(x) for x in flatten(value)]
+        return [target.targetof(x) for x in flatten(value)]
 
 
 def loadbuildfile(filename):
@@ -232,10 +286,13 @@ def emit(*args):
 
 
 def emitter_startrule(name, ins, outs, deps=[]):
+    fins = filenamesof(ins)
+    fouts = filenamesof(outs)
+
     emit("")
     emit(".PHONY:", name)
-    emit(name, ":", *filenamesof(outs))
-    emit(*outs, "&:", *filenamesof(ins))
+    emit(name, ":", *fouts)
+    emit(*fouts, "&:", *fins)
 
 
 def emitter_endrule():
