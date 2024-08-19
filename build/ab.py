@@ -112,7 +112,7 @@ class Target:
 
         self.localname = self.name.split("+")[-1]
         self.traits = set()
-        self.dir = join("$(OBJDIR)",name)
+        self.dir = join("$(OBJDIR)", name)
 
     def __eq__(self, other):
         return self.name is other.name
@@ -224,6 +224,7 @@ class Target:
         t.outs = [value]
         targets[value] = t
         return t
+
 
 class Targets:
     def convert(value, target):
