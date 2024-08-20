@@ -1,12 +1,12 @@
-from build.ab import export, normalrule
+from build.ab import export, simplerule
 
-normalrule(
+simplerule(
     name="fortesting",
-    outs=["out"],
+    outs=["=out"],
     commands=["touch {outs[0]}"],
     label="TOUCH")
 
-normalrule(
+simplerule(
     name="distribution",
     ins=[
         "./build/ab.py",

@@ -53,7 +53,7 @@ def error(message):
 
 
 def _deepcopy(value):
-    if isinstance(value, list):
+    if isinstance(value, (list, dict)):
         return copy.deepcopy(value)
     return value
 
@@ -68,13 +68,15 @@ def Rule(func):
             # If this is an automatically generated rule from another rule,
             # override the CWD so filenames resolve to the parent rule.
             if ("+" in name) and not name.startswith("+"):
-                (cwd, _) = name.split("+", 1)
+                (cwd, _) = name.rsplit("+", 1)
         if not cwd:
             # If no CWD is supplied, use the current one.
             cwd = cwdStack[-1]
 
         if name:
-            t = Target(cwd, name)
+            if name[0] != "+":
+                name = "+" + name
+            t = Target(cwd, join(cwd, name))
 
             if t.name in targets:
                 raise ABException(f"target {t.name} has already been defined")
@@ -103,16 +105,12 @@ def Rule(func):
 
 class Target:
     def __init__(self, cwd, name):
-        if name.startswith("./"):
-            self.name = join(cwd, name)
-        elif "+" not in name:
-            self.name = join(cwd, "+" + name)
-        else:
-            self.name = name
-
-        self.localname = self.name.split("+")[-1]
+        self.name = name
+        self.localname = self.name.rsplit("+")[-1]
         self.traits = set()
         self.dir = join("$(OBJDIR)", name)
+        self.ins = []
+        self.outs = []
 
     def __eq__(self, other):
         return self.name is other.name
@@ -120,11 +118,33 @@ class Target:
     def __hash__(self):
         return id(self.name)
 
-    def materialise(self):
+    def __repr__(self):
+        return "Target('%s')" % self.name
+
+    def templateexpand(selfi, s):
+        class Formatter(string.Formatter):
+            def get_field(self, name, a1, a2):
+                return (
+                    eval(name, selfi.callback.__globals__, selfi.args),
+                    False,
+                )
+
+            def format_field(self, value, format_spec):
+                if type(value) == str:
+                    return value
+                if type(value) != list:
+                    value = [value]
+                return " ".join(
+                    [selfi.templateexpand(f) for f in filenamesof(value)]
+                )
+
+        return Formatter().format(s)
+
+    def materialise(self, replacing=False):
         if self not in unmaterialisedTargets:
             return
 
-        if self in materialisingStack:
+        if not replacing and self in materialisingStack:
             print("Found dependency cycle:")
             for i in materialisingStack:
                 print(f"  {i.name}")
@@ -171,6 +191,8 @@ class Target:
     def targetof(self, value):
         if isinstance(value, Path):
             value = value.as_posix()
+        if isinstance(value, Target):
+            return value
         if value[0] == "=":
             value = join(self.dir, value[1:])
 
@@ -200,18 +222,15 @@ class Target:
 
         # At this point we have the fully qualified name of a rule.
 
-        if value in targets:
-            return targets[value]
+        (path, target) = value.rsplit("+", 1)
+        value = join(path, "+" + target)
+        if value not in targets:
+            # Load the new build file.
 
-        # Load the new build file.
+            path = join(path, "build.py")
+            loadbuildfile(path)
+            assert value in targets, f"build file at '{path}' doesn't contain '+{target}' when trying to resolve '{value}'"
 
-        (path, target) = value.split("+", 2)
-        assert join(path, "+" + target) == value
-        loadbuildfile(join(path, "build.py"))
-        if not value in targets:
-            raise ABException(
-                f"build file at {path} doesn't contain +{target} when trying to resolve {value}"
-            )
         t = targets[value]
         t.materialise()
         return t
@@ -225,10 +244,14 @@ class Target:
         targets[value] = t
         return t
 
-
 class Targets:
     def convert(value, target):
         return [target.targetof(x) for x in flatten(value)]
+
+
+class TargetsMap:
+    def convert(value, target):
+        return {k: target.targetof(v) for k, v in value.items()}
 
 
 def loadbuildfile(filename):
@@ -261,24 +284,12 @@ def filenamesof(items):
     return tuple(generate(items))
 
 
-def templateexpand(s, invocation):
-    class Formatter(string.Formatter):
-        def get_field(self, name, a1, a2):
-            return (
-                eval(name, invocation.callback.__globals__, invocation.args),
-                False,
-            )
-
-        def format_field(self, value, format_spec):
-            if type(value) == str:
-                return value
-            if type(value) != list:
-                value = [value]
-            return " ".join(
-                [templateexpand(f, invocation) for f in filenamesof(value)]
-            )
-
-    return Formatter().format(s)
+def filenameof(x):
+    xs = filenamesof(x.outs)
+    assert (
+        len(xs) == 1
+    ), "tried to use filenameof() on a target with more than one output"
+    return xs[0]
 
 
 def emit(*args):
@@ -289,15 +300,20 @@ def emit(*args):
 def emitter_startrule(name, ins, outs, deps=[]):
     fins = filenamesof(ins)
     fouts = filenamesof(outs)
+    nonobjs = [f for f in fouts if not f.startswith("$(OBJDIR)")]
 
     emit("")
+    if nonobjs:
+        emit("clean::")
+        emit("\t$(hide) rm -f", *nonobjs)
+
     emit(".PHONY:", name)
     emit(name, ":", *fouts)
     emit(*fouts, "&:", *fins)
 
 
 def emitter_endrule():
-    pass
+    emit("")
 
 
 def emitter_label(s):
@@ -323,7 +339,7 @@ def simplerule(
     self.outs = outs
     self.deps = deps
     emitter_startrule(self.name, ins + deps, outs)
-    emitter_label(templateexpand("{label} {name}", self))
+    emitter_label(self.templateexpand("{label} {name}"))
 
     dirs = []
     cs = []
@@ -335,9 +351,39 @@ def simplerule(
         cs = [("mkdir -p %s" % dir) for dir in dirs]
 
     for c in commands:
-        cs += [templateexpand(c, self)]
+        cs += [self.templateexpand(c)]
 
     emitter_exec(cs)
+    emitter_endrule()
+
+
+@Rule
+def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
+    self.ins = deps
+    self.outs = []
+    for dest, src in items.items():
+        dest = self.targetof(dest)
+        self.outs += [dest]
+
+        destf = filenameof(dest)
+
+        srcs = filenamesof([src])
+        assert (
+            len(srcs) == 1
+        ), "a dependency of an exported file must have exactly one output file"
+
+        subrule = simplerule(
+            name=self.name + "/+" + destf,
+            ins=[srcs[0]],
+            outs=[destf],
+            commands=["cp %s %s" % (srcs[0], destf)],
+            label="CP",
+        )
+        subrule.materialise()
+
+        self.ins += [subrule]
+
+    emitter_startrule(self.name, self.ins, self.outs)
     emitter_endrule()
 
 

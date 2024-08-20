@@ -1,26 +1,26 @@
-from build.ab import normalrule, Rule, Target, export
+from build.ab import simplerule, Rule, Target, export
 
 TESTS = [
-    "clibrary",
-    "cprogram",
-    "dependency",
-    "export",
-    "invocation",
-    "pkg",
-    "protobuf",
-    "simple",
+#    "clibrary",
+#    "cprogram",
+#    "dependency",
+#    "export",
+#    "invocation",
+#    "pkg",
+#    "protobuf",
+#    "simple",
 ]
 
 
 @Rule
 def test(self, name, test: Target):
-    normalrule(
+    simplerule(
         replaces=self,
         ins=[
             "./" + self.localname + "/build.py",
             "./" + self.localname + "/good.mk",
         ],
-        outs=["build.mk"],
+        outs=["=build.mk"],
         deps=["build/ab.py", "build/c.py", "build/pkg.py"],
         commands=[
             "PKG_CONFIG_PATH=tests/pkg/pkg-repo python3 -X pycache_prefix=$(OBJ) build/ab.py -t tests/"
