@@ -1,14 +1,14 @@
 from build.ab import simplerule, Rule, Target, export
 
 TESTS = [
-#    "clibrary",
-#    "cprogram",
-#    "dependency",
-#    "export",
-#    "invocation",
-#    "pkg",
-#    "protobuf",
-#    "simple",
+    #    "clibrary",
+    #    "cprogram",
+    #    "dependency",
+    #    "export",
+    #    "invocation",
+    #    "pkg",
+    #    "protobuf",
+    "simple",
 ]
 
 

@@ -108,18 +108,19 @@ class Target:
         self.name = name
         self.localname = self.name.rsplit("+")[-1]
         self.traits = set()
-        self.dir = join("$(OBJDIR)", name)
+        self.dir = join("$(OBJ)", name)
         self.ins = []
         self.outs = []
+        self.materialised = False
 
     def __eq__(self, other):
         return self.name is other.name
 
     def __hash__(self):
-        return id(self.name)
+        return id(self)
 
     def __repr__(self):
-        return "Target('%s')" % self.name
+        return f"Target('{self.name}', {id(self)})"
 
     def templateexpand(selfi, s):
         class Formatter(string.Formatter):
@@ -168,6 +169,7 @@ class Target:
                         if t:
                             vv = t.convert(v, self)
                         self.args[kk] = _deepcopy(vv)
+            self.args["name"] = self.name
 
             # Actually call the callback.
 
@@ -184,6 +186,7 @@ class Target:
 
         unmaterialisedTargets.discard(self)
         materialisingStack.pop()
+        self.materialised = True
 
     def convert(value, target):
         return target.targetof(value)
@@ -192,46 +195,50 @@ class Target:
         if isinstance(value, Path):
             value = value.as_posix()
         if isinstance(value, Target):
-            return value
-        if value[0] == "=":
-            value = join(self.dir, value[1:])
+            t = value
+        else:
+            if value[0] == "=":
+                value = join(self.dir, value[1:])
 
-        if value.startswith("."):
-            # Check for local rule.
-            if value.startswith(".+"):
-                value = normpath(join(self.cwd, value[1:]))
-            # Check for local path.
-            elif value.startswith("./"):
-                value = normpath(join(self.cwd, value))
-        # Explicit directories are always raw files.
-        elif value.endswith("/"):
-            return self._filetarget(value)
-        # Anything starting with a variable expansion is always a raw file.
-        elif value.startswith("$"):
-            return self._filetarget(value)
-
-        # If this is not a rule lookup...
-        if "+" not in value:
-            # ...and if the value is pointing at a directory without a trailing /,
-            # it's a shorthand rule lookup.
-            if isdir(value):
-                value = value + "+" + basename(value)
-            # Otherwise it's an absolute file.
-            else:
+            if value.startswith("."):
+                # Check for local rule.
+                if value.startswith(".+"):
+                    value = normpath(join(self.cwd, value[1:]))
+                # Check for local path.
+                elif value.startswith("./"):
+                    value = normpath(join(self.cwd, value))
+            # Explicit directories are always raw files.
+            elif value.endswith("/"):
+                return self._filetarget(value)
+            # Anything starting with a variable expansion is always a raw file.
+            elif value.startswith("$"):
                 return self._filetarget(value)
 
-        # At this point we have the fully qualified name of a rule.
+            # If this is not a rule lookup...
+            if "+" not in value:
+                # ...and if the value is pointing at a directory without a trailing /,
+                # it's a shorthand rule lookup.
+                if isdir(value):
+                    value = value + "+" + basename(value)
+                # Otherwise it's an absolute file.
+                else:
+                    return self._filetarget(value)
 
-        (path, target) = value.rsplit("+", 1)
-        value = join(path, "+" + target)
-        if value not in targets:
-            # Load the new build file.
+            # At this point we have the fully qualified name of a rule.
 
-            path = join(path, "build.py")
-            loadbuildfile(path)
-            assert value in targets, f"build file at '{path}' doesn't contain '+{target}' when trying to resolve '{value}'"
+            (path, target) = value.rsplit("+", 1)
+            value = join(path, "+" + target)
+            if value not in targets:
+                # Load the new build file.
 
-        t = targets[value]
+                path = join(path, "build.py")
+                loadbuildfile(path)
+                assert (
+                    value in targets
+                ), f"build file at '{path}' doesn't contain '+{target}' when trying to resolve '{value}'"
+
+            t = targets[value]
+
         t.materialise()
         return t
 
@@ -243,6 +250,7 @@ class Target:
         t.outs = [value]
         targets[value] = t
         return t
+
 
 class Targets:
     def convert(value, target):
@@ -267,7 +275,7 @@ def flatten(items):
             else:
                 yield x
 
-    return tuple(generate(items))
+    return list(generate(items))
 
 
 def filenamesof(items):
@@ -281,7 +289,7 @@ def filenamesof(items):
             else:
                 yield x
 
-    return tuple(generate(items))
+    return list(generate(items))
 
 
 def filenameof(x):
@@ -297,10 +305,10 @@ def emit(*args):
     outputFp.write("\n")
 
 
-def emitter_startrule(name, ins, outs, deps=[]):
-    fins = filenamesof(ins)
-    fouts = filenamesof(outs)
-    nonobjs = [f for f in fouts if not f.startswith("$(OBJDIR)")]
+def emit_rule(name, ins, outs, cmds=[], label=None):
+    fins = [t.name for t in ins]
+    fouts = [t.name for t in outs]
+    nonobjs = [f for f in filenamesof(outs) if not f.startswith("$(OBJ)")]
 
     emit("")
     if nonobjs:
@@ -308,21 +316,22 @@ def emitter_startrule(name, ins, outs, deps=[]):
         emit("\t$(hide) rm -f", *nonobjs)
 
     emit(".PHONY:", name)
-    emit(name, ":", *fouts)
-    emit(*fouts, "&:", *fins)
+    if outs:
+        emit(name, ":", *fouts)
+        if cmds:
+            emit(*fouts, "&:", *fins)
+        else:
+            emit(*fouts, ":", *fins)
 
+        if label:
+            emit("\t$(hide)", "$(ECHO)", label)
+        for c in cmds:
+            emit("\t$(hide)", c)
+    else:
+        assert len(cmds) == 0, "rules with no outputs cannot have commands"
+        emit(name, ":", *fins)
 
-def emitter_endrule():
     emit("")
-
-
-def emitter_label(s):
-    emit("\t$(hide)", "$(ECHO)", s)
-
-
-def emitter_exec(cs):
-    for c in cs:
-        emit("\t$(hide)", c)
 
 
 @Rule
@@ -338,8 +347,6 @@ def simplerule(
     self.ins = ins
     self.outs = outs
     self.deps = deps
-    emitter_startrule(self.name, ins + deps, outs)
-    emitter_label(self.templateexpand("{label} {name}"))
 
     dirs = []
     cs = []
@@ -353,8 +360,13 @@ def simplerule(
     for c in commands:
         cs += [self.templateexpand(c)]
 
-    emitter_exec(cs)
-    emitter_endrule()
+    emit_rule(
+        name=self.name,
+        ins=ins + deps,
+        outs=outs,
+        label=self.templateexpand("{label} {name}"),
+        cmds=cs,
+    )
 
 
 @Rule
@@ -383,8 +395,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
 
         self.ins += [subrule]
 
-    emitter_startrule(self.name, self.ins, self.outs)
-    emitter_endrule()
+    emit_rule(name=self.name, ins=self.ins, outs=self.outs)
 
 
 def main():

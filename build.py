@@ -4,7 +4,8 @@ simplerule(
     name="fortesting",
     outs=["=out"],
     commands=["touch {outs[0]}"],
-    label="TOUCH")
+    label="TOUCH",
+)
 
 simplerule(
     name="distribution",
@@ -17,7 +18,7 @@ simplerule(
         "./build/utils.py",
         "./build/_objectify.py",
     ],
-    outs=["distribution.tar.xz"],
+    outs=["=distribution.tar.xz"],
     commands=["tar cJf {outs[0]} {ins}"],
     label="ZIP",
 )
