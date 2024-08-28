@@ -1,20 +1,22 @@
 from os.path import *
-import importlib
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Iterable
 import argparse
+import builtins
+import copy
+import functools
+import importlib
 import importlib.abc
 import importlib.util
-import sys
-import builtins
 import inspect
-import functools
-import copy
 import string
-from pathlib import Path
-from typing import Iterable
+import sys
 
+verbose = False
 cwdStack = [""]
 targets = {}
-unmaterialisedTargets = set()
+unmaterialisedTargets = {}  # dict, not set, to get consistent ordering
 materialisingStack = []
 defaultGlobals = {}
 
@@ -29,8 +31,8 @@ def new_import(name, *args, **kwargs):
             sys.stderr.write(f"loading {path}\n")
             loader = importlib.machinery.SourceFileLoader(name, path)
 
-            spec = importlib.util.spec_from_loader(
-                name, loader, origin="built-in"
+            spec = importlib.util.spec_from_file_location(
+                name=name, location=path, loader=loader
             )
             module = importlib.util.module_from_spec(spec)
             sys.modules[name] = module
@@ -64,14 +66,15 @@ def Rule(func):
     @functools.wraps(func)
     def wrapper(*, name=None, replaces=None, **kwargs):
         cwd = None
-        if name:
-            # If this is an automatically generated rule from another rule,
-            # override the CWD so filenames resolve to the parent rule.
-            if ("+" in name) and not name.startswith("+"):
-                (cwd, _) = name.rsplit("+", 1)
+        if "cwd" in kwargs:
+            cwd = kwargs["cwd"]
+            del kwargs["cwd"]
+
         if not cwd:
-            # If no CWD is supplied, use the current one.
-            cwd = cwdStack[-1]
+            if replaces:
+                cwd = replaces.cwd
+            else:
+                cwd = cwdStack[-1]
 
         if name:
             if name[0] != "+":
@@ -94,7 +97,7 @@ def Rule(func):
         t.binding = sig.bind(name=name, self=t, **kwargs)
         t.binding.apply_defaults()
 
-        unmaterialisedTargets.add(t)
+        unmaterialisedTargets[t] = None
         if replaces:
             t.materialise(replacing=True)
         return t
@@ -105,6 +108,8 @@ def Rule(func):
 
 class Target:
     def __init__(self, cwd, name):
+        if verbose:
+            print("rule('%s', cwd='%s'" % (name, cwd))
         self.name = name
         self.localname = self.name.rsplit("+")[-1]
         self.traits = set()
@@ -131,6 +136,8 @@ class Target:
                 )
 
             def format_field(self, value, format_spec):
+                if not value:
+                    return ""
                 if type(value) == str:
                     return value
                 if type(value) != list:
@@ -184,11 +191,14 @@ class Target:
         if self.outs is None:
             raise ABException(f"{self.name} didn't set self.outs")
 
-        unmaterialisedTargets.discard(self)
+        if self in unmaterialisedTargets:
+            del unmaterialisedTargets[self]
         materialisingStack.pop()
         self.materialised = True
 
     def convert(value, target):
+        if not value:
+            return None
         return target.targetof(value)
 
     def targetof(self, value):
@@ -254,11 +264,18 @@ class Target:
 
 class Targets:
     def convert(value, target):
+        if not value:
+            return []
+        assert isinstance(
+            value, (list, tuple)
+        ), "cannot convert non-list to Targets"
         return [target.targetof(x) for x in flatten(value)]
 
 
 class TargetsMap:
     def convert(value, target):
+        if not value:
+            return {}
         return {k: target.targetof(v) for k, v in value.items()}
 
 
@@ -276,6 +293,13 @@ def flatten(items):
                 yield x
 
     return list(generate(items))
+
+
+def targetnamesof(items):
+    if not isinstance(items, (list, tuple)):
+        error("argument of filenamesof is not a list")
+
+    return [t.name for t in items]
 
 
 def filenamesof(items):
@@ -343,6 +367,7 @@ def simplerule(
     deps: Targets = [],
     commands=[],
     label="RULE",
+    **kwargs,
 ):
     self.ins = ins
     self.outs = outs
@@ -385,7 +410,8 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
         ), "a dependency of an exported file must have exactly one output file"
 
         subrule = simplerule(
-            name=self.name + "/+" + destf,
+            name=f"{self.localname}/{destf}",
+            cwd=self.cwd,
             ins=[srcs[0]],
             outs=[destf],
             commands=["cp %s %s" % (srcs[0], destf)],
@@ -395,14 +421,18 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
 
         self.ins += [subrule]
 
-    emit_rule(name=self.name, ins=self.ins, outs=self.outs)
+    emit_rule(name=self.name, ins=self.ins, outs=[])
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-o", "--output")
     parser.add_argument("files", nargs="+")
     args = parser.parse_args()
+
+    global verbose
+    verbose = args.verbose
 
     global outputFp
     outputFp = open(args.output, "wt")

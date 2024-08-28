@@ -3,9 +3,9 @@ from build.protobuf import proto, protocc
 from hamcrest import assert_that, empty, equal_to, contains_inanyorder
 
 re1 = proto(name="protolib", srcs=["./test.proto"])
-re2 = proto(name="protolib2", srcs=["./test2.proto"], deps=".+protolib")
+re2 = proto(name="protolib2", srcs=["./test2.proto"], deps=[".+protolib"])
 
-rec = protocc(name="protolib_c", srcs=[".+protolib2"])
+rec = protocc(name="protolib_c", srcs=[".+protolib", ".+protolib2"])
 
 re = export(name="all", items={}, deps=[".+protolib2", ".+protolib_c"])
 re.materialise()
@@ -48,7 +48,7 @@ assert_that(
 assert_that(
     filenamesof(rec.outs),
     contains_inanyorder(
-        "$(OBJ)/tests/protobuf/+protolib_c/+protolib_c.a",
+        "$(OBJ)/tests/protobuf/+protolib_c/protolib_c.a",
         "$(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test.pb.h",
         "$(OBJ)/tests/protobuf/+protolib_c_hdrs/tests/protobuf/test2.pb.h",
     ),
