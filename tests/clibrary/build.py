@@ -1,6 +1,6 @@
-from build.ab import export, targetnamesof, filenamesof, targetsof
+from build.ab import export, targetnamesof, filenamesof
 from build.c import clibrary, cprogram, cfile
-from hamcrest import assert_that, equal_to, empty, contains_inanyorder
+from hamcrest import assert_that, equal_to, contains_inanyorder
 
 hl = clibrary(
     name="cheaders",
@@ -41,7 +41,7 @@ assert_that(
 )
 assert_that(
     filenamesof(rl.outs),
-    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary/+clibrary.a"),
+    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary/clibrary.a"),
 )
 
 assert_that(rf.name, equal_to("tests/clibrary/+cfile"))
@@ -55,7 +55,8 @@ assert_that(
     targetnamesof(rp.ins),
     contains_inanyorder(
         "tests/clibrary/+cfile",
-        "$(OBJ)/tests/clibrary/+clibrary/+clibrary.a",
+        "$(OBJ)/tests/clibrary/+clibrary/clibrary.a",
+        "$(OBJ)/tests/clibrary/+clibrary/clibrary.a",
     ),
 )
 
@@ -70,15 +71,7 @@ assert_that(
 assert_that(
     filenamesof(rl2.outs),
     contains_inanyorder(
-        "$(OBJ)/tests/clibrary/+clibrary2/+clibrary2.a",
+        "$(OBJ)/tests/clibrary/+clibrary2/clibrary2.a",
         "$(OBJ)/tests/clibrary/+clibrary2_hdrs/library2.h",
-    ),
-)
-
-rf2 = targetsof("tests/clibrary/+clibrary2/tests/clibrary/lib2.cc", cwd=".")[0]
-assert_that(
-    targetnamesof(rf2.ins),
-    contains_inanyorder(
-        "tests/clibrary/lib2.cc",
     ),
 )

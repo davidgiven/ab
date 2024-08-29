@@ -1,12 +1,13 @@
-from build.ab import export, normalrule
+from build.ab import export, simplerule
 
-normalrule(
+simplerule(
     name="fortesting",
-    outs=["out"],
+    outs=["=out"],
     commands=["touch {outs[0]}"],
-    label="TOUCH")
+    label="TOUCH",
+)
 
-normalrule(
+simplerule(
     name="distribution",
     ins=[
         "./build/ab.py",
@@ -17,7 +18,7 @@ normalrule(
         "./build/utils.py",
         "./build/_objectify.py",
     ],
-    outs=["distribution.tar.xz"],
+    outs=["=distribution.tar.xz"],
     commands=["tar cJf {outs[0]} {ins}"],
     label="ZIP",
 )

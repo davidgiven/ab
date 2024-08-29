@@ -13,7 +13,7 @@ jobs:
 
     - uses: awalsh128/cache-apt-pkgs-action@latest
       with:
-        packages: python3-hamcrest
+        packages: python3-hamcrest protobuf-compiler libprotobuf-dev zip
 
     - name: make
       run: make
