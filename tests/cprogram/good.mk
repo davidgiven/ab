@@ -160,6 +160,22 @@ $(OBJ)/tests/+cprogram_compile_test/cprogram_compile_test$(EXT) &: tests/+cprogr
 	$(hide) $(CC) -o $(OBJ)/tests/+cprogram_compile_test/cprogram_compile_test$(EXT) $(OBJ)/tests/+cprogram_compile_test/tests/cprogram_compile_test.c/cprogram_compile_test.o  $(LDFLAGS)
 
 
+.PHONY: tests/+cxxprogram_compile_test/tests/cxxprogram_compile_test.cc
+tests/+cxxprogram_compile_test/tests/cxxprogram_compile_test.cc : $(OBJ)/tests/+cxxprogram_compile_test/tests/cxxprogram_compile_test.cc/cxxprogram_compile_test.o
+$(OBJ)/tests/+cxxprogram_compile_test/tests/cxxprogram_compile_test.cc/cxxprogram_compile_test.o &: tests/cxxprogram_compile_test.cc
+	$(hide) $(ECHO) CXX tests/+cxxprogram_compile_test/tests/cxxprogram_compile_test.cc
+	$(hide) mkdir -p $(OBJ)/tests/+cxxprogram_compile_test/tests/cxxprogram_compile_test.cc
+	$(hide) $(CXX) -c -o $(OBJ)/tests/+cxxprogram_compile_test/tests/cxxprogram_compile_test.cc/cxxprogram_compile_test.o tests/cxxprogram_compile_test.cc $(CFLAGS) 
+
+
+.PHONY: tests/+cxxprogram_compile_test
+tests/+cxxprogram_compile_test : $(OBJ)/tests/+cxxprogram_compile_test/cxxprogram_compile_test$(EXT)
+$(OBJ)/tests/+cxxprogram_compile_test/cxxprogram_compile_test$(EXT) &: tests/+cxxprogram_compile_test/tests/cxxprogram_compile_test.cc
+	$(hide) $(ECHO) CXXLINK tests/+cxxprogram_compile_test
+	$(hide) mkdir -p $(OBJ)/tests/+cxxprogram_compile_test
+	$(hide) $(CXX) -o $(OBJ)/tests/+cxxprogram_compile_test/cxxprogram_compile_test$(EXT) $(OBJ)/tests/+cxxprogram_compile_test/tests/cxxprogram_compile_test.cc/cxxprogram_compile_test.o  $(LDFLAGS)
+
+
 .PHONY: tests/+proto_compile_test_proto
 tests/+proto_compile_test_proto : $(OBJ)/tests/+proto_compile_test_proto/tests/+proto_compile_test_proto.descriptor
 $(OBJ)/tests/+proto_compile_test_proto/tests/+proto_compile_test_proto.descriptor &: tests/proto_compile_test.proto
@@ -219,7 +235,7 @@ $(OBJ)/tests/+objectify_test/README.md.h &: build/_objectify.py tests/README.md
 
 
 .PHONY: tests/+tests
-tests/+tests : tests/+clibrary tests/+cprogram tests/+dependency tests/+export tests/+invocation tests/+pkg tests/+protobuf tests/+simple tests/+cprogram_compile_test tests/+proto_compile_test tests/+zip_test tests/+objectify_test
+tests/+tests : tests/+clibrary tests/+cprogram tests/+dependency tests/+export tests/+invocation tests/+pkg tests/+protobuf tests/+simple tests/+cprogram_compile_test tests/+cxxprogram_compile_test tests/+proto_compile_test tests/+zip_test tests/+objectify_test
 
 
 clean::
