@@ -38,7 +38,9 @@ def test(self, name, test: Target):
 
 
 cprogram(name="cprogram_compile_test", srcs=["./cprogram_compile_test.c"])
-cxxprogram(name="cxxprogram_compile_test", srcs=["./cxxprogram_compile_test.cc"])
+cxxprogram(
+    name="cxxprogram_compile_test", srcs=["./cxxprogram_compile_test.cc"]
+)
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
 protocc(name="proto_compile_test", srcs=[".+proto_compile_test_proto"])
 zip(name="zip_test", flags="-0", items={"this/is/a/file.txt": "./README.md"})
