@@ -3,6 +3,7 @@ from build.utils import filenamesmatchingof, collectattrs
 from build.c import cxxlibrary
 from types import SimpleNamespace
 from os.path import join
+import build.pkg  # to get the protobuf package check
 
 emit(
     """
@@ -49,7 +50,7 @@ def protocc(self, name, srcs: Targets = [], deps: Targets = []):
         ins=protos,
         outs=outs,
         deps=deps,
-        commands=["$(PROTOC) --cpp_out=" + self.dir + " {ins}"],
+        commands=["$(PROTOC) --cpp_out={dir} {ins}"],
         label="PROTOCC",
     )
 

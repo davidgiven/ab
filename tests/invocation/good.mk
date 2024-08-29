@@ -35,6 +35,23 @@ $(OBJ)/+distribution/distribution.tar.xz &: build/ab.py build/c.py build/pkg.py 
 	$(hide) tar cJf $(OBJ)/+distribution/distribution.tar.xz build/ab.py build/c.py build/pkg.py build/ab.mk build/protobuf.py build/utils.py build/_objectify.py
 
 
+PKG_CONFIG ?= pkg-config
+PACKAGES := $(shell $(PKG_CONFIG) --list-all | cut -d' ' -f1 | sort)
+
+HOST_PKG_CONFIG ?= pkg-config
+HOST_PACKAGES := $(shell $(HOST_PKG_CONFIG) --list-all | cut -d' ' -f1 | sort)
+
+
+PROTOC ?= protoc
+ifeq ($(filter protobuf, $(PACKAGES)),)
+$(error Required package 'protobuf' not installed.)"
+endif
+
+
+ZIP ?= zip
+ZIPNOTE ?= zipnote
+
+
 .PHONY: tests/+clibrary
 tests/+clibrary : $(OBJ)/tests/+clibrary/build.mk
 $(OBJ)/tests/+clibrary/build.mk &: tests/clibrary/build.py tests/clibrary/good.mk build/ab.py build/c.py build/pkg.py
@@ -115,8 +132,82 @@ $(OBJ)/tests/+simple/build.mk &: tests/simple/build.py tests/simple/good.mk buil
 	$(hide) mv $(OBJ)/tests/+simple/build.mk.bad $(OBJ)/tests/+simple/build.mk
 
 
+.PHONY: tests/+cprogram_compile_test/tests/cprogram_compile_test.c
+tests/+cprogram_compile_test/tests/cprogram_compile_test.c : $(OBJ)/tests/+cprogram_compile_test/tests/cprogram_compile_test.c/cprogram_compile_test.o
+$(OBJ)/tests/+cprogram_compile_test/tests/cprogram_compile_test.c/cprogram_compile_test.o &: tests/cprogram_compile_test.c
+	$(hide) $(ECHO) CC tests/+cprogram_compile_test/tests/cprogram_compile_test.c
+	$(hide) mkdir -p $(OBJ)/tests/+cprogram_compile_test/tests/cprogram_compile_test.c
+	$(hide) $(CC) -c -o $(OBJ)/tests/+cprogram_compile_test/tests/cprogram_compile_test.c/cprogram_compile_test.o tests/cprogram_compile_test.c $(CFLAGS) 
+
+
+.PHONY: tests/+cprogram_compile_test
+tests/+cprogram_compile_test : $(OBJ)/tests/+cprogram_compile_test/cprogram_compile_test$(EXT)
+$(OBJ)/tests/+cprogram_compile_test/cprogram_compile_test$(EXT) &: tests/+cprogram_compile_test/tests/cprogram_compile_test.c
+	$(hide) $(ECHO) CLINK tests/+cprogram_compile_test
+	$(hide) mkdir -p $(OBJ)/tests/+cprogram_compile_test
+	$(hide) $(CC) -o $(OBJ)/tests/+cprogram_compile_test/cprogram_compile_test$(EXT) $(OBJ)/tests/+cprogram_compile_test/tests/cprogram_compile_test.c/cprogram_compile_test.o  $(LDFLAGS)
+
+
+.PHONY: tests/+proto_compile_test_proto
+tests/+proto_compile_test_proto : $(OBJ)/tests/+proto_compile_test_proto/tests/+proto_compile_test_proto.descriptor
+$(OBJ)/tests/+proto_compile_test_proto/tests/+proto_compile_test_proto.descriptor &: tests/proto_compile_test.proto
+	$(hide) $(ECHO) PROTO tests/+proto_compile_test_proto
+	$(hide) mkdir -p $(OBJ)/tests/+proto_compile_test_proto/tests
+	$(hide) $(PROTOC) --include_source_info --descriptor_set_out=$(OBJ)/tests/+proto_compile_test_proto/tests/+proto_compile_test_proto.descriptor tests/proto_compile_test.proto
+
+
+.PHONY: tests/+proto_compile_test_srcs
+tests/+proto_compile_test_srcs : $(OBJ)/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc $(OBJ)/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.h
+$(OBJ)/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc $(OBJ)/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.h &: tests/proto_compile_test.proto
+	$(hide) $(ECHO) PROTOCC tests/+proto_compile_test_srcs
+	$(hide) mkdir -p $(OBJ)/tests/+proto_compile_test_srcs/tests
+	$(hide) $(PROTOC) --cpp_out=$(OBJ)/tests/+proto_compile_test_srcs tests/proto_compile_test.proto
+
+
+.PHONY: tests/+proto_compile_test_hdrs
+tests/+proto_compile_test_hdrs : $(OBJ)/tests/+proto_compile_test_hdrs/tests/proto_compile_test.pb.h
+$(OBJ)/tests/+proto_compile_test_hdrs/tests/proto_compile_test.pb.h &: $(OBJ)/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.h
+	$(hide) $(ECHO) CHEADERS tests/+proto_compile_test_hdrs
+	$(hide) mkdir -p $(OBJ)/tests/+proto_compile_test_hdrs/tests
+	$(hide) cp $(OBJ)/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.h $(OBJ)/tests/+proto_compile_test_hdrs/tests/proto_compile_test.pb.h
+
+
+.PHONY: tests/+proto_compile_test/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc
+tests/+proto_compile_test/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc : $(OBJ)/tests/+proto_compile_test/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc/proto_compile_test.pb.o
+$(OBJ)/tests/+proto_compile_test/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc/proto_compile_test.pb.o &: $(OBJ)/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc tests/+proto_compile_test_hdrs $(OBJ)/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.h
+	$(hide) $(ECHO) CXX tests/+proto_compile_test/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc
+	$(hide) mkdir -p $(OBJ)/tests/+proto_compile_test/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc
+	$(hide) $(CXX) -c -o $(OBJ)/tests/+proto_compile_test/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc/proto_compile_test.pb.o $(OBJ)/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc $(CFLAGS) -I$(OBJ)/tests/+proto_compile_test_hdrs -I$(OBJ)/tests/+proto_compile_test_srcs/tests
+
+
+.PHONY: tests/+proto_compile_test
+tests/+proto_compile_test : $(OBJ)/tests/+proto_compile_test/proto_compile_test.a
+$(OBJ)/tests/+proto_compile_test/proto_compile_test.a &: tests/+proto_compile_test/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc
+	$(hide) $(ECHO) LIB tests/+proto_compile_test
+	$(hide) mkdir -p $(OBJ)/tests/+proto_compile_test
+	$(hide) $(AR) cqs $(OBJ)/tests/+proto_compile_test/proto_compile_test.a $(OBJ)/tests/+proto_compile_test/tests/+proto_compile_test_srcs/tests/proto_compile_test.pb.cc/proto_compile_test.pb.o
+
+
+.PHONY: tests/+zip_test
+tests/+zip_test : $(OBJ)/tests/+zip_test/tests/+zip_test.zip
+$(OBJ)/tests/+zip_test/tests/+zip_test.zip &: tests/README.md
+	$(hide) $(ECHO) ZIP tests/+zip_test
+	$(hide) mkdir -p $(OBJ)/tests/+zip_test/tests
+	$(hide) rm -f $(OBJ)/tests/+zip_test/tests/+zip_test.zip
+	$(hide) cat tests/README.md | $(ZIP) -q -0 $(OBJ)/tests/+zip_test/tests/+zip_test.zip -
+	$(hide) echo '@ -\n@=this/is/a/file.txt\n' | $(ZIPNOTE) -w $(OBJ)/tests/+zip_test/tests/+zip_test.zip
+
+
+.PHONY: tests/+objectify_test
+tests/+objectify_test : $(OBJ)/tests/+objectify_test/README.md.h
+$(OBJ)/tests/+objectify_test/README.md.h &: build/_objectify.py tests/README.md
+	$(hide) $(ECHO) OBJECTIFY tests/+objectify_test
+	$(hide) mkdir -p $(OBJ)/tests/+objectify_test
+	$(hide) $(PYTHON) build/_objectify.py tests/README.md readme > $(OBJ)/tests/+objectify_test/README.md.h
+
+
 .PHONY: tests/+tests
-tests/+tests : tests/+clibrary tests/+cprogram tests/+dependency tests/+export tests/+invocation tests/+pkg tests/+protobuf tests/+simple
+tests/+tests : tests/+clibrary tests/+cprogram tests/+dependency tests/+export tests/+invocation tests/+pkg tests/+protobuf tests/+simple tests/+cprogram_compile_test tests/+proto_compile_test tests/+zip_test tests/+objectify_test
 
 
 clean::

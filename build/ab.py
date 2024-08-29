@@ -9,9 +9,16 @@ import functools
 import importlib
 import importlib.abc
 import importlib.util
+from importlib.machinery import (
+    SourceFileLoader,
+    FileFinder,
+    PathFinder,
+    ModuleSpec,
+)
 import inspect
 import string
 import sys
+import os
 
 verbose = False
 cwdStack = [""]
@@ -24,26 +31,44 @@ sys.path += ["."]
 old_import = builtins.__import__
 
 
-def new_import(name, *args, **kwargs):
-    if name not in sys.modules:
-        path = name.replace(".", "/") + ".py"
-        if isfile(path):
-            sys.stderr.write(f"loading {path}\n")
-            loader = importlib.machinery.SourceFileLoader(name, path)
+class PathFinderImpl(PathFinder):
+    def find_spec(self, fullname, path, target=None):
+        if not path:
+            path = ["."]
+        if len(path) != 1:
+            return None
 
+        try:
+            path = relpath(path[0])
+        except ValueError:
+            return None
+
+        realpath = fullname.replace(".", "/")
+        buildpath = realpath + ".py"
+        if isfile(buildpath):
             spec = importlib.util.spec_from_file_location(
-                name=name, location=path, loader=loader
+                name=fullname,
+                location=buildpath,
+                loader=BuildFileLoaderImpl(fullname=fullname, path=buildpath),
+                submodule_search_locations=[],
             )
-            module = importlib.util.module_from_spec(spec)
-            sys.modules[name] = module
-            cwdStack.append(dirname(path))
-            spec.loader.exec_module(module)
-            cwdStack.pop()
-
-    return old_import(name, *args, **kwargs)
+            return spec
+        if isdir(realpath):
+            return ModuleSpec(fullname, None, origin=realpath, is_package=True)
+        return None
 
 
-builtins.__import__ = new_import
+class BuildFileLoaderImpl(SourceFileLoader):
+    def exec_module(self, module):
+        sourcepath = relpath(module.__file__)
+
+        print("loading", sourcepath)
+        cwdStack.append(dirname(sourcepath))
+        super(SourceFileLoader, self).exec_module(module)
+        cwdStack.pop()
+
+
+sys.meta_path.insert(0, PathFinderImpl())
 
 
 class ABException(BaseException):
@@ -177,11 +202,14 @@ class Target:
                             vv = t.convert(v, self)
                         self.args[kk] = _deepcopy(vv)
             self.args["name"] = self.name
+            self.args["dir"] = self.dir
 
             # Actually call the callback.
 
             cwdStack.append(self.cwd)
-            self.callback(**self.args)
+            self.callback(
+                **{k: v for k, v in self.args.items() if k not in {"dir"}}
+            )
             cwdStack.pop()
         except BaseException as e:
             print(f"Error materialising {self}: {self.callback}")
