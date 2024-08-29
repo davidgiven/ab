@@ -142,7 +142,7 @@ class Target:
         self.ins = []
         self.outs = []
         self.materialised = False
-        self.args = []
+        self.args = {}
 
     def __eq__(self, other):
         return self.name is other.name
