@@ -10,13 +10,14 @@ simplerule(
 simplerule(
     name="distribution",
     ins=[
+        "./build/_objectify.py",
+        "./build/ab.mk",
         "./build/ab.py",
         "./build/c.py",
         "./build/pkg.py",
-        "./build/ab.mk",
         "./build/protobuf.py",
         "./build/utils.py",
-        "./build/_objectify.py",
+        "./build/zip.py",
     ],
     outs=["=distribution.tar.xz"],
     commands=["tar cJf {outs[0]} {ins}"],
