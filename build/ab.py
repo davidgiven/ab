@@ -18,6 +18,7 @@ import string
 import sys
 
 verbose = False
+quiet = False
 cwdStack = [""]
 targets = {}
 unmaterialisedTargets = {}  # dict, not set, to get consistent ordering
@@ -59,7 +60,8 @@ class BuildFileLoaderImpl(SourceFileLoader):
     def exec_module(self, module):
         sourcepath = relpath(module.__file__)
 
-        print("loading", sourcepath)
+        if not quiet:
+            print("loading", sourcepath)
         cwdStack.append(dirname(sourcepath))
         super(SourceFileLoader, self).exec_module(module)
         cwdStack.pop()
@@ -454,12 +456,16 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument("-q", "--quiet", action="store_true")
     parser.add_argument("-o", "--output")
     parser.add_argument("files", nargs="+")
     args = parser.parse_args()
 
     global verbose
     verbose = args.verbose
+
+    global quiet
+    quiet = args.quiet
 
     global outputFp
     outputFp = open(args.output, "wt")
