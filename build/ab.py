@@ -1,24 +1,21 @@
 from os.path import *
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Iterable
 import argparse
 import builtins
-import copy
+from copy import copy
 import functools
 import importlib
 import importlib.abc
 import importlib.util
 from importlib.machinery import (
     SourceFileLoader,
-    FileFinder,
     PathFinder,
     ModuleSpec,
 )
 import inspect
 import string
 import sys
-import os
 
 verbose = False
 cwdStack = [""]
@@ -79,12 +76,6 @@ def error(message):
     raise ABException(message)
 
 
-def _deepcopy(value):
-    if isinstance(value, (list, dict)):
-        return copy.deepcopy(value)
-    return value
-
-
 def Rule(func):
     sig = inspect.signature(func)
 
@@ -106,8 +97,9 @@ def Rule(func):
                 name = "+" + name
             t = Target(cwd, join(cwd, name))
 
-            if t.name in targets:
-                raise ABException(f"target {t.name} has already been defined")
+            assert (
+                t.name not in targets
+            ), f"target {t.name} has already been defined"
             targets[t.name] = t
         elif replaces:
             t = replaces
@@ -195,15 +187,16 @@ class Target:
                     t = self.types.get(k, None)
                     if t:
                         v = t.convert(v, self)
-                    self.args[k] = _deepcopy(v)
+                    self.args[k] = copy(v)
                 else:
                     for kk, vv in v.items():
                         t = self.types.get(kk, None)
                         if t:
                             vv = t.convert(v, self)
-                        self.args[kk] = _deepcopy(vv)
+                        self.args[kk] = copy(vv)
             self.args["name"] = self.name
             self.args["dir"] = self.dir
+            self.args["self"] = self
 
             # Actually call the callback.
 
@@ -305,7 +298,12 @@ class TargetsMap:
     def convert(value, target):
         if not value:
             return {}
-        return {k: target.targetof(v) for k, v in value.items()}
+        output = {k: target.targetof(v) for k, v in value.items()}
+        for k, v in output.items():
+            assert (
+                len(filenamesof([v])) == 1
+            ), f"targets of a TargetsMap used as an argument of {target} with key '{k}' must contain precisely one output file, but was {filenamesof([v])}"
+        return output
 
 
 def loadbuildfile(filename):
@@ -349,7 +347,7 @@ def filenameof(x):
     xs = filenamesof(x.outs)
     assert (
         len(xs) == 1
-    ), "tried to use filenameof() on a target with more than one output"
+    ), f"tried to use filenameof() on {x} which does not have exactly one output: {x.outs}"
     return xs[0]
 
 
