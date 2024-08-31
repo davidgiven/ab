@@ -206,6 +206,7 @@ def libraryimpl(
         outs=[f"={self.localname}.a"],
         label=label,
         commands=commands,
+        caller_cflags=hr.args["caller_cflags"] if hr else [],
         caller_ldflags=caller_ldflags,
     )
     self.outs = self.outs + (hr.outs if hr else [])

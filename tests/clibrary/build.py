@@ -16,6 +16,7 @@ rl2 = clibrary(
     name="clibrary2",
     srcs=["./lib1.c", "./lib2.cc"],
     hdrs={"library2.h": "./library2.h"},
+    caller_cflags=["--cheader-cflags2"],
 )
 
 rf = cfile(name="cfile", srcs=["./prog.c"], deps=[".+cheaders"])
@@ -81,4 +82,9 @@ assert_that(
         "$(OBJ)/tests/clibrary/+clibrary2/clibrary2.a",
         "$(OBJ)/tests/clibrary/+clibrary2_hdrs/library2.h",
     ),
+)
+assert_that(rl2.args, has_item("caller_cflags"))
+assert_that(
+    rl2.args["caller_cflags"],
+    equal_to(["--cheader-cflags2", "-I$(OBJ)/tests/clibrary/+clibrary2_hdrs"]),
 )
