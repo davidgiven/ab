@@ -38,6 +38,7 @@ def _package(self, name, package, fallback, prefix=""):
     )
     emit(f"{prefix}PACKAGE_DEPS_{package} :=")
     emit("endif")
+    emit(f"{self.name}:")
 
     self.args["caller_cflags"] = [f"$({prefix}PACKAGE_CFLAGS_{package})"]
     self.args["caller_ldflags"] = [f"$({prefix}PACKAGE_LDFLAGS_{package})"]
