@@ -160,6 +160,8 @@ class Target:
                     return ""
                 if type(value) == str:
                     return value
+                if isinstance(value, (set, tuple)):
+                    value = list(value)
                 if type(value) != list:
                     value = [value]
                 return " ".join(

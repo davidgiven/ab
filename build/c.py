@@ -92,7 +92,11 @@ def cxxfile(
 
 def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
     headers = filenamesmatchingof(srcs, "*.h")
-    cflags = cflags + ["-I" + dirname(h) for h in headers]
+    cflags = collectattrs(
+        targets=deps,
+        name="caller_cflags",
+        initial=cflags + ["-I" + dirname(h) for h in headers],
+    )
     deps = deps + headers
 
     objs = []
@@ -102,7 +106,7 @@ def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
                 name=join(name, f.removeprefix("$(OBJ)/")),
                 srcs=[f],
                 deps=deps,
-                cflags=cflags,
+                cflags=set(cflags),
                 toolchain=toolchain,
                 cwd=cwd,
             )
@@ -190,7 +194,7 @@ def libraryimpl(
         self.localname,
         srcs,
         targetswithtraitsof(deps, "cheaders"),
-        collectattrs(targets=deps, name="caller_cflags", initial=cflags),
+        cflags,
         toolchain,
         kind,
         self.cwd,
