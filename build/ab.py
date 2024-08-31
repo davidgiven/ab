@@ -327,15 +327,15 @@ def flatten(items):
 
 
 def targetnamesof(items):
-    if not isinstance(items, (list, tuple)):
-        error("argument of filenamesof is not a list")
+    if not isinstance(items, (list, tuple, set)):
+        error("argument of filenamesof is not a list/tuple/set")
 
     return [t.name for t in items]
 
 
 def filenamesof(items):
-    if not isinstance(items, (list, tuple)):
-        error("argument of filenamesof is not a list")
+    if not isinstance(items, (list, tuple, set)):
+        error("argument of filenamesof is not a list/tuple/set")
 
     def generate(xs):
         for x in xs:

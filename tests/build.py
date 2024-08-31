@@ -1,5 +1,5 @@
 from build.ab import simplerule, Rule, Target, export
-from build.c import cprogram, cxxprogram, cheaders, clibrary, cxxlibrary
+from build.c import cprogram, cxxprogram, cheaders, clibrary, cxxlibrary, cfile
 from build.protobuf import proto, protocc
 from build.zip import zip
 from build.utils import objectify
@@ -39,6 +39,11 @@ cheaders(
     hdrs={"headers/test.h": "./cheaders_compile_test.h"},
     caller_cflags=["-DCHEADER"],
 )
+cfile(
+    name="cfile_compile_test",
+    srcs=["./cprogram_compile_test.c"],
+    deps=[".+cheaders_compile_test"],
+)
 clibrary(
     name="clibrary_compile_test",
     srcs=["./cprogram_compile_test.c"],
@@ -65,6 +70,7 @@ zip(name="zip_test", flags="-0", items={"this/is/a/file.txt": "./README.md"})
 objectify(name="objectify_test", src="./README.md", symbol="readme")
 
 tests = [test(name=t, test=t) for t in TESTS] + [
+    ".+cfile_compile_test",
     ".+clibrary_compile_test",
     ".+cprogram_compile_test",
     ".+cxxlibrary_compile_test",

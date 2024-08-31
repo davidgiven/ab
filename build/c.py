@@ -39,6 +39,8 @@ class HostToolchain:
 def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
     outleaf = "=" + stripext(basename(filenameof(srcs[0]))) + suffix
 
+    cflags = collectattrs(targets=deps, name="caller_cflags", initial=cflags)
+
     t = simplerule(
         replaces=self,
         ins=srcs,
@@ -92,11 +94,7 @@ def cxxfile(
 
 def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
     headers = filenamesmatchingof(srcs, "*.h")
-    cflags = collectattrs(
-        targets=deps,
-        name="caller_cflags",
-        initial=cflags + ["-I" + dirname(h) for h in headers],
-    )
+    cflags = cflags + ["-I" + dirname(h) for h in headers]
     deps = deps + headers
 
     objs = []
@@ -106,7 +104,7 @@ def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
                 name=join(name, f.removeprefix("$(OBJ)/")),
                 srcs=[f],
                 deps=deps,
-                cflags=set(cflags),
+                cflags=cflags,
                 toolchain=toolchain,
                 cwd=cwd,
             )
@@ -206,7 +204,7 @@ def libraryimpl(
         outs=[f"={self.localname}.a"],
         label=label,
         commands=commands,
-        caller_cflags=hr.args["caller_cflags"] if hr else [],
+        caller_cflags=(hr.args["caller_cflags"] if hr else []),
         caller_ldflags=caller_ldflags,
     )
     self.outs = self.outs + (hr.outs if hr else [])

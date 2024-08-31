@@ -17,9 +17,10 @@ def targetswithtraitsof(xs, trait):
 
 
 def collectattrs(*, targets, name, initial=[]):
-    return list(
-        itertools.chain(initial, *[t.args.get(name, []) for t in targets])
-    )
+    s = set(initial)
+    for a in [t.args.get(name, []) for t in targets]:
+        s.update(a)
+    return s
 
 
 @Rule
