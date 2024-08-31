@@ -28,7 +28,7 @@ def test(self, name, test: Target):
         commands=[
             "PKG_CONFIG_PATH=tests/pkg/pkg-repo python3 -X pycache_prefix=$(OBJ) build/ab.py "
             + " -q"
-            + " -o {outs[0]}.bad {ins[0]}"
+            + " -o {outs[0]} {ins[0]}"
         ],
         label="TEST",
     )
