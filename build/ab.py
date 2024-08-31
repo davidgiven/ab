@@ -361,9 +361,9 @@ def emit(*args):
 
 
 def emit_rule(name, ins, outs, cmds=[], label=None):
-    fins = [t.name for t in ins]
-    fouts = [t.name for t in outs]
-    nonobjs = [f for f in filenamesof(outs) if not f.startswith("$(OBJ)")]
+    fins = filenamesof(ins)
+    fouts = filenamesof(outs)
+    nonobjs = [f for f in fouts if not f.startswith("$(OBJ)")]
 
     emit("")
     if nonobjs:
@@ -427,11 +427,11 @@ def simplerule(
 
 @Rule
 def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
-    self.ins = deps
-    self.outs = []
+    ins = []
+    outs = []
     for dest, src in items.items():
         dest = self.targetof(dest)
-        self.outs += [dest]
+        outs += [dest]
 
         destf = filenameof(dest)
 
@@ -450,9 +450,13 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
         )
         subrule.materialise()
 
-        self.ins += [subrule]
-
-    emit_rule(name=self.name, ins=self.ins, outs=[])
+    simplerule(
+        replaces=self,
+        ins=outs + deps,
+        outs=["=sentinel"],
+        commands=["touch {outs[0]}"],
+        label="EXPORT",
+    )
 
 
 def main():

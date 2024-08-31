@@ -8,11 +8,13 @@ from hamcrest import (
 )
 
 re = export(name="all", items={}, deps=[])
-
 re.materialise()
 assert_that(re.name, equal_to("tests/simple/+all"))
 assert_that(filenamesof(re.ins), empty())
-assert_that(filenamesof(re.outs), empty())
+assert_that(
+    filenamesof(re.outs),
+    contains_inanyorder("$(OBJ)/tests/simple/+all/sentinel"),
+)
 assert_that(re, has_property("args"))
 
 rf = re.targetof("file.txt")
