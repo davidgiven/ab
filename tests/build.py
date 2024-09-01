@@ -3,7 +3,7 @@ from build.c import cprogram, cxxprogram, cheaders, clibrary, cxxlibrary, cfile
 from build.protobuf import proto, protocc
 from build.zip import zip
 from build.utils import objectify
-from build.java import javalibrary, javaprogram
+from build.java import javalibrary, javaprogram, externaljar
 
 TESTS = [
     "clibrary",
@@ -69,13 +69,16 @@ proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
 protocc(name="proto_compile_test", srcs=[".+proto_compile_test_proto"])
 zip(name="zip_test", flags="-0", items={"this/is/a/file.txt": "./README.md"})
 objectify(name="objectify_test", src="./README.md", symbol="readme")
+externaljar(name="external_jar", path="/usr/share/java/guava.jar")
 javalibrary(
-    name="javalibrary_compile_test", srcs=["./javalibrary_compile_test.java"]
+    name="javalibrary_compile_test",
+    srcs=["./javalibrary_compile_test.java"],
+    deps=[".+external_jar"],
 )
 javaprogram(
     name="javaprogram_compile_test",
     srcs=["./java_compile_test.java"],
-    deps=[".+javalibrary_compile_test"],
+    deps=[".+javalibrary_compile_test", ".+external_jar"],
     mainclass="com.cowlark.ab.java_compile_test",
 )
 

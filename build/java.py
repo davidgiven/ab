@@ -8,7 +8,7 @@ from build.ab import (
     filenameof,
     emit,
 )
-from build.utils import targetswithtraitsof
+from build.utils import targetswithtraitsof, collectattrs
 from os.path import *
 
 emit(
@@ -40,6 +40,18 @@ def jar(self, name, srcs: Targets = [], srcroot=None):
 
 
 @Rule
+def externaljar(self, name, path):
+    simplerule(
+        replaces=self,
+        ins=[],
+        outs=[],
+        commands=[],
+        label="EXTERNALJAR",
+        jar=path,
+    )
+
+
+@Rule
 def javalibrary(
     self,
     name,
@@ -58,7 +70,9 @@ def javalibrary(
         filemap[ff] = f
         ins += [f]
 
-    jardeps = filenamesof(targetswithtraitsof(deps, "javalibrary"))
+    jardeps = filenamesof(targetswithtraitsof(deps, "javalibrary")) + [
+        t.args["jar"] for t in targetswithtraitsof(deps, "externaljar")
+    ]
 
     dirs = {dirname(s) for s in filemap.keys()}
     cs = (
@@ -73,11 +87,11 @@ def javalibrary(
                     "$(JAVAC)",
                     "$(JFLAGS)",
                     "-d {dir}/objs",
-                    " -cp " + (";".join(jardeps)) if jardeps else "",
+                    " -cp " + (":".join(jardeps)) if jardeps else "",
                 ]
                 + [f"{self.dir}/srcs/{k}" for k in filemap.keys()]
             ),
-            "$(JAR) cf {outs[0]} -C {self.dir}/objs .",
+            "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs .",
         ]
     )
 
