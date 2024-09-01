@@ -18,6 +18,7 @@ simplerule(
         "./build/protobuf.py",
         "./build/utils.py",
         "./build/zip.py",
+        "./build/java.py",
     ],
     outs=["=distribution.tar.xz"],
     commands=["tar cJf {outs[0]} {ins}"],

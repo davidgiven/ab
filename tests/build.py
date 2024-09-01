@@ -3,6 +3,7 @@ from build.c import cprogram, cxxprogram, cheaders, clibrary, cxxlibrary, cfile
 from build.protobuf import proto, protocc
 from build.zip import zip
 from build.utils import objectify
+from build.java import javalibrary, javaprogram
 
 TESTS = [
     "clibrary",
@@ -68,6 +69,15 @@ proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
 protocc(name="proto_compile_test", srcs=[".+proto_compile_test_proto"])
 zip(name="zip_test", flags="-0", items={"this/is/a/file.txt": "./README.md"})
 objectify(name="objectify_test", src="./README.md", symbol="readme")
+javalibrary(
+    name="javalibrary_compile_test", srcs=["./javalibrary_compile_test.java"]
+)
+javaprogram(
+    name="javaprogram_compile_test",
+    srcs=["./java_compile_test.java"],
+    deps=[".+javalibrary_compile_test"],
+    mainclass="com.cowlark.ab.java_compile_test",
+)
 
 tests = [test(name=t, test=t) for t in TESTS] + [
     ".+cfile_compile_test",
@@ -75,9 +85,11 @@ tests = [test(name=t, test=t) for t in TESTS] + [
     ".+cprogram_compile_test",
     ".+cxxlibrary_compile_test",
     ".+cxxprogram_compile_test",
+    ".+javaprogram_compile_test",
+    ".+javalibrary_compile_test",
+    ".+objectify_test",
     ".+proto_compile_test",
     ".+zip_test",
-    ".+objectify_test",
 ]
 
 export(name="tests", deps=tests)
