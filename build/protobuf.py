@@ -59,5 +59,6 @@ def protocc(self, name, srcs: Targets = [], deps: Targets = []):
     cxxlibrary(
         replaces=self,
         srcs=[r],
+        deps=deps,
         hdrs=headers,
     )

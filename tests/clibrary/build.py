@@ -16,6 +16,7 @@ rl2 = clibrary(
     name="clibrary2",
     srcs=["./lib1.c", "./lib2.cc"],
     hdrs={"library2.h": "./library2.h"},
+    deps=[".+cheaders"],
     caller_cflags=["--cheader-cflags2"],
 )
 
@@ -86,5 +87,10 @@ assert_that(
 assert_that(rl2.args, has_item("caller_cflags"))
 assert_that(
     rl2.args["caller_cflags"],
-    equal_to(["--cheader-cflags2", "-I$(OBJ)/tests/clibrary/+clibrary2_hdrs"]),
+    contains_inanyorder(
+        "--cheader-cflags",
+        "--cheader-cflags2",
+        "-I$(OBJ)/tests/clibrary/+cheaders",
+        "-I$(OBJ)/tests/clibrary/+clibrary2_hdrs",
+    ),
 )
