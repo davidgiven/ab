@@ -4,11 +4,11 @@ from build.ab import (
     Targets,
     TargetsMap,
     filenamesof,
-    error,
     filenameof,
     emit,
 )
-from build.utils import targetswithtraitsof, collectattrs
+from build.utils import targetswithtraitsof
+from build.zip import zip
 from os.path import *
 
 emit(
@@ -21,21 +21,18 @@ JFLAGS ?= -g
 
 
 @Rule
-def jar(self, name, srcs: Targets = [], srcroot=None):
-    if not srcroot:
-        srcroot = self.cwd
-    fs = filenamesof(srcs)
-    try:
-        fs = [relpath(f, srcroot) for f in fs]
-    except ValueError:
-        error(f"some source files in {fs} aren't in the srcroot, {srcroot}")
+def jar(self, name, items: TargetsMap = {}):
+    zip(replaces=self, items=items, extension="jar", flags="-0", label="JAR")
 
-    simplerule(
+
+@Rule
+def srcjar(self, name, items: TargetsMap = {}):
+    zip(
         replaces=self,
-        ins=srcs,
-        outs=["=source.jar"],
-        commands=["jar cf {outs[0]} -C " + srcroot + " " + (" ".join(fs))],
-        label="JAR",
+        items=items,
+        extension="srcjar",
+        flags="-0",
+        label="SRCJAR",
     )
 
 
@@ -55,32 +52,20 @@ def externaljar(self, name, path):
 def javalibrary(
     self,
     name,
-    srcs: Targets = [],
-    srcroot=None,
-    extrasrcs: TargetsMap = {},
+    srcitems: TargetsMap = {},
     deps: Targets = [],
 ):
-    filemap = {k: filenameof(v) for k, v in extrasrcs.items()}
-    ins = []
-    for f in filenamesof(srcs):
-        try:
-            ff = relpath(f, srcroot)
-        except ValueError:
-            error(f"source file {f} is not in the srcroot {srcroot}")
-        filemap[ff] = f
-        ins += [f]
-
     jardeps = filenamesof(targetswithtraitsof(deps, "javalibrary")) + [
         t.args["jar"] for t in targetswithtraitsof(deps, "externaljar")
     ]
 
-    dirs = {dirname(s) for s in filemap.keys()}
+    dirs = {dirname(s) for s in srcitems.keys()}
     cs = (
-        [
-            "rm -rf {dir}/srcs {dir}/objs {outs[0]}",
-            "mkdir -p " + (" ".join([f"{self.dir}/srcs/{k}" for k in dirs])),
+        ["rm -rf {dir}/src {dir}/objs {outs[0]}", "mkdir -p {dir}/src"]
+        + [
+            "(cd {dir}/src && $(JAR) xf $(abspath " + f + "))"
+            for f in filenamesof(targetswithtraitsof(deps, "srcjar"))
         ]
-        + [f"cp {v} {self.dir}/srcs/{k}" for k, v in filemap.items()]
         + [
             " ".join(
                 [
@@ -88,8 +73,9 @@ def javalibrary(
                     "$(JFLAGS)",
                     "-d {dir}/objs",
                     " -cp " + (":".join(jardeps)) if jardeps else "",
+                    "$$(find {dir}/src -name '*.java')",
                 ]
-                + [f"{self.dir}/srcs/{k}" for k in filemap.keys()]
+                + [f"{filenameof(v)}" for v in srcitems.values()]
             ),
             "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs .",
         ]
@@ -97,7 +83,7 @@ def javalibrary(
 
     simplerule(
         replaces=self,
-        ins=ins + deps,
+        ins=list(srcitems.values()) + deps,
         outs=[f"={name}.jar"],
         commands=cs,
         label="JAVALIBRARY",
@@ -108,21 +94,17 @@ def javalibrary(
 def javaprogram(
     self,
     name,
-    srcs: Targets = [],
-    srcroot=None,
-    extrasrcs: TargetsMap = {},
+    srcitems: TargetsMap = {},
     deps: Targets = [],
     mainclass=None,
 ):
     jars = filenamesof(targetswithtraitsof(deps, "javalibrary"))
 
     assert mainclass, "a main class must be specified for javaprogram"
-    if srcs or extrasrcs:
+    if srcitems:
         j = javalibrary(
             name=name + "_mainlib",
-            srcs=srcs,
-            srcroot=srcroot,
-            extrasrcs=extrasrcs,
+            srcitems=srcitems,
             deps=deps,
             cwd=self.cwd,
         )
@@ -140,5 +122,5 @@ def javaprogram(
             + mainclass
             + " -C {dir}/objs ."
         ],
-        label="MERGEJARS",
+        label="JAVAPROGRAM",
     )
