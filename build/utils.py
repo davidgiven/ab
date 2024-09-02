@@ -76,7 +76,7 @@ def test(
         simplerule(
             replaces=self,
             ins=[command],
-            outs=["sentinel"],
+            outs=["=sentinel"],
             commands=["{ins[0]}", "touch {outs}"],
             deps=deps,
             label=label,
@@ -85,7 +85,7 @@ def test(
         simplerule(
             replaces=self,
             ins=ins,
-            outs=["sentinel"],
+            outs=["=sentinel"],
             commands=commands + ["touch {outs}"],
             deps=deps,
             label=label,
