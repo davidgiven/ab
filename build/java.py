@@ -7,7 +7,7 @@ from build.ab import (
     filenameof,
     emit,
 )
-from build.utils import targetswithtraitsof
+from build.utils import targetswithtraitsof, collectattrs
 from build.zip import zip
 from os.path import *
 
@@ -18,6 +18,10 @@ JAVAC ?= javac
 JFLAGS ?= -g
 """
 )
+
+
+def batched(items, n):
+    return (items[pos : pos + n] for pos in range(0, len(items), n))
 
 
 @Rule
@@ -55,17 +59,41 @@ def javalibrary(
     srcitems: TargetsMap = {},
     deps: Targets = [],
 ):
-    jardeps = filenamesof(targetswithtraitsof(deps, "javalibrary")) + [
-        t.args["jar"] for t in targetswithtraitsof(deps, "externaljar")
-    ]
+    jardeps = collectattrs(
+        targets=deps,
+        name="caller_deps",
+        initial=filenamesof(targetswithtraitsof(deps, "javalibrary")),
+    ) + [t.args["jar"] for t in targetswithtraitsof(deps, "externaljar")]
 
-    dirs = {dirname(s) for s in srcitems.keys()}
+    srcfiles = [f"{filenameof(v)}" for v in srcitems.values()]
+
     cs = (
-        ["rm -rf {dir}/src {dir}/objs {outs[0]}", "mkdir -p {dir}/src"]
-        + [
-            "(cd {dir}/src && $(JAR) xf $(abspath " + f + "))"
-            for f in filenamesof(targetswithtraitsof(deps, "srcjar"))
+        # Setup.
+        [
+            "rm -rf {dir}/src {dir}/objs {dir}/files.txt {outs[0]}",
+            "mkdir -p {dir}/src",
         ]
+        # Decompress any srcjars into directories of their own.
+        + [
+            " && ".join(
+                [
+                    "(mkdir {dir}/src/" + str(i),
+                    "cd {dir}/src/" + str(i),
+                    "$(JAR) xf $(abspath " + f + "))",
+                ]
+            )
+            for i, f in enumerate(
+                filenamesof(targetswithtraitsof(deps, "srcjar"))
+            )
+        ]
+        # Construct the list of filenames (which can be too long to go on
+        # the command line).
+        + [
+            "echo " + (" ".join(batch)) + " >> {dir}/files.txt"
+            for batch in batched(srcfiles, 100)
+        ]
+        + ["find {dir}/src -name '*.java' >> {dir}/files.txt"]
+        # Actually do the compilation.
         + [
             " ".join(
                 [
@@ -73,11 +101,13 @@ def javalibrary(
                     "$(JFLAGS)",
                     "-d {dir}/objs",
                     " -cp " + (":".join(jardeps)) if jardeps else "",
-                    "$$(find {dir}/src -name '*.java')",
+                    "@{dir}/files.txt",
                 ]
-                + [f"{filenameof(v)}" for v in srcitems.values()]
-            ),
-            "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs .",
+            )
+        ]
+        # jar up the result.
+        + [
+            "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs ."
         ]
     )
 
@@ -87,6 +117,7 @@ def javalibrary(
         outs=[f"={name}.jar"],
         commands=cs,
         label="JAVALIBRARY",
+        caller_deps=jardeps,
     )
 
 
