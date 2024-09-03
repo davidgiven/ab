@@ -130,6 +130,7 @@ def javaprogram(
     mainclass=None,
 ):
     jars = filenamesof(targetswithtraitsof(deps, "javalibrary"))
+    externaljars = [t.args["jar"] for t in targetswithtraitsof(deps, "externaljar")]
 
     assert mainclass, "a main class must be specified for javaprogram"
     if srcitems:
@@ -146,12 +147,17 @@ def javaprogram(
         replaces=self,
         ins=jars,
         outs=[f"={self.localname}.jar"],
-        commands=["rm -rf {dir}/objs", "mkdir -p {dir}/objs"]
+        commands=[
+            "rm -rf {dir}/objs",
+            "mkdir -p {dir}/objs",
+            "echo 'Manifest-Version: 1.0' > {dir}/manifest.mf",
+            "echo 'Created-By: ab' >> {dir}/manifest.mf",
+            "echo 'Main-Class: "+mainclass+"' >> {dir}/manifest.mf",
+            "echo 'Class-Path: " + (" ".join(externaljars)) + "' >> {dir}/manifest.mf",
+        ]
         + ["(cd {dir}/objs && $(JAR) xf $(abspath " + j + "))" for j in jars]
         + [
-            "$(JAR) --create --file={outs[0]} --main-class="
-            + mainclass
-            + " -C {dir}/objs ."
+            "$(JAR) --create --file={outs[0]} --manifest={dir}/manifest.mf -C {dir}/objs ."
         ],
         label="JAVAPROGRAM",
     )
