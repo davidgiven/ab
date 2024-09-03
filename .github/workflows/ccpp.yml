@@ -6,7 +6,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout
 
     - uses: awalsh128/cache-apt-pkgs-action@latest
       with:
@@ -16,9 +16,19 @@ jobs:
       run: make
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact
       with:
         name: ${{ github.event.repository.name }}.${{ github.sha }}
         path: |
           distribution.tar.xz
 
+  build-macos-current:
+    runs-on: maxos-latest
+    steps:
+    - uses: actions/checkout
+
+    - name: brew
+      run: brew install protobuf openjdk
+
+    - name: make
+      run: gmake
