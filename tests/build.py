@@ -1,6 +1,6 @@
 from build.ab import simplerule, Rule, Target, export
 from build.c import cprogram, cxxprogram, cheaders, clibrary, cxxlibrary, cfile
-from build.protobuf import proto, protocc
+from build.protobuf import proto, protocc, protojava
 from build.zip import zip
 from build.utils import objectify, itemsof
 from build.java import javalibrary, javaprogram, externaljar, srcjar
@@ -65,8 +65,14 @@ cxxprogram(
     srcs=["./cxxprogram_compile_test.cc"],
     deps=[".+cheaders_compile_test"],
 )
+externaljar(name="protobuf_lib", path="/usr/share/java/protobuf.jar")
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
-protocc(name="proto_compile_test", srcs=[".+proto_compile_test_proto"])
+protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_proto"])
+protojava(
+    name="java_proto_compile_test",
+    srcs=[".+proto_compile_test_proto"],
+    deps=[".+protobuf_lib"],
+)
 zip(name="zip_test", flags="-0", items={"this/is/a/file.txt": "./README.md"})
 objectify(name="objectify_test", src="./README.md", symbol="readme")
 externaljar(name="external_jar", path="/usr/share/java/guava.jar")
@@ -93,7 +99,8 @@ tests = [test(name=t, test=t) for t in TESTS] + [
     ".+javaprogram_compile_test",
     ".+javalibrary_compile_test",
     ".+objectify_test",
-    ".+proto_compile_test",
+    ".+cc_proto_compile_test",
+    ".+java_proto_compile_test",
     ".+zip_test",
 ]
 
