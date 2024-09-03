@@ -114,7 +114,7 @@ def javalibrary(
     simplerule(
         replaces=self,
         ins=list(srcitems.values()) + deps,
-        outs=[f"={name}.jar"],
+        outs=[f"={self.localname}.jar"],
         commands=cs,
         label="JAVALIBRARY",
         caller_deps=jardeps,
