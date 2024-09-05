@@ -11,6 +11,7 @@ from build.utils import (
     filenamesmatchingof,
     stripext,
     targetswithtraitsof,
+    targetswithtraitsnotof,
     collectattrs,
 )
 from os.path import *
@@ -191,7 +192,7 @@ def libraryimpl(
     objs = findsources(
         self.localname,
         srcs,
-        targetswithtraitsof(deps, "cheaders"),
+        targetswithtraitsnotof(deps, "clibrary"),
         cflags,
         toolchain,
         kind,
@@ -214,6 +215,7 @@ def libraryimpl(
     self.outs = self.outs + (hr.outs if hr else [])
 
     self.traits.add("cheaders")
+    self.traits.add("clibrary")
 
 
 @Rule
@@ -378,3 +380,44 @@ def cxxprogram(
         cxxfile,
         "cxxprogram",
     )
+
+
+@Rule
+def cxxmodule(
+    self,
+    name,
+    module=None,
+    srcs: Targets = [],
+    deps: Targets = [],
+    cflags=[],
+    toolchain=Toolchain,
+):
+    if not module:
+        module = self.localname
+
+    modulemapping = {module: self.dir}
+    for t in targetswithtraitsof(deps, "cxxmodule"):
+        m = t.args["cxxmodulename"]
+        t[m] = f"{t.dir}/{m}.bmi"
+
+    r = simplerule(
+        name=f"{self.localname}_mf",
+        ins=srcs + targetswithtraitsof(deps, "cxxmodule"),
+        outs=[f"{self.dir}/mapper.txt"],
+        commands=[
+            f"echo {m} {d}/{m}.bmi > {{outs[0]}}"
+            for m, d in modulemapping.items()
+        ],
+        label=None,
+    )
+
+    cxxlibrary(
+        replaces=self,
+        srcs=srcs,
+        deps=deps + [r],
+        cflags=cflags
+        + ["-fmodules-ts", "-fmodule-mapper=" + self.dir + "/mapper.txt"],
+        toolchain=toolchain,
+        label="CXXMODULE",
+    )
+    self.args["cxxmodulename"] = module

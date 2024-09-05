@@ -420,7 +420,7 @@ def simplerule(
         name=self.name,
         ins=ins + deps,
         outs=outs,
-        label=self.templateexpand("{label} {name}"),
+        label=None if not label else self.templateexpand("{label} {name}"),
         cmds=cs,
     )
 

@@ -26,6 +26,10 @@ def targetswithtraitsof(xs, trait):
     return [t for t in xs if trait in t.traits]
 
 
+def targetswithtraitsnotof(xs, trait):
+    return [t for t in xs if trait not in t.traits]
+
+
 def collectattrs(*, targets, name, initial=[]):
     s = set(initial)
     for a in [t.args.get(name, []) for t in targets]:

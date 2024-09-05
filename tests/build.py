@@ -1,5 +1,13 @@
 from build.ab import simplerule, Rule, Target, export
-from build.c import cprogram, cxxprogram, cheaders, clibrary, cxxlibrary, cfile
+from build.c import (
+    cprogram,
+    cxxprogram,
+    cheaders,
+    clibrary,
+    cxxlibrary,
+    cfile,
+    cxxmodule,
+)
 from build.protobuf import proto, protocc, protojava
 from build.zip import zip
 from build.utils import objectify, itemsof
@@ -65,6 +73,10 @@ cxxprogram(
     srcs=["./cxxprogram_compile_test.cc"],
     deps=[".+cheaders_compile_test"],
 )
+cxxmodule(
+    name="cxxmodule_compile_test",
+    srcs=["./cxxmodule_compile_test.cc", "./cxxmodule_extra_compile_test.cc"],
+)
 externaljar(name="protobuf_lib", paths=["/usr/share/java/protobuf.jar"])
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
 protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_proto"])
@@ -98,6 +110,7 @@ tests = [test(name=t, test=t) for t in TESTS] + [
     ".+clibrary_compile_test",
     ".+cprogram_compile_test",
     ".+cxxlibrary_compile_test",
+    ".+cxxmodule_compile_test",
     ".+cxxprogram_compile_test",
     ".+javaprogram_compile_test",
     ".+javalibrary_compile_test",
