@@ -4,7 +4,10 @@ module;
 
 export module cxxmodule_compile_test;
 
-export void hello()
+export namespace cxxmodule_compile_test
 {
-    printf("Hello from a module!\n");
+    void hello()
+    {
+        printf("Hello from a module!\n");
+    }
 }

@@ -66,16 +66,17 @@ cprogram(
 cxxlibrary(
     name="cxxlibrary_compile_test",
     srcs=["./cxxprogram_compile_test.cc"],
-    deps=[".+cheaders_compile_test"],
-)
-cxxprogram(
-    name="cxxprogram_compile_test",
-    srcs=["./cxxprogram_compile_test.cc"],
+    cflags=["-DNO_MODULE"],
     deps=[".+cheaders_compile_test"],
 )
 cxxmodule(
     name="cxxmodule_compile_test",
     srcs=["./cxxmodule_compile_test.cc", "./cxxmodule_extra_compile_test.cc"],
+)
+cxxprogram(
+    name="cxxprogram_compile_test",
+    srcs=["./cxxprogram_compile_test.cc"],
+    deps=[".+cheaders_compile_test", ".+cxxmodule_compile_test"],
 )
 externaljar(name="protobuf_lib", paths=["/usr/share/java/protobuf.jar"])
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])

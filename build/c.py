@@ -353,6 +353,27 @@ def cprogram(
     )
 
 
+def _compute_module_mapping(deps):
+    mapping = {}
+    for t in targetswithtraitsof(deps, "cxxmodule"):
+        m = t.args["cxxmodulename"]
+        mapping[m] = t.dir
+    return mapping
+
+
+def _make_module_manifest(self, srcs, deps, modulemapping):
+    return simplerule(
+        name=f"{self.localname}.manifest",
+        ins=srcs + targetswithtraitsof(deps, "cxxmodule"),
+        outs=[f"{self.dir}/mapper.txt"],
+        commands=[
+            f"echo {m} {d}/{m}.bmi > {{outs[0]}}"
+            for m, d in modulemapping.items()
+        ],
+        label=None,
+    )
+
+
 @Rule
 def cxxprogram(
     self,
@@ -365,13 +386,22 @@ def cxxprogram(
     commands=None,
     label="CXXLINK",
 ):
+    modulemapping = _compute_module_mapping(deps)
+    r = None
+    if modulemapping:
+        r = _make_module_manifest(self, srcs, deps, modulemapping)
+        cflags = cflags + [
+            "-fmodules-ts",
+            "-fmodule-mapper=" + self.dir + "/mapper.txt",
+        ]
+
     if not commands:
         commands = toolchain.cxxprogram
     programimpl(
         self,
         name,
         srcs,
-        deps,
+        deps + ([] if not r else [r]),
         cflags,
         ldflags,
         toolchain,
@@ -395,21 +425,10 @@ def cxxmodule(
     if not module:
         module = self.localname
 
-    modulemapping = {module: self.dir}
-    for t in targetswithtraitsof(deps, "cxxmodule"):
-        m = t.args["cxxmodulename"]
-        t[m] = f"{t.dir}/{m}.bmi"
+    modulemapping = _compute_module_mapping(deps)
+    modulemapping[module] = self.dir
 
-    r = simplerule(
-        name=f"{self.localname}_mf",
-        ins=srcs + targetswithtraitsof(deps, "cxxmodule"),
-        outs=[f"{self.dir}/mapper.txt"],
-        commands=[
-            f"echo {m} {d}/{m}.bmi > {{outs[0]}}"
-            for m, d in modulemapping.items()
-        ],
-        label=None,
-    )
+    r = _make_module_manifest(self, srcs, deps, modulemapping)
 
     cxxlibrary(
         replaces=self,
