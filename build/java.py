@@ -1,5 +1,6 @@
 from build.ab import (
     simplerule,
+    error,
     Rule,
     Targets,
     TargetsMap,
@@ -41,15 +42,19 @@ def srcjar(self, name, items: TargetsMap = {}):
 
 
 @Rule
-def externaljar(self, name, path):
-    simplerule(
-        replaces=self,
-        ins=[],
-        outs=[],
-        commands=[],
-        label="EXTERNALJAR",
-        jar=path,
-    )
+def externaljar(self, name, paths):
+    for f in paths:
+        if isfile(f):
+            simplerule(
+                replaces=self,
+                ins=[],
+                outs=[],
+                commands=[],
+                label="EXTERNALJAR",
+                jar=f,
+            )
+            return
+    error(f"None of {paths} exist")
 
 
 @Rule
@@ -130,7 +135,9 @@ def javaprogram(
     mainclass=None,
 ):
     jars = filenamesof(targetswithtraitsof(deps, "javalibrary"))
-    externaljars = [t.args["jar"] for t in targetswithtraitsof(deps, "externaljar")]
+    externaljars = [
+        t.args["jar"] for t in targetswithtraitsof(deps, "externaljar")
+    ]
 
     assert mainclass, "a main class must be specified for javaprogram"
     if srcitems:
@@ -152,8 +159,10 @@ def javaprogram(
             "mkdir -p {dir}/objs",
             "echo 'Manifest-Version: 1.0' > {dir}/manifest.mf",
             "echo 'Created-By: ab' >> {dir}/manifest.mf",
-            "echo 'Main-Class: "+mainclass+"' >> {dir}/manifest.mf",
-            "echo 'Class-Path: " + (" ".join(externaljars)) + "' >> {dir}/manifest.mf",
+            "echo 'Main-Class: " + mainclass + "' >> {dir}/manifest.mf",
+            "echo 'Class-Path: "
+            + (" ".join(externaljars))
+            + "' >> {dir}/manifest.mf",
         ]
         + ["(cd {dir}/objs && $(JAR) xf $(abspath " + j + "))" for j in jars]
         + [

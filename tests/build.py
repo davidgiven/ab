@@ -65,7 +65,7 @@ cxxprogram(
     srcs=["./cxxprogram_compile_test.cc"],
     deps=[".+cheaders_compile_test"],
 )
-externaljar(name="protobuf_lib", path="/usr/share/java/protobuf.jar")
+externaljar(name="protobuf_lib", paths=["/usr/share/java/protobuf.jar"])
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
 protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_proto"])
 protojava(
@@ -75,7 +75,10 @@ protojava(
 )
 zip(name="zip_test", flags="-0", items={"this/is/a/file.txt": "./README.md"})
 objectify(name="objectify_test", src="./README.md", symbol="readme")
-externaljar(name="external_jar", path="/usr/share/java/guava.jar")
+externaljar(
+    name="external_jar",
+    paths=["/usr/share/java/guava.jar", "/usr/share/java/guava/guava.jar"],
+)
 srcjar(
     name="javalibrary_srcjar", items=itemsof("./javalibrary_compile_test.java")
 )
