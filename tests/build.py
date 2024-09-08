@@ -4,6 +4,7 @@ from build.protobuf import proto, protocc, protojava
 from build.zip import zip
 from build.utils import objectify, itemsof
 from build.java import javalibrary, javaprogram, externaljar, srcjar
+from build.yacc import bison, flex
 
 TESTS = [
     "clibrary",
@@ -93,6 +94,14 @@ javaprogram(
     mainclass="com.cowlark.ab.java_compile_test",
 )
 
+flex(name="flex_compile_test.flex", src="./flex_compile_test.l")
+bison(name="bison_compile_test.bison", src="./bison_compile_test.y",stem="y.tab")
+cprogram(
+    name="bison_compile_test",
+    srcs=[".+bison_compile_test.bison", ".+flex_compile_test.flex"],
+    ldflags=["-lfl"],
+)
+
 tests = [test(name=t, test=t) for t in TESTS] + [
     ".+cfile_compile_test",
     ".+clibrary_compile_test",
@@ -104,6 +113,7 @@ tests = [test(name=t, test=t) for t in TESTS] + [
     ".+objectify_test",
     ".+cc_proto_compile_test",
     ".+java_proto_compile_test",
+    ".+bison_compile_test",
     ".+zip_test",
 ]
 
