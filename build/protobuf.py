@@ -56,6 +56,7 @@ def protocc(self, name, srcs: Targets = [], deps: Targets = []):
     headers = {f[1:]: join(r.dir, f[1:]) for f in outs if f.endswith(".pb.h")}
 
     from build.c import cxxlibrary
+
     cxxlibrary(
         replaces=self,
         srcs=[r],
@@ -91,6 +92,7 @@ def protojava(self, name, srcs: Targets = [], deps: Targets = []):
     r.traits.add("srcjar")
 
     from build.java import javalibrary
+
     javalibrary(
         replaces=self,
         deps=[r] + deps,

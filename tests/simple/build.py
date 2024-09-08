@@ -1,4 +1,4 @@
-from build.ab import export, filenamesof
+from build.ab import export, filenamesof, targetof
 from hamcrest import (
     assert_that,
     empty,
@@ -23,3 +23,10 @@ assert_that(rf.name, equal_to("file.txt"))
 assert_that(filenamesof(rf.ins), empty())
 assert_that(filenamesof(rf.outs), contains_inanyorder("file.txt"))
 assert_that(rf, has_property("args"))
+
+rg = targetof("file.txt")
+rg.materialise()
+assert_that(rg.name, equal_to("file.txt"))
+assert_that(filenamesof(rg.ins), empty())
+assert_that(filenamesof(rg.outs), contains_inanyorder("file.txt"))
+assert_that(rg, has_property("args"))
