@@ -145,7 +145,7 @@ class Target:
         return id(self)
 
     def __repr__(self):
-        return f"Target('{self.name}', {id(self)})"
+        return f"Target('{self.name}')"
 
     def templateexpand(selfi, s):
         class Formatter(string.Formatter):
