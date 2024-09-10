@@ -51,7 +51,7 @@ def externaljar(self, name, paths):
                 outs=[],
                 commands=[],
                 label="EXTERNALJAR",
-                jar=f,
+                args={"jar": f},
             )
             return
     error(f"None of {paths} exist")
@@ -122,7 +122,7 @@ def javalibrary(
         outs=[f"={self.localname}.jar"],
         commands=cs,
         label="JAVALIBRARY",
-        caller_deps=jardeps,
+        args={"caller_deps": jardeps},
     )
 
 

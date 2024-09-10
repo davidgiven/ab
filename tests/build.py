@@ -95,7 +95,9 @@ javaprogram(
 )
 
 flex(name="flex_compile_test.flex", src="./flex_compile_test.l")
-bison(name="bison_compile_test.bison", src="./bison_compile_test.y",stem="y.tab")
+bison(
+    name="bison_compile_test.bison", src="./bison_compile_test.y", stem="y.tab"
+)
 cprogram(
     name="bison_compile_test",
     srcs=[".+bison_compile_test.bison", ".+flex_compile_test.flex"],
