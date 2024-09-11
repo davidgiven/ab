@@ -132,7 +132,7 @@ def javaprogram(
     deps: Targets = [],
     mainclass=None,
 ):
-    alldeps = collectattrs(targets=deps, name="caller_deps")
+    alldeps = collectattrs(targets=deps, name="caller_deps", initial=deps)
     externaldeps = targetswithtraitsof(alldeps, "externaljar")
     externaljars = [t.args["jar"] for t in externaldeps]
     internaldeps = targetswithtraitsof(alldeps, "javalibrary")
