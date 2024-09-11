@@ -21,7 +21,7 @@ JFLAGS ?= -g
 )
 
 
-def batched(items, n):
+def _batched(items, n):
     return (items[pos : pos + n] for pos in range(0, len(items), n))
 
 
@@ -51,7 +51,7 @@ def externaljar(self, name, paths):
                 outs=[],
                 commands=[],
                 label="EXTERNALJAR",
-                args={"jar": f},
+                args={"jar": f, "caller_deps": [self]},
             )
             return
     error(f"None of {paths} exist")
@@ -64,11 +64,13 @@ def javalibrary(
     srcitems: TargetsMap = {},
     deps: Targets = [],
 ):
-    jardeps = collectattrs(
-        targets=deps,
-        name="caller_deps",
-        initial=filenamesof(targetswithtraitsof(deps, "javalibrary")),
-    ) + [t.args["jar"] for t in targetswithtraitsof(deps, "externaljar")]
+    alldeps = collectattrs(targets=deps, name="caller_deps", initial=deps)
+    externaldeps = targetswithtraitsof(alldeps, "externaljar")
+    externaljars = [t.args["jar"] for t in externaldeps]
+    internaldeps = targetswithtraitsof(alldeps, "javalibrary")
+    srcdeps = targetswithtraitsof(alldeps, "srcjar")
+
+    classpath = filenamesof(internaldeps) + externaljars
 
     srcfiles = [f"{filenameof(v)}" for v in srcitems.values()]
 
@@ -87,15 +89,13 @@ def javalibrary(
                     "$(JAR) xf $(abspath " + f + "))",
                 ]
             )
-            for i, f in enumerate(
-                filenamesof(targetswithtraitsof(deps, "srcjar"))
-            )
+            for i, f in enumerate(filenamesof(srcdeps))
         ]
         # Construct the list of filenames (which can be too long to go on
         # the command line).
         + [
             "echo " + (" ".join(batch)) + " >> {dir}/files.txt"
-            for batch in batched(srcfiles, 100)
+            for batch in _batched(srcfiles, 100)
         ]
         + ["find {dir}/src -name '*.java' >> {dir}/files.txt"]
         # Actually do the compilation.
@@ -105,15 +105,13 @@ def javalibrary(
                     "$(JAVAC)",
                     "$(JFLAGS)",
                     "-d {dir}/objs",
-                    " -cp " + (":".join(jardeps)) if jardeps else "",
+                    (" -cp " + ":".join(classpath)) if classpath else "",
                     "@{dir}/files.txt",
                 ]
             )
         ]
         # jar up the result.
-        + [
-            "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs ."
-        ]
+        + ["$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs ."]
     )
 
     simplerule(
@@ -122,7 +120,7 @@ def javalibrary(
         outs=[f"={self.localname}.jar"],
         commands=cs,
         label="JAVALIBRARY",
-        args={"caller_deps": jardeps},
+        args={"caller_deps": externaldeps + internaldeps},
     )
 
 
@@ -134,10 +132,10 @@ def javaprogram(
     deps: Targets = [],
     mainclass=None,
 ):
-    jars = filenamesof(targetswithtraitsof(deps, "javalibrary"))
-    externaljars = [
-        t.args["jar"] for t in targetswithtraitsof(deps, "externaljar")
-    ]
+    alldeps = collectattrs(targets=deps, name="caller_deps")
+    externaldeps = targetswithtraitsof(alldeps, "externaljar")
+    externaljars = [t.args["jar"] for t in externaldeps]
+    internaldeps = targetswithtraitsof(alldeps, "javalibrary")
 
     assert mainclass, "a main class must be specified for javaprogram"
     if srcitems:
@@ -152,7 +150,7 @@ def javaprogram(
 
     simplerule(
         replaces=self,
-        ins=jars,
+        ins=alldeps,
         outs=[f"={self.localname}.jar"],
         commands=[
             "rm -rf {dir}/objs",
@@ -160,11 +158,19 @@ def javaprogram(
             "echo 'Manifest-Version: 1.0' > {dir}/manifest.mf",
             "echo 'Created-By: ab' >> {dir}/manifest.mf",
             "echo 'Main-Class: " + mainclass + "' >> {dir}/manifest.mf",
-            "echo 'Class-Path: "
-            + (" ".join(externaljars))
-            + "' >> {dir}/manifest.mf",
         ]
-        + ["(cd {dir}/objs && $(JAR) xf $(abspath " + j + "))" for j in jars]
+        + (
+            (
+                ["printf 'Class-Path:' >> {dir}/manifest.mf"]
+                + [f"echo ' {j}' >> {{dir}}/manifest.mf" for j in externaljars]
+            )
+            if externaljars
+            else []
+        )
+        + [
+            "(cd {dir}/objs && $(JAR) xf $(abspath " + j + "))"
+            for j in filenamesof(internaldeps)
+        ]
         + [
             "$(JAR) --create --file={outs[0]} --manifest={dir}/manifest.mf -C {dir}/objs ."
         ],
