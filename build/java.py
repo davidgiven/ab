@@ -162,7 +162,7 @@ def javaprogram(
         + (
             (
                 ["printf 'Class-Path:' >> {dir}/manifest.mf"]
-                + [f"echo ' {j}' >> {{dir}}/manifest.mf" for j in externaljars]
+                + [f"echo '  {j}' >> {{dir}}/manifest.mf" for j in externaljars]
             )
             if externaljars
             else []
