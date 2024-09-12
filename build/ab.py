@@ -131,6 +131,12 @@ def Rule(func):
     return wrapper
 
 
+def _isiterable(xs):
+    return isinstance(xs, Iterable) and not isinstance(
+        xs, (str, bytes, bytearray)
+    )
+
+
 class Target:
     def __init__(self, cwd, name):
         if verbose:
@@ -166,7 +172,7 @@ class Target:
                     return ""
                 if type(value) == str:
                     return value
-                if isinstance(value, (set, tuple)):
+                if _isiterable(value):
                     value = list(value)
                 if type(value) != list:
                     value = [value]
@@ -308,9 +314,7 @@ class Targets:
     def convert(value, target):
         if not value:
             return []
-        assert isinstance(
-            value, (list, tuple)
-        ), "cannot convert non-list to Targets"
+        assert _isiterable(value), "cannot convert non-list to Targets"
         return [target.targetof(x) for x in flatten(value)]
 
 
@@ -334,7 +338,7 @@ def loadbuildfile(filename):
 def flatten(items):
     def generate(xs):
         for x in xs:
-            if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
+            if _isiterable(x):
                 yield from generate(x)
             else:
                 yield x
@@ -343,15 +347,13 @@ def flatten(items):
 
 
 def targetnamesof(items):
-    if not isinstance(items, (list, tuple, set)):
-        error("argument of filenamesof is not a list/tuple/set")
+    assert _isiterable(items), "argument of filenamesof is not a collection"
 
     return [t.name for t in items]
 
 
 def filenamesof(items):
-    if not isinstance(items, (list, tuple, set)):
-        error("argument of filenamesof is not a list/tuple/set")
+    assert _isiterable(items), "argument of filenamesof is not a collection"
 
     def generate(xs):
         for x in xs:
