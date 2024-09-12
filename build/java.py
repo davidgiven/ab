@@ -8,7 +8,7 @@ from build.ab import (
     filenameof,
     emit,
 )
-from build.utils import targetswithtraitsof, collectattrs
+from build.utils import targetswithtraitsof, collectattrs, filenamesmatchingof
 from build.zip import zip
 from os.path import *
 
@@ -71,14 +71,13 @@ def javalibrary(
     srcdeps = targetswithtraitsof(alldeps, "srcjar")
 
     classpath = filenamesof(internaldeps) + externaljars
-
-    srcfiles = [f"{filenameof(v)}" for v in srcitems.values()]
+    srcfiles = filenamesmatchingof(srcitems.values(), "*.java")
 
     cs = (
         # Setup.
         [
             "rm -rf {dir}/src {dir}/objs {dir}/files.txt {outs[0]}",
-            "mkdir -p {dir}/src",
+            "mkdir -p {dir}/src {dir}/objs",
         ]
         # Decompress any srcjars into directories of their own.
         + [
@@ -91,28 +90,35 @@ def javalibrary(
             )
             for i, f in enumerate(filenamesof(srcdeps))
         ]
+    )
+
+    if srcfiles or srcdeps:
         # Construct the list of filenames (which can be too long to go on
         # the command line).
-        + [
-            "echo " + (" ".join(batch)) + " >> {dir}/files.txt"
-            for batch in _batched(srcfiles, 100)
-        ]
-        + ["find {dir}/src -name '*.java' >> {dir}/files.txt"]
-        # Actually do the compilation.
-        + [
-            " ".join(
-                [
-                    "$(JAVAC)",
-                    "$(JFLAGS)",
-                    "-d {dir}/objs",
-                    (" -cp " + ":".join(classpath)) if classpath else "",
-                    "@{dir}/files.txt",
-                ]
-            )
-        ]
-        # jar up the result.
-        + ["$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs ."]
-    )
+        cs += (
+            [
+                "echo " + (" ".join(batch)) + " >> {dir}/files.txt"
+                for batch in _batched(srcfiles, 100)
+            ]
+            + ["find {dir}/src -name '*.java' >> {dir}/files.txt"]
+            # Actually do the compilation.
+            + [
+                " ".join(
+                    [
+                        "$(JAVAC)",
+                        "$(JFLAGS)",
+                        "-d {dir}/objs",
+                        (" -cp " + ":".join(classpath)) if classpath else "",
+                        "@{dir}/files.txt",
+                    ]
+                )
+            ]
+        )
+
+    # jar up the result.
+    cs += [
+        "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs ."
+    ]
 
     simplerule(
         replaces=self,
