@@ -146,7 +146,8 @@ def javaprogram(
             cwd=self.cwd,
         )
         j.materialise()
-        jars += [filenameof(j)]
+        internaldeps += [j]
+        alldeps += [j]
 
     simplerule(
         replaces=self,
