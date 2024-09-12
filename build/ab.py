@@ -216,9 +216,21 @@ class Target:
             # Actually call the callback.
 
             cwdStack.append(self.cwd)
-            self.callback(
-                **{k: self.args[k] for k in self.binding.arguments.keys()}
-            )
+            if "kwargs" in self.binding.arguments.keys():
+                # If the caller wants kwargs, return all arguments.
+                self.callback(**self.args)
+            else:
+                # Otherwise, just call the callback with the ones it asks for.
+                cbargs = {}
+                for k in self.binding.arguments.keys():
+                    if k != "kwargs":
+                        try:
+                            cbargs[k] = self.args[k]
+                        except KeyError:
+                            error(
+                                f"invocation of {self} failed because {k} isn't an argument"
+                            )
+                self.callback(**cbargs)
             cwdStack.pop()
         except BaseException as e:
             print(f"Error materialising {self}: {self.callback}")

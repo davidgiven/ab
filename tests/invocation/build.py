@@ -4,7 +4,13 @@ from build.ab import (
     filenamesof,
     Rule,
 )
-from hamcrest import assert_that, empty, equal_to, contains_inanyorder
+from hamcrest import (
+    assert_that,
+    empty,
+    equal_to,
+    contains_inanyorder,
+    has_entries,
+)
 
 
 @Rule
@@ -35,3 +41,15 @@ assert_that(
 assert_that({r1}, contains_inanyorder(r1))
 assert_that({r1, r2}, contains_inanyorder(r1, r2))
 assert_that({r1, r1, r2}, contains_inanyorder(r1, r2))
+
+# Check that kwargs in rules works to get all arguments.
+
+
+@Rule
+def kwargs_test_rule(self, name, **kwargs):
+    self.kwargs = kwargs
+
+
+kr = kwargs_test_rule(name="kr", a=1, b=2, c=3)
+kr.materialise()
+assert_that(kr.kwargs, has_entries({"a": 1, "b": 2, "c": 3}))
