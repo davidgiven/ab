@@ -217,8 +217,10 @@ class Target:
 
             cwdStack.append(self.cwd)
             if "kwargs" in self.binding.arguments.keys():
-                # If the caller wants kwargs, return all arguments.
-                self.callback(**self.args)
+                # If the caller wants kwargs, return all arguments except the standard ones.
+                cbargs = {
+                    k: v for k, v in self.args.items() if k not in {"dir"}
+                }
             else:
                 # Otherwise, just call the callback with the ones it asks for.
                 cbargs = {}
@@ -230,7 +232,7 @@ class Target:
                             error(
                                 f"invocation of {self} failed because {k} isn't an argument"
                             )
-                self.callback(**cbargs)
+            self.callback(**cbargs)
             cwdStack.pop()
         except BaseException as e:
             print(f"Error materialising {self}: {self.callback}")

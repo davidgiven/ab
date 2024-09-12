@@ -46,10 +46,21 @@ assert_that({r1, r1, r2}, contains_inanyorder(r1, r2))
 
 
 @Rule
-def kwargs_test_rule(self, name, **kwargs):
+def kwargs_test_rule2(self, name, a, b, c):
+    self.a = a
+    self.b = b
+    self.c = c
+
+
+@Rule
+def kwargs_test_rule1(self, name, **kwargs):
     self.kwargs = kwargs
+    kwargs_test_rule2(replaces=self, **kwargs)
 
 
-kr = kwargs_test_rule(name="kr", a=1, b=2, c=3)
+kr = kwargs_test_rule1(name="kr", a=1, b=2, c=3)
 kr.materialise()
 assert_that(kr.kwargs, has_entries({"a": 1, "b": 2, "c": 3}))
+assert_that(kr.a, equal_to(1))
+assert_that(kr.b, equal_to(2))
+assert_that(kr.c, equal_to(3))
