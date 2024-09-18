@@ -1,5 +1,6 @@
 from build.ab import (
     Rule,
+    Target,
     Targets,
     TargetsMap,
     filenameof,
@@ -11,6 +12,7 @@ from build.utils import (
     filenamesmatchingof,
     stripext,
     targetswithtraitsof,
+    targetswithtraitsnotof,
     collectattrs,
 )
 from os.path import *
@@ -191,7 +193,7 @@ def libraryimpl(
     objs = findsources(
         self.localname,
         srcs,
-        targetswithtraitsof(deps, "cheaders"),
+        targetswithtraitsnotof(deps, "clibrary"),
         cflags,
         toolchain,
         kind,
@@ -354,6 +356,27 @@ def cprogram(
     )
 
 
+def _compute_module_mapping(deps):
+    mapping = {}
+    for t in targetswithtraitsof(deps, "cxxmodule"):
+        m = t.args["cxxmodulename"]
+        mapping[m] = t.dir
+    return mapping
+
+
+def _make_module_manifest(self, srcs, deps, modulemapping):
+    return simplerule(
+        name=f"{self.localname}.manifest",
+        ins=srcs + targetswithtraitsof(deps, "cxxmodule"),
+        outs=[f"{self.dir}/mapper.txt"],
+        commands=[
+            f"echo {m} {d}/{m}.bmi > {{outs[0]}}"
+            for m, d in modulemapping.items()
+        ],
+        label=None,
+    )
+
+
 @Rule
 def cxxprogram(
     self,
@@ -366,13 +389,22 @@ def cxxprogram(
     commands=None,
     label="CXXLINK",
 ):
+    modulemapping = _compute_module_mapping(deps)
+    r = None
+    if modulemapping:
+        r = _make_module_manifest(self, srcs, deps, modulemapping)
+        cflags = cflags + [
+            "-fmodules-ts",
+            "-fmodule-mapper=" + self.dir + "/mapper.txt",
+        ]
+
     if not commands:
         commands = toolchain.cxxprogram
     programimpl(
         self,
         name,
         srcs,
-        deps,
+        deps + ([] if not r else [r]),
         cflags,
         ldflags,
         toolchain,
@@ -381,3 +413,43 @@ def cxxprogram(
         cxxfile,
         "cxxprogram",
     )
+
+
+@Rule
+def cxxmodule(
+    self,
+    name,
+    module=None,
+    src: Target=None,
+    extrasrcs: Targets = [],
+    deps: Targets = [],
+    cflags=[],
+    toolchain=Toolchain,
+):
+    assert src, "you must specify a C++ module main file"
+    if not module:
+        module = self.localname
+
+    modulemapping = _compute_module_mapping(deps)
+    modulemapping[module] = self.dir
+
+    r = _make_module_manifest(self, [src]+extrasrcs, deps, modulemapping)
+
+    f = cxxfile(
+            name=join(name, filenameof(src).removeprefix("$(OBJ)/")),
+            srcs=[src],
+            deps=[deps],
+            cflags=cflags
+        + ["-fmodules-ts", "-fmodule-mapper=" + self.dir + "/mapper.txt"],
+            toolchain=toolchain)
+
+    cxxlibrary(
+        replaces=self,
+        srcs=extrasrcs,
+        deps=deps + [r, f],
+        cflags=cflags
+        + ["-fmodules-ts", "-fmodule-mapper=" + self.dir + "/mapper.txt"],
+        toolchain=toolchain,
+        label="CXXMODULE",
+    )
+    self.args["cxxmodulename"] = module

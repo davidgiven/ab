@@ -1,5 +1,13 @@
 from build.ab import simplerule, Rule, Target, export
-from build.c import cprogram, cxxprogram, cheaders, clibrary, cxxlibrary, cfile
+from build.c import (
+    cprogram,
+    cxxprogram,
+    cheaders,
+    clibrary,
+    cxxlibrary,
+    cfile,
+    cxxmodule,
+)
 from build.protobuf import proto, protocc, protojava
 from build.zip import zip
 from build.utils import objectify, itemsof
@@ -59,12 +67,18 @@ cprogram(
 cxxlibrary(
     name="cxxlibrary_compile_test",
     srcs=["./cxxprogram_compile_test.cc"],
+    cflags=["-DNO_MODULE"],
     deps=[".+cheaders_compile_test"],
+)
+cxxmodule(
+    name="cxxmodule_compile_test",
+    src="./cxxmodule_compile_test.cc",
+    extrasrcs=["./cxxmodule_extra_compile_test.cc"],
 )
 cxxprogram(
     name="cxxprogram_compile_test",
     srcs=["./cxxprogram_compile_test.cc"],
-    deps=[".+cheaders_compile_test"],
+    deps=[".+cheaders_compile_test", ".+cxxmodule_compile_test"],
 )
 externaljar(name="protobuf_lib", paths=["/usr/share/java/protobuf.jar"])
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
@@ -109,6 +123,7 @@ tests = [test(name=t, test=t) for t in TESTS] + [
     ".+clibrary_compile_test",
     ".+cprogram_compile_test",
     ".+cxxlibrary_compile_test",
+    ".+cxxmodule_compile_test",
     ".+cxxprogram_compile_test",
     ".+javaprogram_compile_test",
     ".+javalibrary_compile_test",
