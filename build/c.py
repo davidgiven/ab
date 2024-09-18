@@ -1,5 +1,6 @@
 from build.ab import (
     Rule,
+    Target,
     Targets,
     TargetsMap,
     filenameof,
@@ -419,23 +420,33 @@ def cxxmodule(
     self,
     name,
     module=None,
-    srcs: Targets = [],
+    src: Target=None,
+    extrasrcs: Targets = [],
     deps: Targets = [],
     cflags=[],
     toolchain=Toolchain,
 ):
+    assert src, "you must specify a C++ module main file"
     if not module:
         module = self.localname
 
     modulemapping = _compute_module_mapping(deps)
     modulemapping[module] = self.dir
 
-    r = _make_module_manifest(self, srcs, deps, modulemapping)
+    r = _make_module_manifest(self, [src]+extrasrcs, deps, modulemapping)
+
+    f = cxxfile(
+            name=join(name, filenameof(src).removeprefix("$(OBJ)/")),
+            srcs=[src],
+            deps=[deps],
+            cflags=cflags
+        + ["-fmodules-ts", "-fmodule-mapper=" + self.dir + "/mapper.txt"],
+            toolchain=toolchain)
 
     cxxlibrary(
         replaces=self,
-        srcs=srcs,
-        deps=deps + [r],
+        srcs=extrasrcs,
+        deps=deps + [r, f],
         cflags=cflags
         + ["-fmodules-ts", "-fmodule-mapper=" + self.dir + "/mapper.txt"],
         toolchain=toolchain,

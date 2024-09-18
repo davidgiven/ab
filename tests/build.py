@@ -72,7 +72,8 @@ cxxlibrary(
 )
 cxxmodule(
     name="cxxmodule_compile_test",
-    srcs=["./cxxmodule_compile_test.cc", "./cxxmodule_extra_compile_test.cc"],
+    src="./cxxmodule_compile_test.cc",
+    extrasrcs=["./cxxmodule_extra_compile_test.cc"],
 )
 cxxprogram(
     name="cxxprogram_compile_test",
