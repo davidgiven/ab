@@ -11,6 +11,7 @@ simplerule(
     name="distribution",
     ins=[
         "./build/_objectify.py",
+        "./build/_progress.py",
         "./build/ab.mk",
         "./build/ab.py",
         "./build/c.py",
