@@ -25,7 +25,7 @@ def proto(self, name, srcs: Targets = [], deps: Targets = []):
             "$(PROTOC) --include_source_info --descriptor_set_out={outs[0]} {ins}"
         ],
         label="PROTO",
-        protosrcs=filenamesof(srcs),
+        args={"protosrcs": filenamesof(srcs)},
     )
 
 
@@ -87,9 +87,9 @@ def protojava(self, name, srcs: Targets = [], deps: Targets = []):
             "$(PROTOC) --java_out={dir}/srcs {ins}",
             "$(JAR) cf {outs[0]} -C {dir}/srcs .",
         ],
+        traits={"srcjar"},
         label="PROTOJAVA",
     )
-    r.traits.add("srcjar")
 
     from build.java import javalibrary
 

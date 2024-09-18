@@ -49,7 +49,7 @@ def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
         outs=[outleaf],
         label=label,
         commands=commands,
-        cflags=cflags,
+        args={"cflags": cflags},
     )
 
 
@@ -151,7 +151,7 @@ def cheaders(
         commands=cs,
         deps=deps,
         label="CHEADERS",
-        caller_cflags=caller_cflags + ["-I" + self.dir],
+        args={"caller_cflags": caller_cflags + ["-I" + self.dir]},
     )
 
 
@@ -205,17 +205,17 @@ def libraryimpl(
         outs=[f"={self.localname}.a"],
         label=label,
         commands=commands,
-        caller_cflags=collectattrs(
-            targets=deps + ([hr] if hr else []), name="caller_cflags"
-        ),
-        caller_ldflags=collectattrs(
-            targets=deps, name="caller_ldflags", initial=caller_ldflags
-        ),
+        args={
+            "caller_cflags": collectattrs(
+                targets=deps + ([hr] if hr else []), name="caller_cflags"
+            ),
+            "caller_ldflags": collectattrs(
+                targets=deps, name="caller_ldflags", initial=caller_ldflags
+            ),
+        },
+        traits={"cheaders"},
     )
     self.outs = self.outs + (hr.outs if hr else [])
-
-    self.traits.add("cheaders")
-    self.traits.add("clibrary")
 
 
 @Rule
@@ -316,9 +316,11 @@ def programimpl(
         deps=deps,
         label=toolchain.label + label,
         commands=commands,
-        ldflags=collectattrs(
-            targets=deps, name="caller_ldflags", initial=ldflags
-        ),
+        args={
+            "ldflags": collectattrs(
+                targets=deps, name="caller_ldflags", initial=ldflags
+            )
+        },
     )
 
 

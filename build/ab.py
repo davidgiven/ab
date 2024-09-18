@@ -16,6 +16,7 @@ from importlib.machinery import (
 import inspect
 import string
 import sys
+import hashlib
 
 verbose = False
 quiet = False
@@ -112,6 +113,12 @@ def Rule(func):
         t.types = func.__annotations__
         t.callback = func
         t.traits.add(func.__name__)
+        if "args" in kwargs:
+            t.args |= kwargs["args"]
+            del kwargs["args"]
+        if "traits" in kwargs:
+            t.traits |= kwargs["traits"]
+            del kwargs["traits"]
 
         t.binding = sig.bind(name=name, self=t, **kwargs)
         t.binding.apply_defaults()
@@ -123,6 +130,12 @@ def Rule(func):
 
     defaultGlobals[func.__name__] = wrapper
     return wrapper
+
+
+def _isiterable(xs):
+    return isinstance(xs, Iterable) and not isinstance(
+        xs, (str, bytes, bytearray)
+    )
 
 
 class Target:
@@ -145,7 +158,7 @@ class Target:
         return id(self)
 
     def __repr__(self):
-        return f"Target('{self.name}', {id(self)})"
+        return f"Target('{self.name}')"
 
     def templateexpand(selfi, s):
         class Formatter(string.Formatter):
@@ -160,7 +173,7 @@ class Target:
                     return ""
                 if type(value) == str:
                     return value
-                if isinstance(value, (set, tuple)):
+                if _isiterable(value):
                     value = list(value)
                 if type(value) != list:
                     value = [value]
@@ -185,7 +198,6 @@ class Target:
         # Perform type conversion to the declared rule parameter types.
 
         try:
-            self.args = {}
             for k, v in self.binding.arguments.items():
                 if k != "kwargs":
                     t = self.types.get(k, None)
@@ -205,9 +217,23 @@ class Target:
             # Actually call the callback.
 
             cwdStack.append(self.cwd)
-            self.callback(
-                **{k: v for k, v in self.args.items() if k not in {"dir"}}
-            )
+            if "kwargs" in self.binding.arguments.keys():
+                # If the caller wants kwargs, return all arguments except the standard ones.
+                cbargs = {
+                    k: v for k, v in self.args.items() if k not in {"dir"}
+                }
+            else:
+                # Otherwise, just call the callback with the ones it asks for.
+                cbargs = {}
+                for k in self.binding.arguments.keys():
+                    if k != "kwargs":
+                        try:
+                            cbargs[k] = self.args[k]
+                        except KeyError:
+                            error(
+                                f"invocation of {self} failed because {k} isn't an argument"
+                            )
+            self.callback(**cbargs)
             cwdStack.pop()
         except BaseException as e:
             print(f"Error materialising {self}: {self.callback}")
@@ -228,73 +254,82 @@ class Target:
         return target.targetof(value)
 
     def targetof(self, value):
-        if isinstance(value, Path):
-            value = value.as_posix()
-        if isinstance(value, Target):
-            t = value
-        else:
-            if value[0] == "=":
-                value = join(self.dir, value[1:])
+        if isinstance(value, str) and (value[0] == "="):
+            value = join(self.dir, value[1:])
 
-            if value.startswith("."):
-                # Check for local rule.
-                if value.startswith(".+"):
-                    value = normpath(join(self.cwd, value[1:]))
-                # Check for local path.
-                elif value.startswith("./"):
-                    value = normpath(join(self.cwd, value))
-            # Explicit directories are always raw files.
-            elif value.endswith("/"):
-                return self._filetarget(value)
-            # Anything starting with a variable expansion is always a raw file.
-            elif value.startswith("$"):
-                return self._filetarget(value)
+        return targetof(value, self.cwd)
 
-            # If this is not a rule lookup...
-            if "+" not in value:
-                # ...and if the value is pointing at a directory without a trailing /,
-                # it's a shorthand rule lookup.
-                if isdir(value):
-                    value = value + "+" + basename(value)
-                # Otherwise it's an absolute file.
-                else:
-                    return self._filetarget(value)
 
-            # At this point we have the fully qualified name of a rule.
+def _filetarget(value, cwd):
+    if value in targets:
+        return targets[value]
 
-            (path, target) = value.rsplit("+", 1)
-            value = join(path, "+" + target)
-            if value not in targets:
-                # Load the new build file.
+    t = Target(cwd, value)
+    t.outs = [value]
+    targets[value] = t
+    return t
 
-                path = join(path, "build.py")
-                loadbuildfile(path)
-                assert (
-                    value in targets
-                ), f"build file at '{path}' doesn't contain '+{target}' when trying to resolve '{value}'"
 
-            t = targets[value]
+def targetof(value, cwd=None):
+    if not cwd:
+        cwd = cwdStack[-1]
+    if isinstance(value, Path):
+        value = value.as_posix()
+    if isinstance(value, Target):
+        t = value
+    else:
+        assert (
+            value[0] != "="
+        ), "can only use = for targets associated with another target"
 
-        t.materialise()
-        return t
+        if value.startswith("."):
+            # Check for local rule.
+            if value.startswith(".+"):
+                value = normpath(join(cwd, value[1:]))
+            # Check for local path.
+            elif value.startswith("./"):
+                value = normpath(join(cwd, value))
+        # Explicit directories are always raw files.
+        elif value.endswith("/"):
+            return _filetarget(value, cwd)
+        # Anything starting with a variable expansion is always a raw file.
+        elif value.startswith("$"):
+            return _filetarget(value, cwd)
 
-    def _filetarget(self, value):
-        if value in targets:
-            return targets[value]
+        # If this is not a rule lookup...
+        if "+" not in value:
+            # ...and if the value is pointing at a directory without a trailing /,
+            # it's a shorthand rule lookup.
+            if isdir(value):
+                value = value + "+" + basename(value)
+            # Otherwise it's an absolute file.
+            else:
+                return _filetarget(value, cwd)
 
-        t = Target(self.cwd, value)
-        t.outs = [value]
-        targets[value] = t
-        return t
+        # At this point we have the fully qualified name of a rule.
+
+        (path, target) = value.rsplit("+", 1)
+        value = join(path, "+" + target)
+        if value not in targets:
+            # Load the new build file.
+
+            path = join(path, "build.py")
+            loadbuildfile(path)
+            assert (
+                value in targets
+            ), f"build file at '{path}' doesn't contain '+{target}' when trying to resolve '{value}'"
+
+        t = targets[value]
+
+    t.materialise()
+    return t
 
 
 class Targets:
     def convert(value, target):
         if not value:
             return []
-        assert isinstance(
-            value, (list, tuple)
-        ), "cannot convert non-list to Targets"
+        assert _isiterable(value), "cannot convert non-list to Targets"
         return [target.targetof(x) for x in flatten(value)]
 
 
@@ -318,7 +353,7 @@ def loadbuildfile(filename):
 def flatten(items):
     def generate(xs):
         for x in xs:
-            if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
+            if _isiterable(x):
                 yield from generate(x)
             else:
                 yield x
@@ -327,15 +362,13 @@ def flatten(items):
 
 
 def targetnamesof(items):
-    if not isinstance(items, (list, tuple, set)):
-        error("argument of filenamesof is not a list/tuple/set")
+    assert _isiterable(items), "argument of filenamesof is not a collection"
 
     return [t.name for t in items]
 
 
 def filenamesof(items):
-    if not isinstance(items, (list, tuple, set)):
-        error("argument of filenamesof is not a list/tuple/set")
+    assert _isiterable(items), "argument of filenamesof is not a collection"
 
     def generate(xs):
         for x in xs:
@@ -355,9 +388,12 @@ def filenameof(x):
     return xs[0]
 
 
-def emit(*args):
-    outputFp.write(" ".join(args))
-    outputFp.write("\n")
+def emit(*args, into=None):
+    s = " ".join(args) + "\n"
+    if into is not None:
+        into += [s]
+    else:
+        outputFp.write(s)
 
 
 def emit_rule(name, ins, outs, cmds=[], label=None):
@@ -366,26 +402,35 @@ def emit_rule(name, ins, outs, cmds=[], label=None):
     nonobjs = [f for f in fouts if not f.startswith("$(OBJ)")]
 
     emit("")
-    if nonobjs:
-        emit("clean::")
-        emit("\t$(hide) rm -f", *nonobjs)
 
-    emit(".PHONY:", name)
+    lines = []
+    if nonobjs:
+        emit("clean::", into=lines)
+        emit("\t$(hide) rm -f", *nonobjs, into=lines)
+
+    emit(".PHONY:", name, into=lines)
     if outs:
-        emit(name, ":", *fouts)
-        if cmds:
-            emit(*fouts, "&:", *fins)
-        else:
-            emit(*fouts, ":", *fins)
+        emit(name, ":", *fouts, into=lines)
+        emit(*fouts, "&:", *fins, "\x01", into=lines)
 
         if label:
-            emit("\t$(hide)", "$(ECHO)", label)
+            emit("\t$(hide)", "$(ECHO)", label, into=lines)
         for c in cmds:
-            emit("\t$(hide)", c)
+            emit("\t$(hide)", c, into=lines)
     else:
         assert len(cmds) == 0, "rules with no outputs cannot have commands"
-        emit(name, ":", *fins)
+        emit(name, ":", *fins, into=lines)
 
+    cmd = "".join(lines)
+    hash = hashlib.sha1(bytes(cmd, "utf-8")).hexdigest()
+
+    outputFp.write(cmd.replace("\x01", f"$(OBJ)/.hashes/{hash}"))
+
+    if outs:
+        emit(f"$(OBJ)/.hashes/{hash}:")
+        emit(
+            f"\t$(hide) mkdir -p $(OBJ)/.hashes && touch $(OBJ)/.hashes/{hash}"
+        )
     emit("")
 
 
@@ -398,7 +443,6 @@ def simplerule(
     deps: Targets = [],
     commands=[],
     label="RULE",
-    **kwargs,
 ):
     self.ins = ins
     self.outs = outs
