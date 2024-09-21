@@ -90,35 +90,32 @@ def javalibrary(
             )
             for i, f in enumerate(filenamesof(srcdeps))
         ]
-    )
-
-    if srcfiles or srcdeps:
         # Construct the list of filenames (which can be too long to go on
         # the command line).
-        cs += (
-            [
-                "echo " + (" ".join(batch)) + " >> {dir}/files.txt"
-                for batch in _batched(srcfiles, 100)
-            ]
-            + ["find {dir}/src -name '*.java' >> {dir}/files.txt"]
+        + [
+            "echo " + (" ".join(batch)) + " >> {dir}/files.txt"
+            for batch in _batched(srcfiles, 100)
+        ]
+        + [
+            # Find any source files in the srcjars (which we don't know
+            # statically).
+            "find {dir}/src -name '*.java' >> {dir}/files.txt",
             # Actually do the compilation.
-            + [
-                " ".join(
-                    [
-                        "$(JAVAC)",
-                        "$(JFLAGS)",
-                        "-d {dir}/objs",
-                        (" -cp " + ":".join(classpath)) if classpath else "",
-                        "@{dir}/files.txt",
-                    ]
-                )
-            ]
-        )
-
-    # jar up the result.
-    cs += [
-        "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs ."
-    ]
+            " ".join(
+                [
+                    "if [ -s {dir}/files.txt ]; then",
+                    "$(JAVAC)",
+                    "$(JFLAGS)",
+                    "-d {dir}/objs",
+                    (" -cp " + ":".join(classpath)) if classpath else "",
+                    "@{dir}/files.txt",
+                    "; fi"
+                ]
+            ),
+            # jar up the result.
+            "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs .",
+        ]
+    )
 
     simplerule(
         replaces=self,
