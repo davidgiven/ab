@@ -143,7 +143,7 @@ def javaprogram(
     srcitems: TargetsMap = {},
     deps: Targets = [],
     mainclass=None,
-    manifest={}
+    manifest={},
 ):
     alldeps = collectattrs(targets=deps, name="caller_deps", initial=deps)
     externaldeps = targetswithtraitsof(alldeps, "externaljar")
@@ -191,4 +191,35 @@ def javaprogram(
             "$(JAR) --create --file={outs[0]} --manifest={dir}/manifest.mf -C {dir}/objs ."
         ],
         label="JAVAPROGRAM",
+    )
+
+
+@Rule
+def javaexecutable(
+    self,
+    name,
+    srcitems: TargetsMap = {},
+    deps: Targets = [],
+    mainclass=None,
+    manifest={},
+    vmflags=[],
+):
+    jar = javaprogram(
+        name=f"{self.localname}.jar",
+        srcitems=srcitems,
+        deps=deps,
+        mainclass=mainclass,
+        manifest=manifest,
+    )
+
+    simplerule(
+        replaces=self,
+        ins=[jar],
+        outs=[f"={self.localname}"],
+        commands=[
+            f"echo '#!/usr/bin/env -S java {" ".join(vmflags)} -jar' > {{outs[0]}}",
+            "cat {ins[0]} >> {outs[0]}",
+            "chmod a+rx {outs[0]}",
+        ],
+        label="JAVAEXE",
     )
