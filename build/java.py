@@ -21,6 +21,15 @@ JFLAGS ?= -g
 )
 
 
+def _manifestline(key, value):
+    s = f"{key}: {value}"
+    c = []
+    while s:
+        c += [("" if len(c) == 0 else " ") + s[:70]]
+        s = s[70:]
+    return c
+
+
 def _batched(items, n):
     return (items[pos : pos + n] for pos in range(0, len(items), n))
 
@@ -109,7 +118,7 @@ def javalibrary(
                     "-d {dir}/objs",
                     (" -cp " + ":".join(classpath)) if classpath else "",
                     "@{dir}/files.txt",
-                    "; fi"
+                    "; fi",
                 ]
             ),
             # jar up the result.
@@ -134,6 +143,7 @@ def javaprogram(
     srcitems: TargetsMap = {},
     deps: Targets = [],
     mainclass=None,
+    manifest={}
 ):
     alldeps = collectattrs(targets=deps, name="caller_deps", initial=deps)
     externaldeps = targetswithtraitsof(alldeps, "externaljar")
@@ -152,25 +162,27 @@ def javaprogram(
         internaldeps += [j]
         alldeps += [j]
 
+    mf = (
+        _manifestline("Manifest-Version", "1.0")
+        + _manifestline("Created-By", "ab")
+        + _manifestline("Main-Class", mainclass)
+        + (
+            []
+            if not externaljars
+            else _manifestline("Class-Path", " ".join(externaljars))
+        )
+        + [_manifestline(k, v) for k, v in manifest.items()]
+    )
+
     simplerule(
         replaces=self,
         ins=alldeps,
         outs=[f"={self.localname}.jar"],
         commands=[
-            "rm -rf {dir}/objs",
+            "rm -rf {dir}/objs {dir}/manifest.mf",
             "mkdir -p {dir}/objs",
-            "echo 'Manifest-Version: 1.0' > {dir}/manifest.mf",
-            "echo 'Created-By: ab' >> {dir}/manifest.mf",
-            "echo 'Main-Class: " + mainclass + "' >> {dir}/manifest.mf",
         ]
-        + (
-            (
-                ["printf 'Class-Path:' >> {dir}/manifest.mf"]
-                + [f"echo '  {j}' >> {{dir}}/manifest.mf" for j in externaljars]
-            )
-            if externaljars
-            else []
-        )
+        + [f"echo '{m}' >> {{dir}}/manifest.mf" for m in mf]
         + [
             "(cd {dir}/objs && $(JAR) xf $(abspath " + j + "))"
             for j in filenamesof(internaldeps)
