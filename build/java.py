@@ -212,12 +212,13 @@ def javaexecutable(
         manifest=manifest,
     )
 
+    flags = " ".join(vmflags)
     simplerule(
         replaces=self,
         ins=[jar],
         outs=[f"={self.localname}"],
         commands=[
-            f"echo '#!/usr/bin/env -S java {" ".join(vmflags)} -jar' > {{outs[0]}}",
+            f"echo '#!/usr/bin/env -S java {flags} -jar' > {{outs[0]}}",
             "cat {ins[0]} >> {outs[0]}",
             "chmod a+rx {outs[0]}",
         ],
