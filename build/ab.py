@@ -314,7 +314,12 @@ def targetof(value, cwd=None):
             # Load the new build file.
 
             path = join(path, "build.py")
-            loadbuildfile(path)
+            try:
+                loadbuildfile(path)
+            except ModuleNotFoundError:
+                error(
+                    f"no such build file '{path}' while trying to resolve '{value}'"
+                )
             assert (
                 value in targets
             ), f"build file at '{path}' doesn't contain '+{target}' when trying to resolve '{value}'"
