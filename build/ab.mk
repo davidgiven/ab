@@ -53,8 +53,8 @@ clean::
 
 export PYTHONHASHSEED = 1
 build-files = $(shell find . -name 'build.py') $(wildcard build/*.py) $(wildcard config.py)
-$(OBJ)/build.mk: Makefile $(build-files)
+$(OBJ)/build.mk: Makefile $(build-files) build/ab.mk
 	@echo "AB"
 	@mkdir -p $(OBJ)
-	$(hide) $(PYTHON) -X pycache_prefix=$(OBJ) build/ab.py -o $@ build.py \
+	$(hide) $(PYTHON) -X pycache_prefix=$(OBJ)/__pycache__ build/ab.py -o $@ build.py \
 		|| rm -f $@
