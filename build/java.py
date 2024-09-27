@@ -143,7 +143,7 @@ def javalibrary(
 
 
 @Rule
-def javaprogram(
+def javalink(
     self,
     name,
     srcitems: TargetsMap = {},
@@ -201,7 +201,7 @@ def javaprogram(
 
 
 @Rule
-def javaexecutable(
+def javaprogram(
     self,
     name,
     srcitems: TargetsMap = {},
@@ -210,7 +210,7 @@ def javaexecutable(
     manifest={},
     vmflags=[],
 ):
-    jar = javaprogram(
+    jar = javalink(
         name=f"{self.localname}.jar",
         srcitems=srcitems,
         deps=deps,
