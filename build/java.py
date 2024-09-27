@@ -71,6 +71,7 @@ def javalibrary(
     self,
     name,
     srcitems: TargetsMap = {},
+    dataitems: TargetsMap = {},
     deps: Targets = [],
 ):
     alldeps = collectattrs(targets=deps, name="caller_deps", initial=deps)
@@ -98,6 +99,11 @@ def javalibrary(
                 ]
             )
             for i, f in enumerate(filenamesof(srcdeps))
+        ]
+        # Copy any source data items.
+        + [
+            f"mkdir -p {{dir}}/objs/{dirname(dest)} && cp {filenameof(src)} {{dir}}/objs/{dest}"
+            for dest, src in dataitems.items()
         ]
         # Construct the list of filenames (which can be too long to go on
         # the command line).
@@ -212,12 +218,13 @@ def javaexecutable(
         manifest=manifest,
     )
 
+    flags = " ".join(vmflags)
     simplerule(
         replaces=self,
         ins=[jar],
         outs=[f"={self.localname}"],
         commands=[
-            f"echo '#!/usr/bin/env -S java {" ".join(vmflags)} -jar' > {{outs[0]}}",
+            f"echo '#!/usr/bin/env -S java {flags} -jar' > {{outs[0]}}",
             "cat {ins[0]} >> {outs[0]}",
             "chmod a+rx {outs[0]}",
         ],
