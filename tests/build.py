@@ -3,7 +3,7 @@ from build.c import cprogram, cxxprogram, cheaders, clibrary, cxxlibrary, cfile
 from build.protobuf import proto, protocc, protojava
 from build.zip import zip
 from build.utils import objectify, itemsof
-from build.java import javalibrary, javaexecutable, externaljar, srcjar
+from build.java import javalibrary, javaprogram, externaljar, srcjar
 from build.yacc import bison, flex
 
 TESTS = [
@@ -87,7 +87,7 @@ javalibrary(
     name="javalibrary_compile_test",
     deps=[".+external_jar", ".+javalibrary_srcjar"],
 )
-javaexecutable(
+javaprogram(
     name="javaprogram_compile_test",
     srcitems=itemsof("./java_compile_test.java"),
     deps=[".+javalibrary_compile_test", ".+external_jar"],
