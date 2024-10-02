@@ -211,11 +211,10 @@ def libraryimpl(
     lib_deps = []
     for d in deps:
         lib_deps += d.args.get("clibraries", [d])
-    lib_deps = filenamesmatchingof(lib_deps, "*.a")
 
     simplerule(
         replaces=self,
-        ins=objs + lib_deps,
+        ins=objs,
         outs=[f"={self.localname}.a"],
         label=label,
         commands=commands,
@@ -327,11 +326,11 @@ def programimpl(
     lib_deps = []
     for d in deps:
         lib_deps += d.args.get("clibraries", [d])
-    lib_deps = filenamesmatchingof(lib_deps, "*.a")
+    lib_deps = sorted(set(filenamesmatchingof(lib_deps, "*.a")))
 
     simplerule(
         replaces=self,
-        ins=cfiles + lib_deps,
+        ins=cfiles + lib_deps + lib_deps,
         outs=[f"={self.localname}$(EXT)"],
         deps=deps,
         label=toolchain.label + label,
