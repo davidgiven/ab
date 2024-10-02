@@ -472,7 +472,7 @@ def simplerule(
         name=self.name,
         ins=ins + deps,
         outs=outs,
-        label=self.templateexpand("{label} {name}"),
+        label=self.templateexpand("{label} {name}") if label else None,
         cmds=cs,
     )
 
@@ -498,7 +498,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
             ins=[srcs[0]],
             outs=[destf],
             commands=["$(CP) %s %s" % (srcs[0], destf)],
-            label="CP",
+            label="",
         )
         subrule.materialise()
 
