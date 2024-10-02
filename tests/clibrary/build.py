@@ -16,7 +16,7 @@ rl2 = clibrary(
     name="clibrary2",
     srcs=["./lib1.c", "./lib2.cc"],
     hdrs={"library2.h": "./library2.h"},
-    deps=[".+cheaders"],
+    deps=[".+cheaders", ".+clibrary"],
     caller_cflags=["--cheader-cflags2"],
 )
 
@@ -24,12 +24,12 @@ hl2 = cheaders(name="cheaders2", deps=[".+clibrary2"])
 
 rf = cfile(name="cfile", srcs=["./prog.c"], deps=[".+cheaders"])
 
-rp = cprogram(name="cprogram", srcs=[".+cfile"], deps=[".+clibrary"])
+rp = cprogram(name="cprogram", srcs=[".+cfile"], deps=[".+clibrary2"])
 
 re = export(
     name="all",
     items={},
-    deps=[".+cprogram", ".+cheaders", ".+clibrary2"],
+    deps=[".+cprogram", ".+cheaders", ".+clibrary", ".+cheaders2"],
 )
 
 re.materialise()
@@ -61,20 +61,11 @@ assert_that(
     targetnamesof(rf.deps), contains_inanyorder("tests/clibrary/+cheaders")
 )
 
-assert_that(rp.name, equal_to("tests/clibrary/+cprogram"))
-assert_that(
-    targetnamesof(rp.ins),
-    contains_inanyorder(
-        "tests/clibrary/+cfile",
-        "$(OBJ)/tests/clibrary/+clibrary/clibrary.a",
-        "$(OBJ)/tests/clibrary/+clibrary/clibrary.a",
-    ),
-)
-
 assert_that(rl2.name, equal_to("tests/clibrary/+clibrary2"))
 assert_that(
     targetnamesof(rl2.ins),
     contains_inanyorder(
+        "$(OBJ)/tests/clibrary/+clibrary/clibrary.a",
         "tests/clibrary/+clibrary2/tests/clibrary/lib1.c",
         "tests/clibrary/+clibrary2/tests/clibrary/lib2.cc",
     ),
@@ -83,7 +74,6 @@ assert_that(
     filenamesof(rl2.outs),
     contains_inanyorder(
         "$(OBJ)/tests/clibrary/+clibrary2/clibrary2.a",
-        "$(OBJ)/tests/clibrary/+clibrary2_hdrs/library2.h",
     ),
 )
 assert_that(rl2.args, has_item("caller_cflags"))
@@ -97,7 +87,16 @@ assert_that(
     ),
 )
 
-hl2.materialise()
+assert_that(rp.name, equal_to("tests/clibrary/+cprogram"))
+assert_that(
+    targetnamesof(rp.ins),
+    contains_inanyorder(
+        "tests/clibrary/+cfile",
+        "$(OBJ)/tests/clibrary/+clibrary/clibrary.a",
+        "$(OBJ)/tests/clibrary/+clibrary2/clibrary2.a",
+    ),
+)
+
 assert_that(hl2.name, equal_to("tests/clibrary/+cheaders2"))
 assert_that(filenamesof(hl2.ins), empty())
 assert_that(

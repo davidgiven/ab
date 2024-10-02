@@ -208,9 +208,14 @@ def libraryimpl(
         self.cwd,
     )
 
+    lib_deps = []
+    for d in deps:
+        lib_deps += d.args.get("clibraries", [d])
+    lib_deps = filenamesmatchingof(lib_deps, "*.a")
+
     simplerule(
         replaces=self,
-        ins=objs,
+        ins=objs + lib_deps,
         outs=[f"={self.localname}.a"],
         label=label,
         commands=commands,
@@ -218,6 +223,7 @@ def libraryimpl(
             "caller_ldflags": collectattrs(
                 targets=deps, name="caller_ldflags", initial=caller_ldflags
             ),
+            "clibraries": lib_deps + [self],
         }
         | (
             {"cheaders": [hr], "caller_cflags": hr.args["caller_cflags"]}
@@ -226,7 +232,6 @@ def libraryimpl(
         ),
         traits={"cheaders"},
     )
-    self.outs = self.outs + (hr.outs if hr else [])
 
 
 @Rule
@@ -315,14 +320,18 @@ def programimpl(
     filerule,
     kind,
 ):
-    ars = filenamesmatchingof(deps, "*.a")
-
     cfiles = findsources(
         self.localname, srcs, deps, cflags, toolchain, filerule, self.cwd
     )
+
+    lib_deps = []
+    for d in deps:
+        lib_deps += d.args.get("clibraries", [d])
+    lib_deps = filenamesmatchingof(lib_deps, "*.a")
+
     simplerule(
         replaces=self,
-        ins=cfiles + ars + ars,
+        ins=cfiles + lib_deps,
         outs=[f"={self.localname}$(EXT)"],
         deps=deps,
         label=toolchain.label + label,
