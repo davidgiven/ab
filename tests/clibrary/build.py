@@ -1,6 +1,6 @@
 from build.ab import export, targetnamesof, filenamesof
-from build.c import clibrary, cprogram, cfile
-from hamcrest import assert_that, equal_to, contains_inanyorder, has_item
+from build.c import clibrary, cprogram, cfile, cheaders
+from hamcrest import assert_that, equal_to, contains_inanyorder, has_item, empty
 
 hl = clibrary(
     name="cheaders",
@@ -19,6 +19,8 @@ rl2 = clibrary(
     deps=[".+cheaders"],
     caller_cflags=["--cheader-cflags2"],
 )
+
+hl2 = cheaders(name="cheaders2", deps=[".+clibrary2"])
 
 rf = cfile(name="cfile", srcs=["./prog.c"], deps=[".+cheaders"])
 
@@ -93,4 +95,12 @@ assert_that(
         "-I$(OBJ)/tests/clibrary/+cheaders",
         "-I$(OBJ)/tests/clibrary/+clibrary2_hdrs",
     ),
+)
+
+hl2.materialise()
+assert_that(hl2.name, equal_to("tests/clibrary/+cheaders2"))
+assert_that(filenamesof(hl2.ins), empty())
+assert_that(
+    filenamesof(hl2.deps),
+    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary2_hdrs/library2.h"),
 )

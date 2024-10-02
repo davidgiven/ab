@@ -129,8 +129,16 @@ def cheaders(
     caller_cflags=[],
     deps: Targets = None,
 ):
+    hdr_deps = []
+    for d in deps:
+        hdr_deps += d.args.get("cheaders", [d])
+
+    hdr_caller_cflags = collectattrs(
+        targets=hdr_deps, name="caller_cflags", initial=caller_cflags
+    )
+
     cs = []
-    ins = list(hdrs.values())
+    ins = hdrs.values()
     outs = []
     i = 0
     for dest, src in hdrs.items():
@@ -148,9 +156,9 @@ def cheaders(
         ins=ins,
         outs=outs,
         commands=cs,
-        deps=deps,
+        deps=hdr_deps,
         label="CHEADERS",
-        args={"caller_cflags": caller_cflags + ["-I" + self.dir]},
+        args={"caller_cflags": hdr_caller_cflags + ["-I" + self.dir]},
     )
 
 
@@ -174,7 +182,7 @@ def libraryimpl(
         cheaders(
             replaces=self,
             hdrs=hdrs,
-            deps=targetswithtraitsof(deps, "cheaders"),
+            deps=deps,
             caller_cflags=caller_cflags,
         )
         return
@@ -182,7 +190,7 @@ def libraryimpl(
         hr = cheaders(
             name=self.localname + "_hdrs",
             hdrs=hdrs,
-            deps=targetswithtraitsof(deps, "cheaders"),
+            deps=deps,
             caller_cflags=caller_cflags,
         )
         hr.materialise()
@@ -205,13 +213,15 @@ def libraryimpl(
         label=label,
         commands=commands,
         args={
-            "caller_cflags": collectattrs(
-                targets=deps + ([hr] if hr else []), name="caller_cflags"
-            ),
             "caller_ldflags": collectattrs(
                 targets=deps, name="caller_ldflags", initial=caller_ldflags
             ),
-        },
+        }
+        | (
+            {"cheaders": [hr], "caller_cflags": hr.args["caller_cflags"]}
+            if hr
+            else {}
+        ),
         traits={"cheaders"},
     )
     self.outs = self.outs + (hr.outs if hr else [])
