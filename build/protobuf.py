@@ -1,7 +1,7 @@
 from build.ab import Rule, Targets, emit, simplerule, filenamesof
 from build.utils import filenamesmatchingof, collectattrs
 from types import SimpleNamespace
-from os.path import join
+from os.path import join, abspath, dirname
 import build.pkg  # to get the protobuf package check
 
 emit(
@@ -16,13 +16,35 @@ endif
 
 @Rule
 def proto(self, name, srcs: Targets = [], deps: Targets = []):
+    descriptorlist = ":".join(
+        [abspath(f) for f in filenamesmatchingof(deps, "*.descriptor")]
+    )
+
     simplerule(
         replaces=self,
         ins=srcs,
-        outs=[f"={name}.descriptor"],
+        outs=[f"={self.localname}.descriptor"]
+        + ["=" + f for f in filenamesof(srcs)],
         deps=deps,
-        commands=[
-            "$(PROTOC) --include_source_info --descriptor_set_out={outs[0]} {ins}"
+        commands=[f"$(CP) {f} {{dir}}/{f}" for f in filenamesof(srcs)]
+        + [
+            "cd {dir} && "
+            + (
+                " ".join(
+                    [
+                        "$(PROTOC)",
+                        "--proto_path=.",
+                        "--include_source_info",
+                        f"--descriptor_set_out={self.localname}.descriptor",
+                    ]
+                    + (
+                        [f"--descriptor_set_in={descriptorlist}"]
+                        if descriptorlist
+                        else []
+                    )
+                    + ["{ins}"]
+                )
+            )
         ],
         label="PROTO",
         args={"protosrcs": filenamesof(srcs)},
@@ -43,13 +65,30 @@ def protocc(self, name, srcs: Targets = [], deps: Targets = []):
         srcs += [f]
         outs += ["=" + cc, "=" + h]
 
+    descriptorlist = ":".join(
+        [abspath(f) for f in filenamesmatchingof(srcs + deps, "*.descriptor")]
+    )
+
     r = simplerule(
         name=f"{self.localname}_srcs",
         cwd=self.cwd,
-        ins=protos,
+        ins=srcs + deps,
         outs=outs,
         deps=deps,
-        commands=["$(PROTOC) --cpp_out={dir} {ins}"],
+        commands=[
+            "cd {dir} && "
+            + (
+                " ".join(
+                    [
+                        "$(PROTOC)",
+                        "--proto_path=.",
+                        "--cpp_out=.",
+                        f"--descriptor_set_in={descriptorlist}",
+                    ]
+                    + protos
+                )
+            )
+        ],
         label="PROTOCC",
     )
 
@@ -76,6 +115,10 @@ def protojava(self, name, srcs: Targets = [], deps: Targets = []):
         protos += [f]
         srcs += [f]
 
+    descriptorlist = ":".join(
+        [abspath(f) for f in filenamesmatchingof(srcs + deps, "*.descriptor")]
+    )
+
     r = simplerule(
         name=f"{self.localname}_srcs",
         cwd=self.cwd,
@@ -84,7 +127,18 @@ def protojava(self, name, srcs: Targets = [], deps: Targets = []):
         deps=deps,
         commands=[
             "mkdir -p {dir}/srcs",
-            "$(PROTOC) --java_out={dir}/srcs {ins}",
+            "cd {dir} && "
+            + (
+                " ".join(
+                    [
+                        "$(PROTOC)",
+                        "--proto_path=.",
+                        "--java_out=.",
+                        f"--descriptor_set_in={descriptorlist}",
+                    ]
+                    + protos
+                )
+            ),
             "$(JAR) cf {outs[0]} -C {dir}/srcs .",
         ],
         traits={"srcjar"},
