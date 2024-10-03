@@ -20,32 +20,35 @@ def proto(self, name, srcs: Targets = [], deps: Targets = []):
         [abspath(f) for f in filenamesmatchingof(deps, "*.descriptor")]
     )
 
+    dirs = sorted({"{dir}/" + dirname(f) for f in filenamesof(srcs)})
     simplerule(
         replaces=self,
         ins=srcs,
-        outs=[f"={self.localname}.descriptor"]
-        + ["=" + f for f in filenamesof(srcs)],
+        outs=[f"={self.localname}.descriptor"],
         deps=deps,
-        commands=[f"$(CP) {f} {{dir}}/{f}" for f in filenamesof(srcs)]
-        + [
-            "cd {dir} && "
-            + (
-                " ".join(
-                    [
-                        "$(PROTOC)",
-                        "--proto_path=.",
-                        "--include_source_info",
-                        f"--descriptor_set_out={self.localname}.descriptor",
-                    ]
-                    + (
-                        [f"--descriptor_set_in={descriptorlist}"]
-                        if descriptorlist
-                        else []
+        commands=(
+            ["mkdir -p " + (" ".join(dirs))]
+            + [f"$(CP) {f} {{dir}}/{f}" for f in filenamesof(srcs)]
+            + [
+                "cd {dir} && "
+                + (
+                    " ".join(
+                        [
+                            "$(PROTOC)",
+                            "--proto_path=.",
+                            "--include_source_info",
+                            f"--descriptor_set_out={self.localname}.descriptor",
+                        ]
+                        + (
+                            [f"--descriptor_set_in={descriptorlist}"]
+                            if descriptorlist
+                            else []
+                        )
+                        + ["{ins}"]
                     )
-                    + ["{ins}"]
                 )
-            )
-        ],
+            ]
+        ),
         label="PROTO",
         args={"protosrcs": filenamesof(srcs)},
     )

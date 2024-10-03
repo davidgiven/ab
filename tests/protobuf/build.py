@@ -17,9 +17,7 @@ assert_that(
 )
 assert_that(
     filenamesof(re1.outs),
-    contains_inanyorder(
-        "$(OBJ)/tests/protobuf/+protolib/tests/protobuf/+protolib.descriptor"
-    ),
+    contains_inanyorder("$(OBJ)/tests/protobuf/+protolib/protolib.descriptor"),
 )
 
 assert_that(re2.name, equal_to("tests/protobuf/+protolib2"))
@@ -32,7 +30,7 @@ assert_that(
 assert_that(
     filenamesof(re2.outs),
     contains_inanyorder(
-        "$(OBJ)/tests/protobuf/+protolib2/tests/protobuf/+protolib2.descriptor"
+        "$(OBJ)/tests/protobuf/+protolib2/protolib2.descriptor"
     ),
 )
 
