@@ -48,7 +48,7 @@ def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
     t = simplerule(
         replaces=self,
         ins=srcs,
-        deps=hdr_deps,
+        deps=sorted(hdr_deps),
         outs=[outleaf],
         label=label,
         commands=commands,
