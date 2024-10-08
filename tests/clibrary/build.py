@@ -1,4 +1,4 @@
-from build.ab import export, targetnamesof, filenamesof
+from build.ab import export, targetnamesof, filenamesof, targets
 from build.c import clibrary, cprogram, cfile, cheaders
 from hamcrest import assert_that, equal_to, contains_inanyorder, has_item, empty
 
@@ -120,10 +120,14 @@ assert_that(rp.name, equal_to("tests/clibrary/+cprogram"))
 assert_that(
     targetnamesof(rp.ins),
     contains_inanyorder(
-        "tests/clibrary/+cfile",
+        "tests/clibrary/+cfile", "tests/clibrary/+cprogram_libs"
+    ),
+)
+t = targets["tests/clibrary/+cprogram_libs"]
+assert_that(
+    targetnamesof(t.ins),
+    contains_inanyorder(
         "$(OBJ)/tests/clibrary/+clibrary/clibrary.a",
-        "$(OBJ)/tests/clibrary/+clibrary/clibrary.a",
-        "$(OBJ)/tests/clibrary/+clibrary2/clibrary2.a",
         "$(OBJ)/tests/clibrary/+clibrary2/clibrary2.a",
     ),
 )
