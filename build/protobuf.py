@@ -14,10 +14,18 @@ endif
 )
 
 
+def _getprotodeps(deps):
+    r = set()
+    for d in deps:
+        r.update(d.args.get("protodeps", {d}))
+    return sorted(r)
+
+
 @Rule
 def proto(self, name, srcs: Targets = [], deps: Targets = []):
+    protodeps = _getprotodeps(deps)
     descriptorlist = ":".join(
-        [abspath(f) for f in filenamesmatchingof(deps, "*.descriptor")]
+        [abspath(f) for f in filenamesmatchingof(protodeps, "*.descriptor")]
     )
 
     dirs = sorted({"{dir}/" + dirname(f) for f in filenamesof(srcs)})
@@ -25,7 +33,7 @@ def proto(self, name, srcs: Targets = [], deps: Targets = []):
         replaces=self,
         ins=srcs,
         outs=[f"={self.localname}.descriptor"],
-        deps=deps,
+        deps=protodeps,
         commands=(
             ["mkdir -p " + (" ".join(dirs))]
             + [f"$(CP) {f} {{dir}}/{f}" for f in filenamesof(srcs)]
@@ -50,7 +58,10 @@ def proto(self, name, srcs: Targets = [], deps: Targets = []):
             ]
         ),
         label="PROTO",
-        args={"protosrcs": filenamesof(srcs)},
+        args={
+            "protosrcs": filenamesof(srcs),
+            "protodeps": set(protodeps) | {self},
+        },
     )
 
 
@@ -65,19 +76,19 @@ def protocc(self, name, srcs: Targets = [], deps: Targets = []):
         cc = f.replace(".proto", ".pb.cc")
         h = f.replace(".proto", ".pb.h")
         protos += [f]
-        srcs += [f]
         outs += ["=" + cc, "=" + h]
 
+    protodeps = _getprotodeps(deps + srcs)
     descriptorlist = ":".join(
-        [abspath(f) for f in filenamesmatchingof(srcs + deps, "*.descriptor")]
+        [abspath(f) for f in filenamesmatchingof(protodeps, "*.descriptor")]
     )
 
     r = simplerule(
         name=f"{self.localname}_srcs",
         cwd=self.cwd,
-        ins=srcs + deps,
+        ins=srcs,
         outs=outs,
-        deps=deps,
+        deps=protodeps,
         commands=[
             "cd {dir} && "
             + (

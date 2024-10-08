@@ -69,6 +69,16 @@ cxxprogram(
 externaljar(name="protobuf_lib", paths=["/usr/share/java/protobuf.jar"])
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
 protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_proto"])
+proto(
+    name="proto_compile_test2_proto",
+    srcs=["./proto_compile_test2.proto"],
+    deps=[".+proto_compile_test_proto"],
+)
+protocc(
+    name="cc_proto_compile_test2",
+    srcs=[".+proto_compile_test2_proto"],
+    deps=[".+cc_proto_compile_test"],
+)
 protojava(
     name="java_proto_compile_test",
     srcs=[".+proto_compile_test_proto"],
@@ -101,6 +111,7 @@ bison(
 cprogram(
     name="bison_compile_test",
     srcs=[".+bison_compile_test.bison", ".+flex_compile_test.flex"],
+    deps=[".+cc_proto_compile_test2"],
     ldflags=["-lfl"],
 )
 

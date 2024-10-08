@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+import "tests/proto_compile_test.proto";
+
+message NotEmptyProto {
+    optional EmptyProto p = 1;
+}
+

@@ -1,6 +1,6 @@
 from build.ab import export, filenamesof, targetnamesof
 from build.protobuf import proto, protocc
-from hamcrest import assert_that, empty, equal_to, contains_inanyorder
+from hamcrest import assert_that, empty, equal_to, contains_inanyorder, has_item
 
 re1 = proto(name="protolib", srcs=["./test.proto"])
 re2 = proto(name="protolib2", srcs=["./test2.proto"], deps=[".+protolib"])
@@ -19,6 +19,11 @@ assert_that(
     filenamesof(re1.outs),
     contains_inanyorder("$(OBJ)/tests/protobuf/+protolib/protolib.descriptor"),
 )
+assert_that(re1.args, has_item("protodeps"))
+assert_that(
+    targetnamesof(re1.args["protodeps"]),
+    contains_inanyorder("tests/protobuf/+protolib"),
+)
 
 assert_that(re2.name, equal_to("tests/protobuf/+protolib2"))
 assert_that(
@@ -31,6 +36,13 @@ assert_that(
     filenamesof(re2.outs),
     contains_inanyorder(
         "$(OBJ)/tests/protobuf/+protolib2/protolib2.descriptor"
+    ),
+)
+assert_that(re2.args, has_item("protodeps"))
+assert_that(
+    targetnamesof(re2.args["protodeps"]),
+    contains_inanyorder(
+        "tests/protobuf/+protolib", "tests/protobuf/+protolib2"
     ),
 )
 
