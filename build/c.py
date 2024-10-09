@@ -349,11 +349,12 @@ def programimpl(
         replaces=self,
         ins=cfiles + libs,
         outs=[f"={self.localname}$(EXT)"],
+        deps=deps,
         label=toolchain.label + label,
         commands=commands,
         args={
             "ldflags": collectattrs(
-                targets=deps, name="caller_ldflags", initial=ldflags
+                targets=lib_deps, name="caller_ldflags", initial=ldflags
             )
         },
     )

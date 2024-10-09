@@ -26,9 +26,12 @@ def test(self, name, test: Target):
             "./" + self.localname + "/build.py",
         ],
         outs=["=build.mk"],
-        deps=["build/ab.py", "build/c.py", "build/pkg.py"],
+        deps=["build/ab.py", "build/c.py", "build/pkg.py", "build/protobuf.py"],
         commands=[
-            "PKG_CONFIG_PATH=tests/pkg/pkg-repo python3 -X pycache_prefix=$(OBJ) build/ab.py "
+            "PKG_CONFIG=pkg-config "
+            + "HOST_PKG_CONFIG=pkg-config "
+            + "PKG_CONFIG_PATH=tests/pkg/pkg-repo "
+            + "python3 -X pycache_prefix=$(OBJ) build/ab.py "
             + " -q"
             + " -o {outs[0]} {ins[0]}"
         ],
