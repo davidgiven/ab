@@ -120,13 +120,7 @@ assert_that(rp.name, equal_to("tests/clibrary/+cprogram"))
 assert_that(
     targetnamesof(rp.ins),
     contains_inanyorder(
-        "tests/clibrary/+cfile", "tests/clibrary/+cprogram_libs"
-    ),
-)
-t = targets["tests/clibrary/+cprogram_libs"]
-assert_that(
-    targetnamesof(t.ins),
-    contains_inanyorder(
+        "tests/clibrary/+cfile",
         "$(OBJ)/tests/clibrary/+clibrary/clibrary.a",
         "$(OBJ)/tests/clibrary/+clibrary2/clibrary2.a",
     ),
