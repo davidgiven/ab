@@ -45,14 +45,14 @@ endif
 EXT ?=
 
 ifeq ($(PROGRESSINFO),)
-rulecount := $(shell $(MAKE) --no-print-directory -q $(OBJ)/build.mk PROGRESSINFO=1 && $(MAKE) -n $(MAKECMDGOALS) PROGRESSINFO=XXXPROGRESSINFOXXX | grep XXXPROGRESSINFOXXX | wc -l)
+rulecount := $(shell $(MAKE) -q $(OBJ)/build.mk PROGRESSINFO=1 && $(MAKE) -n $(MAKECMDGOALS) PROGRESSINFO=XXXPROGRESSINFOXXX | grep XXXPROGRESSINFOXXX | wc -l)
 ruleindex := 1
 PROGRESSINFO = "$(shell $(PYTHON) build/_progress.py $(ruleindex) $(rulecount))$(eval ruleindex := $(shell expr $(ruleindex) + 1))"
 endif
 
 include $(OBJ)/build.mk
 
-MAKEFLAGS += -r -j$(shell nproc)
+MAKEFLAGS += -r -j$(shell nproc) --no-print-directory
 .DELETE_ON_ERROR:
 
 .PHONY: update-ab
