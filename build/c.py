@@ -14,9 +14,11 @@ from os.path import *
 emit(
     """
 ifeq ($(OSX),no)
-START-GROUP ?= -Wl,--start-group
-END-GROUP ?= -Wl,--end-group
+HOSTSTARTGROUP ?= -Wl,--start-group
+HOSTENDGROUP ?= -Wl,--end-group
 endif
+STARTGROUP ?= $(HOSTSTARTGROUP)
+ENDGROUP ?= $(HOSTENDGROUP)
 """
 )
 
@@ -28,10 +30,10 @@ class Toolchain:
     clibrary = ["$(AR) cqs {outs[0]} {ins}"]
     cxxlibrary = ["$(AR) cqs {outs[0]} {ins}"]
     cprogram = [
-        "$(CC) -o {outs[0]} $(START-GROUP) {ins} $(END-GROUP) {ldflags} $(LDFLAGS)"
+        "$(CC) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
     ]
     cxxprogram = [
-        "$(CXX) -o {outs[0]} $(START-GROUP) {ins} $(END-GROUP) {ldflags} $(LDFLAGS)"
+        "$(CXX) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
     ]
 
 
@@ -41,8 +43,12 @@ class HostToolchain:
     cxxfile = ["$(HOSTCXX) -c -o {outs[0]} {ins[0]} $(HOSTCFLAGS) {cflags}"]
     clibrary = ["$(HOSTAR) cqs {outs[0]} {ins}"]
     cxxlibrary = ["$(HOSTAR) cqs {outs[0]} {ins}"]
-    cprogram = ["$(HOSTCC) -o {outs[0]} {ins} {ldflags} $(HOSTLDFLAGS)"]
-    cxxprogram = ["$(HOSTCXX) -o {outs[0]} {ins} {ldflags} $(HOSTLDFLAGS)"]
+    cprogram = [
+        "$(HOSTCC) -o {outs[0]} $(HOSTSTARTGROUP) {ins} {ldflags} $(HOSTLDFLAGS) $(HOSTENDGROUP)"
+    ]
+    cxxprogram = [
+        "$(HOSTCXX) -o {outs[0]} $(HOSTSTARTGROUP) {ins} {ldflags} $(HOSTLDFLAGS) $(HOSTENDGROUP)"
+    ]
 
 
 def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
