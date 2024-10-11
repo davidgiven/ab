@@ -44,6 +44,8 @@ t = targets["tests/pkg/+cprogram/tests/pkg/cfile.c"]
 assert_that(
     t.args["cflags"],
     contains_inanyorder(
-        "--c-flag", "--cflags-flag-fallback", "-I$(OBJ)/tests/pkg/+fallbacklib"
+        "--c-flag",
+        "--cflags-flag-fallback",
+        "-I$(OBJ)/tests/pkg/+fallbacklib_hdr",
     ),
 )

@@ -1,5 +1,5 @@
 from build.ab import simplerule, Rule, Target, export
-from build.c import cprogram, cxxprogram, cheaders, clibrary, cxxlibrary, cfile
+from build.c import cprogram, cxxprogram, clibrary, cxxlibrary, cfile
 from build.protobuf import proto, protocc, protojava
 from build.zip import zip
 from build.utils import objectify, itemsof
@@ -39,7 +39,7 @@ def test(self, name, test: Target):
     )
 
 
-cheaders(
+clibrary(
     name="cheaders_compile_test",
     hdrs={"headers/test.h": "./cheaders_compile_test.h"},
     caller_cflags=["-DCHEADER"],

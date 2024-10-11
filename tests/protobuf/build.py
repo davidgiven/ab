@@ -48,16 +48,8 @@ assert_that(
 
 assert_that(rec.name, equal_to("tests/protobuf/+protolib_c"))
 assert_that(
-    targetnamesof(rec.ins),
+    targetnamesof(rec.outs),
     contains_inanyorder(
-        "tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test2.pb.cc",
-        "tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc",
-    ),
-)
-
-assert_that(
-    filenamesof(rec.outs),
-    contains_inanyorder(
-        "$(OBJ)/tests/protobuf/+protolib_c/protolib_c.a",
+        "tests/protobuf/+protolib_c_hdr", "tests/protobuf/+protolib_c_lib"
     ),
 )

@@ -1,5 +1,5 @@
 from build.ab import export, targetnamesof, filenamesof, targets
-from build.c import clibrary, cprogram, cfile, cheaders
+from build.c import clibrary, cprogram, cfile
 from hamcrest import assert_that, equal_to, contains_inanyorder, has_item, empty
 
 hl = clibrary(
@@ -21,7 +21,7 @@ rl2 = clibrary(
     caller_ldflags=["--clibrary2-ldflags"],
 )
 
-hl2 = cheaders(name="cheaders2", deps=[".+clibrary2"])
+hl2 = clibrary(name="cheaders2", deps=[".+clibrary2"])
 
 rf = cfile(name="cfile", srcs=["./prog.c"], deps=[".+cheaders"])
 
@@ -40,20 +40,16 @@ assert_that(hl.name, equal_to("tests/clibrary/+cheaders"))
 assert_that(hl.args, has_item("caller_cflags"))
 assert_that(
     hl.args["caller_cflags"],
-    equal_to(["--cheaders-cflags", "-I$(OBJ)/tests/clibrary/+cheaders"]),
+    equal_to(["--cheaders-cflags", "-I$(OBJ)/tests/clibrary/+cheaders_hdr"]),
 )
 
 assert_that(rl.name, equal_to("tests/clibrary/+clibrary"))
 assert_that(
-    targetnamesof(rl.ins),
-    contains_inanyorder(
-        "tests/clibrary/+clibrary/tests/clibrary/lib1.c",
-        "tests/clibrary/+clibrary/tests/clibrary/lib2.cc",
-    ),
+    targetnamesof(rl.outs), contains_inanyorder("tests/clibrary/+clibrary_lib")
 )
 assert_that(
     filenamesof(rl.outs),
-    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary/clibrary.a"),
+    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary_lib/clibrary.a"),
 )
 
 assert_that(rf.name, equal_to("tests/clibrary/+cfile"))
@@ -63,17 +59,12 @@ assert_that(
 )
 
 assert_that(rl2.name, equal_to("tests/clibrary/+clibrary2"))
-assert_that(
-    targetnamesof(rl2.ins),
-    contains_inanyorder(
-        "tests/clibrary/+clibrary2/tests/clibrary/lib1.c",
-        "tests/clibrary/+clibrary2/tests/clibrary/lib2.cc",
-    ),
-)
+assert_that(targetnamesof(rl2.ins), empty())
 assert_that(
     filenamesof(rl2.outs),
     contains_inanyorder(
-        "$(OBJ)/tests/clibrary/+clibrary2/clibrary2.a",
+        "$(OBJ)/tests/clibrary/+clibrary2_lib/clibrary2.a",
+        "$(OBJ)/tests/clibrary/+clibrary2_hdr/library2.h",
     ),
 )
 assert_that(rl2.args, has_item("caller_cflags"))
@@ -82,7 +73,7 @@ assert_that(
     # the header rule.
     rl2.args["caller_cflags"],
     contains_inanyorder(
-        "--clibrary2-cflags",
+        "--clibrary2-cflags", "-I$(OBJ)/tests/clibrary/+clibrary2_hdr"
     ),
 )
 assert_that(rl2.args, has_item("caller_ldflags"))
@@ -94,26 +85,24 @@ assert_that(
     ),
 )
 assert_that(rl2.args, has_item("cheader_deps"))
-assert_that(len(rl2.args["cheader_deps"]), equal_to(2))
-assert_that(rl2.args["cheader_deps"], has_item(hl))
-[rl2h] = rl2.args["cheader_deps"] - {hl}
-
-assert_that(rl2h.name, equal_to("tests/clibrary/+clibrary2_hdrs"))
 assert_that(
-    targetnamesof(rl2h.ins),
+    targetnamesof(rl2.args["cheader_deps"]),
+    contains_inanyorder(
+        "tests/clibrary/+clibrary2",
+        "tests/clibrary/+clibrary",
+        "tests/clibrary/+cheaders",
+    ),
+)
+t = targets["tests/clibrary/+clibrary2_hdr"]
+t.materialise()
+assert_that(t.name, equal_to("tests/clibrary/+clibrary2_hdr"))
+assert_that(
+    targetnamesof(t.ins),
     contains_inanyorder("tests/clibrary/library2.h"),
 )
 assert_that(
-    filenamesof(rl2h.outs),
-    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary2_hdrs/library2.h"),
-)
-assert_that(rl2h.args, has_item("caller_cflags"))
-assert_that(
-    rl2h.args["caller_cflags"],
-    contains_inanyorder(
-        "--clibrary2-cflags",
-        "-I$(OBJ)/tests/clibrary/+clibrary2_hdrs",
-    ),
+    filenamesof(t.outs),
+    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary2_hdr/library2.h"),
 )
 
 assert_that(rp.name, equal_to("tests/clibrary/+cprogram"))
@@ -121,15 +110,12 @@ assert_that(
     targetnamesof(rp.ins),
     contains_inanyorder(
         "tests/clibrary/+cfile",
-        "$(OBJ)/tests/clibrary/+clibrary/clibrary.a",
-        "$(OBJ)/tests/clibrary/+clibrary2/clibrary2.a",
+        "$(OBJ)/tests/clibrary/+clibrary_lib/clibrary.a",
+        "$(OBJ)/tests/clibrary/+clibrary2_lib/clibrary2.a",
     ),
 )
 
 assert_that(hl2.name, equal_to("tests/clibrary/+cheaders2"))
 assert_that(filenamesof(hl2.ins), empty())
 assert_that(filenamesof(hl2.outs), empty())
-assert_that(
-    filenamesof(hl2.deps),
-    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary2/clibrary2.a"),
-)
+assert_that(filenamesof(hl2.deps), empty())
