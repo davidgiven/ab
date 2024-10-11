@@ -195,7 +195,13 @@ def libraryimpl(
 
     if srcs:
         objs = findsources(
-            self.localname, srcs, deps, cflags + hf, toolchain, kind, self.cwd
+            self.localname,
+            srcs,
+            deps + ([hr] if hr else []),
+            cflags + hf,
+            toolchain,
+            kind,
+            self.cwd,
         )
 
         ar = simplerule(
