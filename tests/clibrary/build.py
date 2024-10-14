@@ -55,7 +55,7 @@ assert_that(
 assert_that(rf.name, equal_to("tests/clibrary/+cfile"))
 assert_that(targetnamesof(rf.ins), contains_inanyorder("tests/clibrary/prog.c"))
 assert_that(
-    targetnamesof(rf.deps), contains_inanyorder("tests/clibrary/+cheaders")
+    targetnamesof(rf.deps), contains_inanyorder("tests/clibrary/+cheaders_hdr")
 )
 
 assert_that(rl2.name, equal_to("tests/clibrary/+clibrary2"))
