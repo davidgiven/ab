@@ -1,0 +1,5 @@
+.obj
+.hg
+.git
+**/__pycache__
+

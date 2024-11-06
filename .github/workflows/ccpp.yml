@@ -13,7 +13,9 @@ jobs:
         packages: python3-hamcrest protobuf-compiler libprotobuf-dev zip libguava-java libprotobuf-java flex bison libfl-dev
 
     - name: make
-      run: make
+      run: |
+        make
+        make docker
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
