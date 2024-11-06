@@ -6,18 +6,21 @@ all: +all
 include build/ab.mk
 
 DOCKERFILES = \
-    Dockerfile.debian12
+    debian12
 
 define run-docker
+    docker build -t $1 -f tests/docker/Dockerfile.$(strip $1) .
     docker run \
         --device=/dev/kvm \
         --rm \
-        -it \
-        $$(docker build -q -f tests/docker/$(strip $1) .) \
+        --attach STDOUT \
+		--attach STDERR \
+        $1 \
         make
+
 endef
 
 .PHONY: docker
 docker: distribution.tar.xz
 	$(hide) echo DOCKERTESTS
-	$(foreach f,$(DOCKERFILES), $(call run-docker, $f) &&) true
+	$(foreach f,$(DOCKERFILES), $(call run-docker, $f))
