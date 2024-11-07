@@ -6,6 +6,7 @@ all: +all
 include build/ab.mk
 
 DOCKERFILES = \
+	debian11 \
     debian12
 
 define run-docker
