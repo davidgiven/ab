@@ -60,10 +60,10 @@ def externaljar(self, name, paths):
 
 @Rule
 def mavenjar(self, name, artifact, repo="https://repo.maven.apache.org/maven2"):
-#Artifact name looks like this:
-#'org.apache.felix:org.apache.felix.framework:7.0.5'
-#Which gets mapped to a URL like this:
-#https: // repo.maven.apache.org/maven2/org/apache/felix/org.apache.felix.framework/7.0.5/org.apache.felix.framework-7.0.5.jar
+    # Artifact name looks like this:
+    # 'org.apache.felix:org.apache.felix.framework:7.0.5'
+    # Which gets mapped to a URL like this:
+    # https: // repo.maven.apache.org/maven2/org/apache/felix/org.apache.felix.framework/7.0.5/org.apache.felix.framework-7.0.5.jar
 
     values = artifact.split(":")
     if len(values) == 3:
@@ -85,7 +85,9 @@ def mavenjar(self, name, artifact, repo="https://repo.maven.apache.org/maven2"):
         replaces=self,
         ins=[],
         outs=[f"={localname}"],
-        commands=["curl --location --fail-with-body -s -S -o {outs[0]} " + path],
+        commands=[
+            "curl --location --fail-with-body -s -S -o {outs[0]} " + path
+        ],
         label="MAVENDOWNLOAD",
         args={"caller_deps": [self]},
     )
@@ -127,12 +129,12 @@ def javalibrary(
     srcfiles = filenamesmatchingof(srcitems.values(), "*.java")
 
     cs = (
-#Setup.
+        # Setup.
         [
             "rm -rf {dir}/src {dir}/objs {dir}/files.txt {outs[0]}",
             "mkdir -p {dir}/src {dir}/objs",
         ]
-#Decompress any srcjars into directories of their own.
+        # Decompress any srcjars into directories of their own.
         + [
             " && ".join(
                 [
@@ -143,22 +145,22 @@ def javalibrary(
             )
             for i, f in enumerate(filenamesof(srcdeps))
         ]
-#Copy any source data items.
+        # Copy any source data items.
         + [
             f"mkdir -p {{dir}}/objs/{dirname(dest)} && cp {filenameof(src)} {{dir}}/objs/{dest}"
             for dest, src in dataitems.items()
         ]
-#Construct the list of filenames(which can be too long to go on
-#the command line).
+        # Construct the list of filenames(which can be too long to go on
+        # the command line).
         + [
             "echo " + (" ".join(batch)) + " >> {dir}/files.txt"
             for batch in _batched(srcfiles, 100)
         ]
         + [
-#Find any source files in the srcjars(which we don't know
-#statically).
+            # Find any source files in the srcjars(which we don't know
+            # statically).
             "find {dir}/src -name '*.java' >> {dir}/files.txt",
-#Actually do the compilation.
+            # Actually do the compilation.
             " ".join(
                 [
                     "if [ -s {dir}/files.txt ]; then",
@@ -170,7 +172,7 @@ def javalibrary(
                     "; fi",
                 ]
             ),
-#jar up the result.
+            # jar up the result.
             "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs .",
         ]
     )
@@ -215,7 +217,7 @@ def javalink(
         [
             "Manifest-Version: 1.0",
             "Created-By: ab",
-            "Main-Class: "+mainclass,
+            "Main-Class: " + mainclass,
         ]
         + (
             []
