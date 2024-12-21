@@ -68,11 +68,13 @@ def mavenjar(self, name, artifact, repo="https://repo.maven.apache.org/maven2"):
     values = artifact.split(":")
     if len(values) == 3:
         (group, artifact, version) = values
-        path = f"{repo}/{group.replace(".", "/")}/{artifact}/{version}/{artifact}-{version}.jar"
+        domain = group.replace(".", "/")
+        path = f"{repo}/{domain}/{artifact}/{version}/{artifact}-{version}.jar"
         localname = f"{artifact}-{version}.jar"
     elif len(values) == 2:
         (group, artifact) = values
-        path = f"{repo}/{group.replace(".", "/")}/{artifact}/{artifact}.jar"
+        domain = group.replace(".", "/")
+        path = f"{repo}/{domain}/{artifact}/{artifact}.jar"
         localname = f"{artifact}.jar"
     else:
         assert (
