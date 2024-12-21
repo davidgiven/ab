@@ -11,6 +11,7 @@ from build.ab import (
 from build.utils import targetswithtraitsof, collectattrs, filenamesmatchingof
 from build.zip import zip
 from os.path import *
+import re
 
 emit(
     """
@@ -19,15 +20,6 @@ JAVAC ?= javac
 JFLAGS ?= -g
 """
 )
-
-
-def _manifestline(key, value):
-    s = f"{key}: {value}"
-    c = []
-    while s:
-        c += [("" if len(c) == 0 else " ") + s[:70]]
-        s = s[70:]
-    return c
 
 
 def _batched(items, n):
@@ -67,6 +59,55 @@ def externaljar(self, name, paths):
 
 
 @Rule
+def mavenjar(self, name, artifact, repo="https://repo.maven.apache.org/maven2"):
+#Artifact name looks like this:
+#'org.apache.felix:org.apache.felix.framework:7.0.5'
+#Which gets mapped to a URL like this:
+#https: // repo.maven.apache.org/maven2/org/apache/felix/org.apache.felix.framework/7.0.5/org.apache.felix.framework-7.0.5.jar
+
+    values = artifact.split(":")
+    if len(values) == 3:
+        (group, artifact, version) = values
+        path = f"{repo}/{group.replace(".", "/")}/{artifact}/{version}/{artifact}-{version}.jar"
+        localname = f"{artifact}-{version}.jar"
+    elif len(values) == 2:
+        (group, artifact) = values
+        path = f"{repo}/{group.replace(".", "/")}/{artifact}/{artifact}.jar"
+        localname = f"{artifact}.jar"
+    else:
+        assert (
+            False
+        ), "only artifact IDs with 2 or 3 elements are supported so far"
+
+    r = simplerule(
+        replaces=self,
+        ins=[],
+        outs=[f"={localname}"],
+        commands=["curl --location --fail-with-body -s -S -o {outs[0]} " + path],
+        label="MAVENDOWNLOAD",
+        args={"caller_deps": [self]},
+    )
+    r.materialise()
+    r.args["jar"] = filenameof(r.outs[0])
+    r.traits.add("externaljar")
+
+
+@Rule
+def httpjar(self, name, url):
+    r = simplerule(
+        replaces=self,
+        ins=[],
+        outs=[f"={self.localname}.jar"],
+        commands=["curl --location --fail-with-body -s -S -o {outs[0]} " + url],
+        label="HTTPDOWNLOAD",
+        args={"caller_deps": [self]},
+    )
+    r.materialise()
+    r.args["jar"] = filenameof(r.outs[0])
+    r.traits.add("externaljar")
+
+
+@Rule
 def javalibrary(
     self,
     name,
@@ -84,12 +125,12 @@ def javalibrary(
     srcfiles = filenamesmatchingof(srcitems.values(), "*.java")
 
     cs = (
-        # Setup.
+#Setup.
         [
             "rm -rf {dir}/src {dir}/objs {dir}/files.txt {outs[0]}",
             "mkdir -p {dir}/src {dir}/objs",
         ]
-        # Decompress any srcjars into directories of their own.
+#Decompress any srcjars into directories of their own.
         + [
             " && ".join(
                 [
@@ -100,22 +141,22 @@ def javalibrary(
             )
             for i, f in enumerate(filenamesof(srcdeps))
         ]
-        # Copy any source data items.
+#Copy any source data items.
         + [
-            f"mkdir -p {{dir}}/objs/{dirname(dest)} && $(CP) {filenameof(src)} {{dir}}/objs/{dest}"
+            f"mkdir -p {{dir}}/objs/{dirname(dest)} && cp {filenameof(src)} {{dir}}/objs/{dest}"
             for dest, src in dataitems.items()
         ]
-        # Construct the list of filenames (which can be too long to go on
-        # the command line).
+#Construct the list of filenames(which can be too long to go on
+#the command line).
         + [
             "echo " + (" ".join(batch)) + " >> {dir}/files.txt"
             for batch in _batched(srcfiles, 100)
         ]
         + [
-            # Find any source files in the srcjars (which we don't know
-            # statically).
+#Find any source files in the srcjars(which we don't know
+#statically).
             "find {dir}/src -name '*.java' >> {dir}/files.txt",
-            # Actually do the compilation.
+#Actually do the compilation.
             " ".join(
                 [
                     "if [ -s {dir}/files.txt ]; then",
@@ -127,7 +168,7 @@ def javalibrary(
                     "; fi",
                 ]
             ),
-            # jar up the result.
+#jar up the result.
             "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs .",
         ]
     )
@@ -169,26 +210,34 @@ def javalink(
         alldeps += [j]
 
     mf = (
-        _manifestline("Manifest-Version", "1.0")
-        + _manifestline("Created-By", "ab")
-        + _manifestline("Main-Class", mainclass)
+        [
+            "Manifest-Version: 1.0",
+            "Created-By: ab",
+            "Main-Class: "+mainclass,
+        ]
         + (
             []
             if not externaljars
-            else _manifestline("Class-Path", " ".join(externaljars))
+            else [
+                "Class-Path: " + " ".join([f"$(CWD)/{f}" for f in externaljars])
+            ]
         )
-        + [_manifestline(k, v) for k, v in manifest.items()]
+        + [f"{k}={v}" for k, v in manifest.items()]
     )
 
     simplerule(
         replaces=self,
-        ins=alldeps,
+        ins=alldeps + ["build/_manifest.py"],
         outs=[f"={self.localname}.jar"],
         commands=[
             "rm -rf {dir}/objs {dir}/manifest.mf",
             "mkdir -p {dir}/objs",
         ]
-        + [f"echo '{m}' >> {{dir}}/manifest.mf" for m in mf]
+        + [
+            f"$(PYTHON) build/_manifest.py "
+            + " ".join([v.replace(" ", "\\ ") for v in mf])
+            + " > {dir}/manifest.mf"
+        ]
         + [
             "(cd {dir}/objs && $(JAR) xf $(abspath " + j + "))"
             for j in filenamesof(internaldeps)
