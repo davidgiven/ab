@@ -20,12 +20,14 @@ endif
 """
 )
 
+
 def _combine(list1, list2):
     r = list(list1)
     for i in list2:
         if i not in r:
             r.append(i)
     return r
+
 
 def _indirect(deps, name):
     r = []
@@ -83,9 +85,10 @@ def cxxfile(
 
 def _removeprefix(self, prefix):
     if self.startswith(prefix):
-        return self[len(prefix):]
+        return self[len(prefix) :]
     else:
         return self[:]
+
 
 def findsources(name, srcs, deps, cflags, filerule, cwd):
     for f in filenamesof(srcs):
@@ -96,7 +99,7 @@ def findsources(name, srcs, deps, cflags, filerule, cwd):
     for s in flatten(srcs):
         objs += [
             filerule(
-                name=join(name, _removeprefix(f,"$(OBJ)/")),
+                name=join(name, _removeprefix(f, "$(OBJ)/")),
                 srcs=[f],
                 deps=deps,
                 cflags=sorted(set(cflags)),

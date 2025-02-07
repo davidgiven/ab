@@ -17,6 +17,9 @@ import inspect
 import string
 import sys
 import hashlib
+import re
+import ast
+from collections import namedtuple
 
 verbose = False
 quiet = False
@@ -25,6 +28,22 @@ targets = {}
 unmaterialisedTargets = {}  # dict, not set, to get consistent ordering
 materialisingStack = []
 defaultGlobals = {}
+
+RE_FORMAT_SPEC = re.compile(
+    r"(?:(?P<fill>[\s\S])?(?P<align>[<>=^]))?"
+    r"(?P<sign>[- +])?"
+    r"(?P<pos_zero>z)?"
+    r"(?P<alt>#)?"
+    r"(?P<zero_padding>0)?"
+    r"(?P<width_str>\d+)?"
+    r"(?P<grouping>[_,])?"
+    r"(?:(?P<decimal>\.)(?P<precision_str>\d+))?"
+    r"(?P<type>[bcdeEfFgGnosxX%])?"
+)
+
+CommandFormatSpec = namedtuple(
+    "CommandFormatSpec", RE_FORMAT_SPEC.groupindex.keys()
+)
 
 sys.path += ["."]
 old_import = builtins.__import__
@@ -78,6 +97,34 @@ class ABException(BaseException):
 
 def error(message):
     raise ABException(message)
+
+
+class BracketedFormatter(string.Formatter):
+    def parse(self, format_string):
+        while format_string:
+            left, *right = format_string.split("{", 1)
+            if not right:
+                yield (left, None, None, None)
+                break
+
+            right = right[0]
+            if right.startswith("{"):
+                yield (left + "{", None, None, None)
+                format_string = right[1:]
+                continue
+
+            offset = len(right) + 1
+            try:
+                ast.parse(right)
+            except SyntaxError as e:
+                if not str(e).startswith("unmatched '}'"):
+                    raise e
+                offset = e.offset
+
+            expr = right[0 : offset - 1]
+            format_string = right[offset:]
+
+            yield (left if left else None, expr, None, None)
 
 
 def Rule(func):
@@ -166,7 +213,7 @@ class Target:
         return f"Target('{self.name}')"
 
     def templateexpand(selfi, s):
-        class Formatter(string.Formatter):
+        class Formatter(BracketedFormatter):
             def get_field(self, name, a1, a2):
                 return (
                     eval(name, selfi.callback.__globals__, selfi.args),
@@ -358,9 +405,10 @@ class TargetsMap:
 def _removesuffix(self, suffix):
     # suffix='' should not call self[:-0].
     if suffix and self.endswith(suffix):
-        return self[:-len(suffix)]
+        return self[: -len(suffix)]
     else:
         return self[:]
+
 
 def loadbuildfile(filename):
     filename = _removesuffix(filename.replace("/", "."), ".py")

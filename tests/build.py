@@ -11,14 +11,16 @@ TESTS = [
     "cprogram",
     "dependency",
     "export",
+    "formatter",
     "invocation",
     "pkg",
     "protobuf",
     "simple",
 ]
 
-mavenjar(name="libprotobuf-java",
-              artifact="com.google.protobuf:protobuf-java:3.19.6")
+mavenjar(
+    name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6"
+)
 
 
 @Rule
