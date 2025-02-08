@@ -63,7 +63,7 @@ def cfile(
     deps: Targets = None,
     cflags=[],
     suffix=".o",
-    commands=["$(CC) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"],
+    commands=["$(CC) -c -o $[outs[0]] $[ins[0]] $(CFLAGS) $[cflags]"],
     label="CC",
 ):
     cfileimpl(self, name, srcs, deps, suffix, commands, label, cflags)
@@ -77,7 +77,7 @@ def cxxfile(
     deps: Targets = None,
     cflags=[],
     suffix=".o",
-    commands=["$(CXX) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"],
+    commands=["$(CXX) -c -o $[outs[0]] $[ins[0]] $(CFLAGS) $[cflags]"],
     label="CXX",
 ):
     cfileimpl(self, name, srcs, deps, suffix, commands, label, cflags)
@@ -151,7 +151,7 @@ def libraryimpl(
                 len(s) == 1
             ), "the target of a header must return exactly one file"
 
-            cs += ["$(CP) {ins[" + str(i) + "]} {outs[" + str(i) + "]}"]
+            cs += [f"$(CP) $[ins[{i}]] $[outs[{i}]]"]
             outs += ["=" + dest]
             i = i + 1
 
@@ -205,7 +205,7 @@ def clibrary(
     caller_ldflags=[],
     cflags=[],
     ldflags=[],
-    commands=["rm -f {outs[0]} && $(AR) cqs {outs[0]} {ins}"],
+    commands=["rm -f $[outs[0]] && $(AR) cqs $[outs[0]] $[ins]"],
     label="LIB",
     cfilerule=cfile,
 ):
@@ -236,7 +236,7 @@ def cxxlibrary(
     caller_ldflags=[],
     cflags=[],
     ldflags=[],
-    commands=["rm -f {outs[0]} && $(AR) cqs {outs[0]} {ins}"],
+    commands=["rm -f $[outs[0]] && $(AR) cqs $[outs[0]] $[ins]"],
     label="CXXLIB",
     cxxfilerule=cxxfile,
 ):
@@ -301,7 +301,7 @@ def cprogram(
     cflags=[],
     ldflags=[],
     commands=[
-        "$(CC) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
+        "$(CC) -o $[outs[0]] $(STARTGROUP) $[ins] $[ldflags] $(LDFLAGS) $(ENDGROUP)"
     ],
     label="CLINK",
     cfilerule=cfile,
@@ -328,7 +328,7 @@ def cxxprogram(
     cflags=[],
     ldflags=[],
     commands=[
-        "$(CXX) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
+        "$(CXX) -o $[outs[0]] $(STARTGROUP) $[ins] $[ldflags] $(LDFLAGS) $(ENDGROUP)"
     ],
     label="CXXLINK",
     cxxfilerule=cxxfile,

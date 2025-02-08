@@ -19,7 +19,7 @@ def writetext(self, name):
         replaces=self,
         ins=[],
         outs=[f"={self.localname}.txt"],
-        commands=["echo %s > {outs[0]}" % name],
+        commands=["echo %s > $[outs[0]]" % name],
         label="WRITETEXT",
     )
 

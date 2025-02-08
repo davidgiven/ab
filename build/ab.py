@@ -102,22 +102,17 @@ def error(message):
 class BracketedFormatter(string.Formatter):
     def parse(self, format_string):
         while format_string:
-            left, *right = format_string.split("{", 1)
+            left, *right = format_string.split("$[", 1)
             if not right:
                 yield (left, None, None, None)
                 break
-
             right = right[0]
-            if right.startswith("{"):
-                yield (left + "{", None, None, None)
-                format_string = right[1:]
-                continue
 
             offset = len(right) + 1
             try:
                 ast.parse(right)
             except SyntaxError as e:
-                if not str(e).startswith("unmatched '}'"):
+                if not str(e).startswith("unmatched ']'"):
                     raise e
                 offset = e.offset
 
@@ -537,7 +532,7 @@ def simplerule(
         name=self.name,
         ins=ins + deps,
         outs=outs,
-        label=self.templateexpand("{label} {name}") if label else None,
+        label=self.templateexpand("$[label] $[name]") if label else None,
         cmds=cs,
     )
 
@@ -571,7 +566,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
         replaces=self,
         ins=outs + deps,
         outs=["=sentinel"],
-        commands=["touch {outs[0]}"],
+        commands=["touch $[outs[0]]"],
         label="EXPORT",
     )
 

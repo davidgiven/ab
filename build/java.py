@@ -86,7 +86,7 @@ def mavenjar(self, name, artifact, repo="https://repo.maven.apache.org/maven2"):
         ins=[],
         outs=[f"={localname}"],
         commands=[
-            "curl --location --fail-with-body -s -S -o {outs[0]} " + path
+            "curl --location --fail-with-body -s -S -o $[outs[0]] " + path
         ],
         label="MAVENDOWNLOAD",
         args={"caller_deps": [self]},
@@ -102,7 +102,9 @@ def httpjar(self, name, url):
         replaces=self,
         ins=[],
         outs=[f"={self.localname}.jar"],
-        commands=["curl --location --fail-with-body -s -S -o {outs[0]} " + url],
+        commands=[
+            "curl --location --fail-with-body -s -S -o $[outs[0]] " + url
+        ],
         label="HTTPDOWNLOAD",
         args={"caller_deps": [self]},
     )
@@ -131,15 +133,15 @@ def javalibrary(
     cs = (
         # Setup.
         [
-            "rm -rf {dir}/src {dir}/objs {dir}/files.txt {outs[0]}",
-            "mkdir -p {dir}/src {dir}/objs",
+            "rm -rf $[dir]/src $[dir]/objs $[dir]/files.txt $[outs[0]]",
+            "mkdir -p $[dir]/src $[dir]/objs",
         ]
         # Decompress any srcjars into directories of their own.
         + [
             " && ".join(
                 [
-                    "(mkdir {dir}/src/" + str(i),
-                    "cd {dir}/src/" + str(i),
+                    "(mkdir $[dir]/src/" + str(i),
+                    "cd $[dir]/src/" + str(i),
                     "$(JAR) xf $(abspath " + f + "))",
                 ]
             )
@@ -147,33 +149,33 @@ def javalibrary(
         ]
         # Copy any source data items.
         + [
-            f"mkdir -p {{dir}}/objs/{dirname(dest)} && cp {filenameof(src)} {{dir}}/objs/{dest}"
+            f"mkdir -p $[dir]/objs/{dirname(dest)} && cp {filenameof(src)} $[dir]/objs/{dest}"
             for dest, src in dataitems.items()
         ]
         # Construct the list of filenames(which can be too long to go on
         # the command line).
         + [
-            "echo " + (" ".join(batch)) + " >> {dir}/files.txt"
+            "echo " + (" ".join(batch)) + " >> $[dir]/files.txt"
             for batch in _batched(srcfiles, 100)
         ]
         + [
             # Find any source files in the srcjars(which we don't know
             # statically).
-            "find {dir}/src -name '*.java' >> {dir}/files.txt",
+            "find $[dir]/src -name '*.java' >> $[dir]/files.txt",
             # Actually do the compilation.
             " ".join(
                 [
-                    "if [ -s {dir}/files.txt ]; then",
+                    "if [ -s $[dir]/files.txt ]; then",
                     "$(JAVAC)",
                     "$(JFLAGS)",
-                    "-d {dir}/objs",
+                    "-d $[dir]/objs",
                     (" -cp " + ":".join(classpath)) if classpath else "",
-                    "@{dir}/files.txt",
+                    "@$[dir]/files.txt",
                     "; fi",
                 ]
             ),
             # jar up the result.
-            "$(JAR) --create --no-compress --file {outs[0]} -C {self.dir}/objs .",
+            "$(JAR) --create --no-compress --file $[outs[0]] -C $[dir]/objs .",
         ]
     )
 
@@ -234,20 +236,20 @@ def javalink(
         ins=alldeps + ["build/_manifest.py"],
         outs=[f"={self.localname}.jar"],
         commands=[
-            "rm -rf {dir}/objs {dir}/manifest.mf",
-            "mkdir -p {dir}/objs",
+            "rm -rf $[dir]/objs $[dir]/manifest.mf",
+            "mkdir -p $[dir]/objs",
         ]
         + [
             f"$(PYTHON) build/_manifest.py "
             + " ".join([v.replace(" ", "\\ ") for v in mf])
-            + " > {dir}/manifest.mf"
+            + " > $[dir]/manifest.mf"
         ]
         + [
-            "(cd {dir}/objs && $(JAR) xf $(abspath " + j + "))"
+            "(cd $[dir]/objs && $(JAR) xf $(abspath " + j + "))"
             for j in filenamesof(internaldeps)
         ]
         + [
-            "$(JAR) --create --file={outs[0]} --manifest={dir}/manifest.mf -C {dir}/objs ."
+            "$(JAR) --create --file=$[outs[0]] --manifest=$[dir]/manifest.mf -C $[dir]/objs ."
         ],
         label="JAVAPROGRAM",
     )
@@ -277,9 +279,9 @@ def javaprogram(
         ins=[jar],
         outs=[f"={self.localname}"],
         commands=[
-            f"echo '#!/usr/bin/env -S java {flags} -jar' > {{outs[0]}}",
-            "cat {ins[0]} >> {outs[0]}",
-            "chmod a+rx {outs[0]}",
+            f"echo '#!/usr/bin/env -S java {flags} -jar' > $[outs[0]]",
+            "cat $[ins[0]] >> $[outs[0]]",
+            "chmod a+rx $[outs[0]]",
         ],
         label="JAVAEXE",
     )

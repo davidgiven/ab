@@ -3,7 +3,7 @@ from build.ab import export, simplerule
 simplerule(
     name="fortesting",
     outs=["=out"],
-    commands=["touch {outs[0]}"],
+    commands=["touch $[outs[0]]"],
     label="TOUCH",
 )
 
@@ -22,7 +22,7 @@ simplerule(
         "./build/zip.py",
     ],
     outs=["=distribution.tar.xz"],
-    commands=["tar cJf {outs[0]} {ins}"],
+    commands=["tar cJf $[outs[0]] $[ins]"],
     label="ZIP",
 )
 
