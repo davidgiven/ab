@@ -94,6 +94,7 @@ def findsources(name, srcs, deps, cflags, filerule, cwd):
     for f in filenamesof(srcs):
         if f.endswith(".h") or f.endswith(".hh"):
             cflags = cflags + [f"-I{dirname(f)}"]
+            deps = deps + [f]
 
     objs = []
     for s in flatten(srcs):

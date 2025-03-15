@@ -31,7 +31,14 @@ def test(self, name, test: Target):
             "./" + self.localname + "/build.py",
         ],
         outs=["=build.mk"],
-        deps=["build/ab.py", "build/c.py", "build/pkg.py", "build/protobuf.py"],
+        deps=[
+            "build/ab.py",
+            "build/c.py",
+            "build/pkg.py",
+            "build/protobuf.py",
+            "build/utils.py",
+            "tests/pkg/pkg-repo/ab-sample-pkg.pc",
+        ],
         commands=[
             "PKG_CONFIG=pkg-config "
             + "HOST_PKG_CONFIG=pkg-config "
