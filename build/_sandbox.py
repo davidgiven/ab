@@ -31,7 +31,9 @@ def main():
             sf = join(args.sandbox, f)
             if args.verbose:
                 print("export", sf)
-            os.makedirs(dirname(f), exist_ok=True)
+            df = dirname(f)
+            if df:
+                os.makedirs(df, exist_ok=True)
             os.rename(sf, f)
 
 
