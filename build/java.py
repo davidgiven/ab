@@ -85,9 +85,7 @@ def mavenjar(self, name, artifact, repo="https://repo.maven.apache.org/maven2"):
         replaces=self,
         ins=[],
         outs=[f"={localname}"],
-        commands=[
-            "curl --location --fail-with-body -s -S -o $[outs[0]] " + path
-        ],
+        commands=["curl --location -s -S -o $[outs[0]] " + path],
         label="MAVENDOWNLOAD",
         args={"caller_deps": [self]},
     )
