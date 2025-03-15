@@ -24,7 +24,7 @@ simplerule(
         "./build/zip.py",
     ],
     outs=["=distribution.tar.xz"],
-    commands=["tar cJf $[outs[0]] $[ins]"],
+    commands=["tar chJf $[outs[0]] $[ins]"],
     label="ZIP",
 )
 
