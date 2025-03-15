@@ -456,8 +456,9 @@ def emit(*args, into=None):
         outputFp.write(s)
 
 
-def emit_rule(name, ins, outs, cmds=[], label=None):
-    fins = filenamesof(ins)
+def emit_rule(self, ins, outs, cmds=[], label=None):
+    name = self.name
+    fins = set(filenamesof(ins))
     fouts = filenamesof(outs)
     nonobjs = [f for f in fouts if not f.startswith("$(OBJ)")]
 
@@ -483,8 +484,23 @@ def emit_rule(name, ins, outs, cmds=[], label=None):
 
         if label:
             emit("\t$(hide)", "$(ECHO) $(PROGRESSINFO)", label, into=lines)
+
+        sandbox = join(self.dir, "sandbox")
+        emit("\t$(hide)", f"rm -rf {sandbox}", into=lines)
+        emit(
+            "\t$(hide)",
+            f"$(PYTHON) build/_sandbox.py --link -s {sandbox}",
+            *fins,
+            into=lines,
+        )
         for c in cmds:
-            emit("\t$(hide)", c, into=lines)
+            emit(f"\t$(hide) cd {sandbox} &&", c, into=lines)
+        emit(
+            "\t$(hide)",
+            f"$(PYTHON) build/_sandbox.py --export -s {sandbox}",
+            *fouts,
+            into=lines,
+        )
     else:
         assert len(cmds) == 0, "rules with no outputs cannot have commands"
         emit(name, ":", *fins, into=lines)
@@ -529,7 +545,7 @@ def simplerule(
         cs += [self.templateexpand(c)]
 
     emit_rule(
-        name=self.name,
+        self=self,
         ins=ins + deps,
         outs=outs,
         label=self.templateexpand("$[label] $[name]") if label else None,

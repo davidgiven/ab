@@ -58,7 +58,7 @@ def objectify(self, name, src: Target, symbol):
         replaces=self,
         ins=["build/_objectify.py", src],
         outs=[f"={basename(filenameof(src))}.h"],
-        commands=["$(PYTHON) $[ins[0]] $[ins[1]] " + symbol + " > {outs}"],
+        commands=["$(PYTHON) $[ins[0]] $[ins[1]] " + symbol + " > $[outs]"],
         label="OBJECTIFY",
     )
 

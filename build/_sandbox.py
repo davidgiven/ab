@@ -4,22 +4,35 @@ from os.path import *
 import argparse
 import os
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--sandbox")
     parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument("-l", "--link", action="store_true")
+    parser.add_argument("-e", "--export", action="store_true")
     parser.add_argument("files", nargs="*")
     args = parser.parse_args()
 
     assert args.sandbox, "You must specify a sandbox directory"
-    assert not exists(args.sandbox), "The sandbox already exists"
+    assert args.link ^ args.export, "You can't link and export at the same time"
 
-    for f in args.files:
-        sf = join(args.sandbox, f)
-        if args.verbose:
-            print(sf)
-        os.makedirs(dirname(sf), exist_ok=True)
-        os.symlink(abspath(f), sf)
+    if args.link:
+        os.makedirs(args.sandbox, exist_ok=True)
+        for f in args.files:
+            sf = join(args.sandbox, f)
+            if args.verbose:
+                print("link", sf)
+            os.makedirs(dirname(sf), exist_ok=True)
+            os.symlink(abspath(f), sf)
+
+    if args.export:
+        for f in args.files:
+            sf = join(args.sandbox, f)
+            if args.verbose:
+                print("export", sf)
+            os.makedirs(dirname(f), exist_ok=True)
+            os.rename(sf, f)
+
 
 main()
-
