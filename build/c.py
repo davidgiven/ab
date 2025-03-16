@@ -90,9 +90,21 @@ def _removeprefix(self, prefix):
         return self[:]
 
 
+def _isSourceFile(f):
+    return (
+        f.endswith(".c")
+        or f.endswith(".cc")
+        or f.endswith(".cpp")
+        or f.endswith(".S")
+        or f.endswith(".s")
+        or f.endswith(".m")
+        or f.endswith(".mm")
+    )
+
+
 def findsources(name, srcs, deps, cflags, filerule, cwd):
     for f in filenamesof(srcs):
-        if f.endswith(".h") or f.endswith(".hh"):
+        if not _isSourceFile(f):
             cflags = cflags + [f"-I{dirname(f)}"]
             deps = deps + [f]
 
@@ -107,13 +119,7 @@ def findsources(name, srcs, deps, cflags, filerule, cwd):
                 cwd=cwd,
             )
             for f in filenamesof([s])
-            if f.endswith(".c")
-            or f.endswith(".cc")
-            or f.endswith(".cpp")
-            or f.endswith(".S")
-            or f.endswith(".s")
-            or f.endswith(".m")
-            or f.endswith(".mm")
+            if _isSourceFile(f)
         ]
         if any(f.endswith(".o") for f in filenamesof([s])):
             objs += [s]
