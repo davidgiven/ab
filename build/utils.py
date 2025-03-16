@@ -78,7 +78,7 @@ def test(
             replaces=self,
             ins=[command],
             outs=["=sentinel"],
-            commands=["$[ins[0]]", "touch $[outs]"],
+            commands=["$[ins[0]]", "touch {outs}"],
             deps=deps,
             label=label,
         )
@@ -87,7 +87,7 @@ def test(
             replaces=self,
             ins=ins,
             outs=["=sentinel"],
-            commands=commands + ["touch $[outs]"],
+            commands=commands + ["touch {outs}"],
             deps=deps,
             label=label,
         )

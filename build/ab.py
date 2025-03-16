@@ -494,7 +494,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
             into=lines,
         )
         for c in cmds:
-            emit(f"\t$(hide) cd {sandbox} &&", c, into=lines)
+            emit(f"\t$(hide) cd {sandbox} && (", c, ")", into=lines)
         emit(
             "\t$(hide)",
             f"$(PYTHON) build/_sandbox.py --export -s {sandbox}",
@@ -573,7 +573,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
             cwd=self.cwd,
             ins=[srcs[0]],
             outs=[destf],
-            commands=["$(CP) --dereference %s %s" % (srcs[0], destf)],
+            commands=["$(CP) -H %s %s" % (srcs[0], destf)],
             label="",
         )
         subrule.materialise()
