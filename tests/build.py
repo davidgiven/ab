@@ -1,6 +1,6 @@
 from build.ab import simplerule, Rule, Target, export
 from build.c import cprogram, cxxprogram, clibrary, cxxlibrary, cfile
-from build.protobuf import proto, protocc, protojava
+from build.protobuf import proto, protocc, protojava, protolib
 from build.zip import zip
 from build.utils import objectify, itemsof
 from build.java import javalibrary, javaprogram, externaljar, srcjar, mavenjar
@@ -82,7 +82,8 @@ cxxprogram(
     deps=[".+cheaders_compile_test"],
 )
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
-protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_proto"])
+protolib(name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"])
+protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_protolib"])
 proto(
     name="proto_compile_test2_proto",
     srcs=["./proto_compile_test2.proto"],

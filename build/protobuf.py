@@ -69,6 +69,18 @@ def proto(self, name, srcs: Targets = [], deps: Targets = []):
 
 
 @Rule
+def protolib(self, name, srcs: Targets = []):
+    simplerule(
+        replaces=self,
+        label="PROTOLIB",
+        args={
+            "protosrcs": collectattrs(targets=srcs, name="protosrcs"),
+            "protodeps": set(_getprotodeps(srcs)),
+        },
+    )
+
+
+@Rule
 def protocc(self, name, srcs: Targets = [], deps: Targets = []):
     outs = []
     protos = []

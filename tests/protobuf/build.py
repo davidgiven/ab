@@ -1,11 +1,12 @@
 from build.ab import export, filenamesof, targetnamesof
-from build.protobuf import proto, protocc
-from hamcrest import assert_that, empty, equal_to, contains_inanyorder, has_item
+from build.protobuf import proto, protocc, protolib
+from hamcrest import assert_that, empty, equal_to, contains_inanyorder, has_item, has_items
 
 re1 = proto(name="protolib", srcs=["./test.proto"])
 re2 = proto(name="protolib2", srcs=["./test2.proto"], deps=[".+protolib"])
+rel = protolib(name="combined", srcs=[".+protolib", ".+protolib2"])
 
-rec = protocc(name="protolib_c", srcs=[".+protolib", ".+protolib2"])
+rec = protocc(name="protolib_c", srcs=[".+protolib", ".+protolib2", ".+combined"])
 
 re = export(name="all", items={}, deps=[".+protolib2", ".+protolib_c"])
 re.materialise()
@@ -41,6 +42,23 @@ assert_that(
 assert_that(re2.args, has_item("protodeps"))
 assert_that(
     targetnamesof(re2.args["protodeps"]),
+    contains_inanyorder(
+        "tests/protobuf/+protolib", "tests/protobuf/+protolib2"
+    ),
+)
+
+assert_that(rel.name, equal_to("tests/protobuf/+combined"))
+assert_that(rel.ins, empty())
+assert_that(rel.outs, empty())
+assert_that(rel.args, has_items("protodeps", "protosrcs"))
+assert_that(
+    rel.args["protosrcs"],
+    contains_inanyorder(
+        "tests/protobuf/test.proto", "tests/protobuf/test2.proto"
+    ),
+)
+assert_that(
+    targetnamesof(rel.args["protodeps"]),
     contains_inanyorder(
         "tests/protobuf/+protolib", "tests/protobuf/+protolib2"
     ),
