@@ -10,15 +10,16 @@ simplerule(
 simplerule(
     name="distribution",
     ins=[
+        "./build/_manifest.py",
         "./build/_objectify.py",
         "./build/_sandbox.py",
-        "./build/_manifest.py",
         "./build/ab.mk",
         "./build/ab.py",
         "./build/c.py",
         "./build/java.py",
         "./build/pkg.py",
         "./build/protobuf.py",
+        "./build/toolchain.py",
         "./build/utils.py",
         "./build/yacc.py",
         "./build/zip.py",

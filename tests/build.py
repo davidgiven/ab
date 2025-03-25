@@ -36,6 +36,7 @@ def test(self, name, test: Target):
             "build/c.py",
             "build/pkg.py",
             "build/protobuf.py",
+            "build/toolchain.py",
             "build/utils.py",
             "tests/pkg/pkg-repo/ab-sample-pkg.pc",
         ],
