@@ -21,6 +21,47 @@ endif
 )
 
 
+class CToolchain:
+    PREFIX = ""
+
+    CC = ["$(CC) -c -o $[outs[0]] $[ins[0]] $(CFLAGS) $[cflags]"]
+    CXX = ["$(CXX) -c -o $[outs[0]] $[ins[0]] $(CFLAGS) $[cflags]"]
+    AR = ["$(AR) cqs $[outs[0]] $[ins]"]
+    ARXX = ["$(AR) cqs $[outs[0]] $[ins]"]
+    CLINK = [
+        "$(CC) -o $[outs[0]] $(STARTGROUP) $[ins] $[ldflags] $(LDFLAGS) $(ENDGROUP)"
+    ]
+    CXXLINK = [
+        "$(CXX) -o $[outs[0]] $(STARTGROUP) $[ins] $[ldflags] $(LDFLAGS) $(ENDGROUP)"
+    ]
+
+    def is_source_file(f):
+        return (
+            f.endswith(".c")
+            or f.endswith(".cc")
+            or f.endswith(".cpp")
+            or f.endswith(".S")
+            or f.endswith(".s")
+            or f.endswith(".m")
+            or f.endswith(".mm")
+        )
+
+
+class CHostToolchain(CToolchain):
+    PREFIX = "HOST"
+
+    CC = ["$(HOSTCC) -c -o $[outs[0]] $[ins[0]] $(HOSTCFLAGS) $[cflags]"]
+    CXX = ["$(HOSTCXX) -c -o $[outs[0]] $[ins[0]] $(HOSTCFLAGS) $[cflags]"]
+    AR = ["$(HOSTAR) cqs $[outs[0]] $[ins]"]
+    ARXX = ["$(HOSTAR) cqs $[outs[0]] $[ins]"]
+    CLINK = [
+        "$(HOSTCC) -o $[outs[0]] $(STARTGROUP) $[ins] $[ldflags] $(HOSTLDFLAGS) $(ENDGROUP)"
+    ]
+    CXXLINK = [
+        "$(HOSTCXX) -o $[outs[0]] $(STARTGROUP) $[ins] $[ldflags] $(HOSTLDFLAGS) $(ENDGROUP)"
+    ]
+
+
 def _combine(list1, list2):
     r = list(list1)
     for i in list2:
@@ -63,10 +104,19 @@ def cfile(
     deps: Targets = None,
     cflags=[],
     suffix=".o",
-    commands=["$(CC) -c -o $[outs[0]] $[ins[0]] $(CFLAGS) $[cflags]"],
+    toolchain=CToolchain,
     label="CC",
 ):
-    cfileimpl(self, name, srcs, deps, suffix, commands, label, cflags)
+    cfileimpl(
+        self,
+        name,
+        srcs,
+        deps,
+        suffix,
+        toolchain.CC,
+        toolchain.PREFIX + label,
+        cflags,
+    )
 
 
 @Rule
@@ -77,10 +127,19 @@ def cxxfile(
     deps: Targets = None,
     cflags=[],
     suffix=".o",
-    commands=["$(CXX) -c -o $[outs[0]] $[ins[0]] $(CFLAGS) $[cflags]"],
+    toolchain=CToolchain,
     label="CXX",
 ):
-    cfileimpl(self, name, srcs, deps, suffix, commands, label, cflags)
+    cfileimpl(
+        self,
+        name,
+        srcs,
+        deps,
+        suffix,
+        toolchain.CXX,
+        toolchain.PREFIX + label,
+        cflags,
+    )
 
 
 def _removeprefix(self, prefix):
@@ -90,21 +149,9 @@ def _removeprefix(self, prefix):
         return self[:]
 
 
-def _isSourceFile(f):
-    return (
-        f.endswith(".c")
-        or f.endswith(".cc")
-        or f.endswith(".cpp")
-        or f.endswith(".S")
-        or f.endswith(".s")
-        or f.endswith(".m")
-        or f.endswith(".mm")
-    )
-
-
-def findsources(name, srcs, deps, cflags, filerule, cwd):
+def findsources(name, srcs, deps, cflags, filerule, toolchain, cwd):
     for f in filenamesof(srcs):
-        if not _isSourceFile(f):
+        if not toolchain.is_source_file(f):
             cflags = cflags + [f"-I{dirname(f)}"]
             deps = deps + [f]
 
@@ -116,10 +163,11 @@ def findsources(name, srcs, deps, cflags, filerule, cwd):
                 srcs=[f],
                 deps=deps,
                 cflags=sorted(set(cflags)),
+                toolchain=toolchain,
                 cwd=cwd,
             )
             for f in filenamesof([s])
-            if _isSourceFile(f)
+            if toolchain.is_source_file(f)
         ]
         if any(f.endswith(".o") for f in filenamesof([s])):
             objs += [s]
@@ -137,6 +185,7 @@ def libraryimpl(
     caller_ldflags,
     cflags,
     ldflags,
+    toolchain,
     commands,
     label,
     filerule,
@@ -167,7 +216,7 @@ def libraryimpl(
             ins=ins,
             outs=outs,
             commands=cs,
-            label="CHEADERS",
+            label=toolchain.PREFIX + "CHEADERS",
         )
         hr.materialise()
         hf = [f"-I{hr.dir}"]
@@ -179,6 +228,7 @@ def libraryimpl(
             deps + ([hr] if hr else []),
             cflags + hf,
             filerule,
+            toolchain,
             self.cwd,
         )
 
@@ -212,7 +262,7 @@ def clibrary(
     caller_ldflags=[],
     cflags=[],
     ldflags=[],
-    commands=["rm -f $[outs[0]] && $(AR) cqs $[outs[0]] $[ins]"],
+    toolchain=CToolchain,
     label="LIB",
     cfilerule=cfile,
 ):
@@ -226,8 +276,41 @@ def clibrary(
         caller_ldflags,
         cflags,
         ldflags,
-        commands,
-        label,
+        toolchain,
+        toolchain.AR,
+        toolchain.PREFIX + label,
+        cfilerule,
+    )
+
+
+@Rule
+def hostclibrary(
+    self,
+    name,
+    srcs: Targets = None,
+    deps: Targets = None,
+    hdrs: TargetsMap = None,
+    caller_cflags=[],
+    caller_ldflags=[],
+    cflags=[],
+    ldflags=[],
+    toolchain=CHostToolchain,
+    label="LIB",
+    cfilerule=cfile,
+):
+    libraryimpl(
+        self,
+        name,
+        srcs,
+        deps,
+        hdrs,
+        caller_cflags,
+        caller_ldflags,
+        cflags,
+        ldflags,
+        toolchain,
+        toolchain.AR,
+        toolchain.PREFIX + label,
         cfilerule,
     )
 
@@ -243,7 +326,7 @@ def cxxlibrary(
     caller_ldflags=[],
     cflags=[],
     ldflags=[],
-    commands=["rm -f $[outs[0]] && $(AR) cqs $[outs[0]] $[ins]"],
+    toolchain=CToolchain,
     label="CXXLIB",
     cxxfilerule=cxxfile,
 ):
@@ -257,8 +340,41 @@ def cxxlibrary(
         caller_ldflags,
         cflags,
         ldflags,
-        commands,
-        label,
+        toolchain,
+        toolchain.ARXX,
+        toolchain.PREFIX + label,
+        cxxfilerule,
+    )
+
+
+@Rule
+def hostcxxlibrary(
+    self,
+    name,
+    srcs: Targets = None,
+    deps: Targets = None,
+    hdrs: TargetsMap = None,
+    caller_cflags=[],
+    caller_ldflags=[],
+    cflags=[],
+    ldflags=[],
+    toolchain=CHostToolchain,
+    label="CXXLIB",
+    cxxfilerule=cxxfile,
+):
+    libraryimpl(
+        self,
+        name,
+        srcs,
+        deps,
+        hdrs,
+        caller_cflags,
+        caller_ldflags,
+        cflags,
+        ldflags,
+        toolchain,
+        toolchain.ARXX,
+        toolchain.PREFIX + label,
         cxxfilerule,
     )
 
@@ -270,11 +386,14 @@ def programimpl(
     deps,
     cflags,
     ldflags,
+    toolchain,
     commands,
     label,
     filerule,
 ):
-    cfiles = findsources(self.localname, srcs, deps, cflags, filerule, self.cwd)
+    cfiles = findsources(
+        self.localname, srcs, deps, cflags, filerule, toolchain, self.cwd
+    )
 
     lib_deps = []
     for d in deps:
@@ -307,9 +426,7 @@ def cprogram(
     deps: Targets = None,
     cflags=[],
     ldflags=[],
-    commands=[
-        "$(CC) -o $[outs[0]] $(STARTGROUP) $[ins] $[ldflags] $(LDFLAGS) $(ENDGROUP)"
-    ],
+    toolchain=CToolchain,
     label="CLINK",
     cfilerule=cfile,
 ):
@@ -320,8 +437,35 @@ def cprogram(
         deps,
         cflags,
         ldflags,
-        commands,
-        label,
+        toolchain,
+        toolchain.CLINK,
+        toolchain.PREFIX + label,
+        cfilerule,
+    )
+
+
+@Rule
+def hostcprogram(
+    self,
+    name,
+    srcs: Targets = None,
+    deps: Targets = None,
+    cflags=[],
+    ldflags=[],
+    toolchain=CHostToolchain,
+    label="CLINK",
+    cfilerule=cfile,
+):
+    programimpl(
+        self,
+        name,
+        srcs,
+        deps,
+        cflags,
+        ldflags,
+        toolchain,
+        toolchain.CLINK,
+        toolchain.PREFIX + label,
         cfilerule,
     )
 
@@ -334,9 +478,7 @@ def cxxprogram(
     deps: Targets = None,
     cflags=[],
     ldflags=[],
-    commands=[
-        "$(CXX) -o $[outs[0]] $(STARTGROUP) $[ins] $[ldflags] $(LDFLAGS) $(ENDGROUP)"
-    ],
+    toolchain=CToolchain,
     label="CXXLINK",
     cxxfilerule=cxxfile,
 ):
@@ -347,7 +489,33 @@ def cxxprogram(
         deps,
         cflags,
         ldflags,
-        commands,
-        label,
+        toolchain,
+        toolchain.CXXLINK,
+        toolchain.PREFIX + label,
+        cxxfilerule,
+    )
+
+@Rule
+def hostcxxprogram(
+    self,
+    name,
+    srcs: Targets = None,
+    deps: Targets = None,
+    cflags=[],
+    ldflags=[],
+    toolchain=CHostToolchain,
+    label="CXXLINK",
+    cxxfilerule=cxxfile,
+):
+    programimpl(
+        self,
+        name,
+        srcs,
+        deps,
+        cflags,
+        ldflags,
+        toolchain,
+        toolchain.CXXLINK,
+        toolchain.PREFIX + label,
         cxxfilerule,
     )

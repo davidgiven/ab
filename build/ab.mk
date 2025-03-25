@@ -8,15 +8,22 @@ endif
 
 OBJ ?= .obj
 PYTHON ?= python3
-CC ?= gcc
-CXX ?= g++
-AR ?= ar
-CFLAGS ?= -g -Og
-LDFLAGS ?= -g
 PKG_CONFIG ?= pkg-config
 HOST_PKG_CONFIG ?= $(PKG_CONFIG)
 ECHO ?= echo
 CP ?= cp
+
+HOSTCC ?= gcc
+HOSTCXX ?= g++
+HOSTAR ?= ar
+HOSTCFLAGS ?= -g -Og
+HOSTLDFLAGS ?= -g
+
+CC ?= $(HOSTCC)
+CXX ?= $(HOSTCXX)
+AR ?= $(HOSTAR)
+CFLAGS ?= $(HOSTCFLAGS)
+LDFLAGS ?= $(HOSTLDFLAGS)
 
 export PKG_CONFIG
 export HOST_PKG_CONFIG

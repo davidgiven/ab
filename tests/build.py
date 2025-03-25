@@ -1,5 +1,5 @@
 from build.ab import simplerule, Rule, Target, export
-from build.c import cprogram, cxxprogram, clibrary, cxxlibrary, cfile
+from build.c import cprogram, cxxprogram, clibrary, cxxlibrary, cfile, hostcxxprogram
 from build.protobuf import proto, protocc, protojava, protolib
 from build.zip import zip
 from build.utils import objectify, itemsof
@@ -81,6 +81,11 @@ cxxprogram(
     srcs=["./cxxprogram_compile_test.cc"],
     deps=[".+cheaders_compile_test"],
 )
+hostcxxprogram(
+    name="hostcxxprogram_compile_test",
+    srcs=["./cxxprogram_compile_test.cc"],
+    deps=[".+cheaders_compile_test"],
+)
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
 protolib(name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"])
 protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_protolib"])
@@ -136,6 +141,7 @@ tests = [test(name=t, test=t) for t in TESTS] + [
     ".+cprogram_compile_test",
     ".+cxxlibrary_compile_test",
     ".+cxxprogram_compile_test",
+    ".+hostcxxprogram_compile_test",
     ".+javaprogram_compile_test",
     ".+javalibrary_compile_test",
     ".+objectify_test",
