@@ -16,6 +16,7 @@ TESTS = [
     "pkg",
     "protobuf",
     "simple",
+    "toolchain",
 ]
 
 mavenjar(
