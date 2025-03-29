@@ -1,12 +1,21 @@
 from build.ab import export, filenamesof, targetnamesof
 from build.protobuf import proto, protocc, protolib
-from hamcrest import assert_that, empty, equal_to, contains_inanyorder, has_item, has_items
+from hamcrest import (
+    assert_that,
+    empty,
+    equal_to,
+    contains_inanyorder,
+    has_item,
+    has_items,
+)
 
 re1 = proto(name="protolib", srcs=["./test.proto"])
 re2 = proto(name="protolib2", srcs=["./test2.proto"], deps=[".+protolib"])
 rel = protolib(name="combined", srcs=[".+protolib", ".+protolib2"])
 
-rec = protocc(name="protolib_c", srcs=[".+protolib", ".+protolib2", ".+combined"])
+rec = protocc(
+    name="protolib_c", srcs=[".+protolib", ".+protolib2", ".+combined"]
+)
 
 re = export(name="all", items={}, deps=[".+protolib2", ".+protolib_c"])
 re.materialise()

@@ -1,5 +1,13 @@
 from build.ab import simplerule, Rule, Target, export
-from build.c import cprogram, cxxprogram, clibrary, cxxlibrary, cfile, hostcxxprogram
+from build.c import (
+    cprogram,
+    cxxprogram,
+    clibrary,
+    cxxlibrary,
+    cfile,
+    hostcxxprogram,
+    cppfile,
+)
 from build.protobuf import proto, protocc, protojava, protolib
 from build.zip import zip
 from build.utils import objectify, itemsof
@@ -58,6 +66,11 @@ clibrary(
     hdrs={"headers/test.h": "./cheaders_compile_test.h"},
     caller_cflags=["-DCHEADER"],
 )
+cppfile(
+    name="cppfile_compile_test",
+    srcs=["./cprogram_compile_test.c"],
+    deps=[".+cheaders_compile_test"],
+)
 cfile(
     name="cfile_compile_test",
     srcs=["./cprogram_compile_test.c"],
@@ -89,7 +102,9 @@ hostcxxprogram(
     deps=[".+cheaders_compile_test"],
 )
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
-protolib(name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"])
+protolib(
+    name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"]
+)
 protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_protolib"])
 proto(
     name="proto_compile_test2_proto",
@@ -139,6 +154,7 @@ cprogram(
 
 tests = [test(name=t, test=t) for t in TESTS] + [
     ".+cfile_compile_test",
+    ".+cppfile_compile_test",
     ".+clibrary_compile_test",
     ".+cprogram_compile_test",
     ".+cxxlibrary_compile_test",
