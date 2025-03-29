@@ -1,4 +1,4 @@
-from build.ab import simplerule, Rule, Target, export
+from build.ab import simplerule, Rule, Target, export, Targets
 from build.c import (
     cprogram,
     cxxprogram,
@@ -14,27 +14,13 @@ from build.utils import objectify, itemsof
 from build.java import javalibrary, javaprogram, externaljar, srcjar, mavenjar
 from build.yacc import bison, flex
 
-TESTS = [
-    "args",
-    "clibrary",
-    "cprogram",
-    "dependency",
-    "export",
-    "formatter",
-    "invocation",
-    "pkg",
-    "protobuf",
-    "simple",
-    "toolchain",
-]
-
 mavenjar(
     name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6"
 )
 
 
 @Rule
-def test(self, name, test: Target):
+def test(self, name, deps: Targets = []):
     simplerule(
         replaces=self,
         ins=[
@@ -48,8 +34,8 @@ def test(self, name, test: Target):
             "build/protobuf.py",
             "build/toolchain.py",
             "build/utils.py",
-            "tests/pkg/pkg-repo/ab-sample-pkg.pc",
-        ],
+        ]
+        + deps,
         commands=[
             "PKG_CONFIG=pkg-config "
             + "HOST_PKG_CONFIG=pkg-config "
@@ -153,7 +139,19 @@ cprogram(
     ldflags=["-lfl"],
 )
 
-tests = [test(name=t, test=t) for t in TESTS] + [
+tests = [
+    test(name="args"),
+    test(name="clibrary"),
+    test(name="cprogram"),
+    test(name="dependency"),
+    test(name="dot", deps=["./dot/module.with.dot/build.py"]),
+    test(name="export"),
+    test(name="formatter"),
+    test(name="invocation"),
+    test(name="pkg", deps=["tests/pkg/pkg-repo/ab-sample-pkg.pc"]),
+    test(name="protobuf"),
+    test(name="simple"),
+    test(name="toolchain"),
     ".+cfile_compile_test",
     ".+cppfile_compile_test",
     ".+clibrary_compile_test",
@@ -169,5 +167,6 @@ tests = [test(name=t, test=t) for t in TESTS] + [
     ".+bison_compile_test",
     ".+zip_test",
 ]
+
 
 export(name="tests", deps=tests)

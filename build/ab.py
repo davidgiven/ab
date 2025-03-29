@@ -19,6 +19,7 @@ import sys
 import hashlib
 import re
 import ast
+import os
 from collections import namedtuple
 
 verbose = False
@@ -407,8 +408,16 @@ def _removesuffix(self, suffix):
 
 
 def loadbuildfile(filename):
-    filename = _removesuffix(filename.replace("/", "."), ".py")
-    builtins.__import__(filename)
+    modulename = _removesuffix(filename.replace("/", "."), ".py")
+    spec = importlib.util.spec_from_file_location(
+        name=modulename,
+        location=filename,
+        loader=BuildFileLoaderImpl(fullname=modulename, path=filename),
+        submodule_search_locations=[],
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[modulename] = module
+    spec.loader.exec_module(module)
 
 
 def flatten(items):
