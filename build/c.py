@@ -166,7 +166,7 @@ def findsources(self, srcs, deps, cflags, filerule, toolchain, cwd):
                 cflags=sorted(set(cflags)),
                 toolchain=toolchain,
                 cwd=cwd,
-                args=getattr(self, "explicit_args", {})
+                args=getattr(self, "explicit_args", {}),
             )
             for f in filenamesof([s])
             if is_source_file(f)

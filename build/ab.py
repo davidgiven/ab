@@ -579,13 +579,12 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
         )
         subrule.materialise()
 
-    simplerule(
-        replaces=self,
-        ins=outs + deps,
-        outs=["=sentinel"],
-        commands=["touch $[outs[0]]"],
-        label="EXPORT",
-    )
+    self.ins = []
+    self.outs = deps + outs
+
+    emit("")
+    emit(".PHONY:", name)
+    emit(name, ":", *filenamesof(outs + deps))
 
 
 def main():
