@@ -157,7 +157,8 @@ def Rule(func):
         t.callback = func
         t.traits.add(func.__name__)
         if "args" in kwargs:
-            t.args.update(kwargs["args"])
+            t.explicit_args = kwargs["args"]
+            t.args.update(t.explicit_args)
             del kwargs["args"]
         if "traits" in kwargs:
             t.traits |= kwargs["traits"]

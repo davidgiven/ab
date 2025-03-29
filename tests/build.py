@@ -15,6 +15,7 @@ from build.java import javalibrary, javaprogram, externaljar, srcjar, mavenjar
 from build.yacc import bison, flex
 
 TESTS = [
+    "args",
     "clibrary",
     "cprogram",
     "dependency",
