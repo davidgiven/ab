@@ -497,7 +497,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
         emit("endif", into=lines)
 
         if label:
-            emit("\t$(hide)", "$(ECHO) $(PROGRESSINFO)", label, into=lines)
+            emit("\t$(hide)", "$(ECHO) $(PROGRESSINFO)" + label, into=lines)
 
         sandbox = join(self.dir, "sandbox")
         emit("\t$(hide)", f"rm -rf {sandbox}", into=lines)
