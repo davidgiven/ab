@@ -29,6 +29,7 @@ targets = {}
 unmaterialisedTargets = {}  # dict, not set, to get consistent ordering
 materialisingStack = []
 defaultGlobals = {}
+globalId = 1
 
 RE_FORMAT_SPEC = re.compile(
     r"(?:(?P<fill>[\s\S])?(?P<align>[<>=^]))?"
@@ -486,14 +487,17 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
     hash = hashlib.sha1(bytes("\n".join(hashable), "utf-8")).hexdigest()
     hashfile = join(self.dir, f"hash_{hash}")
 
+    global globalId
     emit(".PHONY:", name, into=lines)
     if outs:
-        emit(name, ":", hashfile, *fouts, into=lines)
+        emit(f"OUTS_{globalId} =", *fouts)
+        emit(f"INS_{globalId} =", *fins)
+        emit(name, ":", hashfile, f"$(OUTS_{globalId})", into=lines)
         emit("ifeq ($(MAKE4.3),yes)", into=lines)
-        emit(hashfile, *fouts, "&:", *fins, into=lines)
+        emit(hashfile, f"$(OUTS_{globalId})" , "&:", f"$(INS_{globalId})", into=lines)
         emit("else", into=lines)
-        emit(*fouts, ":", hashfile, into=lines)
-        emit(hashfile, ":", *fins, into=lines)
+        emit(f"$(OUTS_{globalId})", ":", hashfile, into=lines)
+        emit(hashfile, ":", f"$(INS_{globalId})", into=lines)
         emit("endif", into=lines)
 
         if label:
@@ -504,7 +508,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
         emit(
             "\t$(hide)",
             f"$(PYTHON) build/_sandbox.py --link -s {sandbox}",
-            *fins,
+            f"$(INS_{globalId})",
             into=lines,
         )
         for c in cmds:
@@ -512,7 +516,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
         emit(
             "\t$(hide)",
             f"$(PYTHON) build/_sandbox.py --export -s {sandbox}",
-            *fouts,
+            f"$(OUTS_{globalId})",
             into=lines,
         )
     else:
@@ -524,6 +528,8 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
     if outs:
         emit(f"\t$(hide) touch {hashfile}")
     emit("")
+
+    globalId = globalId + 1
 
 
 @Rule
