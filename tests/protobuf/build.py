@@ -1,4 +1,4 @@
-from build.ab import export, filenamesof, targetnamesof
+from build.ab import export, filenamesof, targetnamesof, targetof
 from build.protobuf import proto, protocc, protolib
 from hamcrest import (
     assert_that,
@@ -74,9 +74,29 @@ assert_that(
 )
 
 assert_that(rec.name, equal_to("tests/protobuf/+protolib_c"))
+assert_that(targetnamesof(rec.ins), empty())
 assert_that(
     targetnamesof(rec.outs),
     contains_inanyorder(
         "tests/protobuf/+protolib_c_hdr", "tests/protobuf/+protolib_c_lib"
+    ),
+)
+assert_that(rec.traits, contains_inanyorder("cxxlibrary", "protocc"))
+assert_that(
+    rec.args, has_items("clibrary_deps", "cheader_deps", "caller_cflags")
+)
+assert_that(
+    rec.args["caller_cflags"],
+    contains_inanyorder("-I$(OBJ)/tests/protobuf/+protolib_c_hdr"),
+)
+
+ret = targetof(
+    "tests/protobuf/+protolib_c/tests/protobuf/+protolib_c_srcs/tests/protobuf/test.pb.cc"
+)
+assert_that(
+    ret.args["cflags"],
+    contains_inanyorder(
+        "-I$(OBJ)/tests/protobuf/+protolib_c_hdr",
+        "-I$(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf",
     ),
 )
