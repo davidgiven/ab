@@ -1,4 +1,4 @@
-from build.ab import export, targetnamesof, targets
+from build.ab import export, targetnamesof, targets, filenamesof
 from build.pkg import package
 from build.c import cprogram, clibrary
 from hamcrest import assert_that, equal_to, contains_inanyorder, has_item, empty
@@ -34,7 +34,11 @@ assert_that(
 )
 assert_that(
     targetnamesof(cp.deps),
-    contains_inanyorder("tests/pkg/+foundpkg"),
+    contains_inanyorder("tests/pkg/+foundpkg", "tests/pkg/+missingpkg"),
+)
+assert_that(
+    filenamesof(cp.deps),
+    contains_inanyorder("$(OBJ)/tests/pkg/+fallbacklib_hdr/fallback.h"),
 )
 assert_that(
     targetnamesof(cp.ins),
@@ -47,7 +51,7 @@ assert_that(
 t = targets["tests/pkg/+cprogram/tests/pkg/cfile.c"]
 assert_that(
     targetnamesof(t.deps),
-    contains_inanyorder("tests/pkg/+fallbacklib_hdr", "tests/pkg/+foundpkg"),
+    contains_inanyorder("tests/pkg/+fallbacklib_hdr"),
 )
 assert_that(
     t.args["cflags"],
