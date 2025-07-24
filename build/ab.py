@@ -503,6 +503,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
         emit(f"INS_{insn}", "=", *fins, into=lines)
         emit(name, ":", f"$(OUTS_{outsn})")
         emit(hashfile, ":")
+        emit(f"\t@mkdir -p {self.dir}")
         emit(f"\t@touch {hashfile}")
         emit(f"$(OUTS_{outsn})", "&:",f"$(INS_{insn})", hashfile, into=lines)
 
