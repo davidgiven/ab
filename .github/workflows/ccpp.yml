@@ -25,7 +25,7 @@ jobs:
           distribution.tar.xz
 
   build-macos-current:
-    runs-on: maxos-latest
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
 
