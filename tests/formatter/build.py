@@ -31,3 +31,5 @@ assert_that(
 
 assert_that(parse("$[']']"), contains((None, "']'", None, None)))
 assert_that(parse("$['$[]']"), contains((None, "'$[]'", None, None)))
+
+assert_that(parse("$$[foo]"), contains(("$[foo]", None, None, None)))

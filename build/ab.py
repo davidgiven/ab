@@ -109,14 +109,17 @@ class BracketedFormatter(string.Formatter):
         self.op = op
         self.cl = cl
 
+    def _undo_escaped_dollar(self, s):
+        return s.replace(f"$${self.op}", f"${self.op}")
+
     def parse(self, format_string):
         while format_string:
             m = re.search(f"(?:[^$]|^)()\\$\\{self.op}()", format_string)
             if not m:
-                yield (format_string, None, None, None)
+                yield (self._undo_escaped_dollar(format_string), None, None, None)
                 break
-            left = format_string[:m.start(1)]
-            right = format_string[m.end(2):]
+            left = format_string[: m.start(1)]
+            right = format_string[m.end(2) :]
 
             offset = len(right) + 1
             try:
@@ -129,7 +132,7 @@ class BracketedFormatter(string.Formatter):
             expr = right[0 : offset - 1]
             format_string = right[offset:]
 
-            yield (left if left else None, expr, None, None)
+            yield (self._undo_escaped_dollar(left) if left else None, expr, None, None)
 
 
 def Rule(func):
