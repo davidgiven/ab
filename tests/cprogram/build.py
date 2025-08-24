@@ -12,7 +12,7 @@ assert_that(
 )
 assert_that(
     filenamesof(rcf.outs),
-    contains_inanyorder("$(OBJ)/tests/cprogram/+cfile/cfile.o"),
+    contains_inanyorder("OBJ/tests/cprogram/+cfile/cfile.o"),
 )
 
 rccf = cxxfile(name="cxxfile", srcs=["./cxxfile.c"], cflags=["-cxxflag"])
@@ -27,7 +27,7 @@ assert_that(
 )
 assert_that(
     filenamesof(rccf.outs),
-    contains_inanyorder("$(OBJ)/tests/cprogram/+cxxfile/cxxfile.o"),
+    contains_inanyorder("OBJ/tests/cprogram/+cxxfile/cxxfile.o"),
 )
 
 rp = cprogram(
@@ -42,8 +42,8 @@ assert_that(rp.name, equal_to("tests/cprogram/+cprogram"))
 assert_that(
     filenamesof(rp.ins),
     contains_inanyorder(
-        "$(OBJ)/tests/cprogram/+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o",
-        "$(OBJ)/tests/cprogram/+cfile/cfile.o",
+        "OBJ/tests/cprogram/+cprogram/tests/cprogram/implicitcfile.c/implicitcfile.o",
+        "OBJ/tests/cprogram/+cfile/cfile.o",
     ),
 )
 assert_that(
@@ -55,7 +55,7 @@ assert_that(
 )
 assert_that(
     filenamesof(rp.outs),
-    contains_inanyorder("$(OBJ)/tests/cprogram/+cprogram/cprogram$(EXT)"),
+    contains_inanyorder("OBJ/tests/cprogram/+cprogram/cprogram$(EXT)"),
 )
 
 cxxprogram(

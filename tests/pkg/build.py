@@ -38,7 +38,7 @@ assert_that(
 )
 assert_that(
     filenamesof(cp.deps),
-    contains_inanyorder("$(OBJ)/tests/pkg/+fallbacklib_hdr/fallback.h"),
+    contains_inanyorder("OBJ/tests/pkg/+fallbacklib_hdr/fallback.h"),
 )
 assert_that(
     targetnamesof(cp.ins),
@@ -58,6 +58,6 @@ assert_that(
     contains_inanyorder(
         "--c-flag",
         "--cflags-flag-fallback",
-        "-I$(OBJ)/tests/pkg/+fallbacklib_hdr",
+        "-IOBJ/tests/pkg/+fallbacklib_hdr",
     ),
 )

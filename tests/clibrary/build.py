@@ -45,11 +45,11 @@ assert_that(
 assert_that(hl.args["clibrary_files"], empty())
 assert_that(
     filenamesof(hl.args["cheader_files"]),
-    contains_inanyorder("$(OBJ)/tests/clibrary/+cheaders_hdr/library.h"),
+    contains_inanyorder("OBJ/tests/clibrary/+cheaders_hdr/library.h"),
 )
 assert_that(
     hl.args["caller_cflags"],
-    equal_to(["--cheaders-cflags", "-I$(OBJ)/tests/clibrary/+cheaders_hdr"]),
+    equal_to(["--cheaders-cflags", "-IOBJ/tests/clibrary/+cheaders_hdr"]),
 )
 
 assert_that(rl.name, equal_to("tests/clibrary/+clibrary"))
@@ -58,7 +58,7 @@ assert_that(
 )
 assert_that(
     filenamesof(rl.args["clibrary_files"]),
-    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary_lib/clibrary.a"),
+    contains_inanyorder("OBJ/tests/clibrary/+clibrary_lib/clibrary.a"),
 )
 
 assert_that(rf.name, equal_to("tests/clibrary/+cfile"))
@@ -80,7 +80,7 @@ assert_that(
     # the header rule.
     rl2.args["caller_cflags"],
     contains_inanyorder(
-        "--clibrary2-cflags", "-I$(OBJ)/tests/clibrary/+clibrary2_hdr"
+        "--clibrary2-cflags", "-IOBJ/tests/clibrary/+clibrary2_hdr"
     ),
 )
 assert_that(
@@ -116,16 +116,16 @@ assert_that(
 )
 assert_that(
     filenamesof(t.outs),
-    contains_inanyorder("$(OBJ)/tests/clibrary/+clibrary2_hdr/library2.h"),
+    contains_inanyorder("OBJ/tests/clibrary/+clibrary2_hdr/library2.h"),
 )
 
 assert_that(rp.name, equal_to("tests/clibrary/+cprogram"))
 assert_that(
     filenamesof(rp.ins),
     contains_inanyorder(
-        "$(OBJ)/tests/clibrary/+cfile/prog.o",
-        "$(OBJ)/tests/clibrary/+clibrary_lib/clibrary.a",
-        "$(OBJ)/tests/clibrary/+clibrary2_lib/clibrary2.a",
+        "OBJ/tests/clibrary/+cfile/prog.o",
+        "OBJ/tests/clibrary/+clibrary_lib/clibrary.a",
+        "OBJ/tests/clibrary/+clibrary2_lib/clibrary2.a",
     ),
 )
 

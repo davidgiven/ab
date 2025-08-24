@@ -6,7 +6,7 @@ from hamcrest import (
 
 
 def parse(s):
-    return list(BracketedFormatter().parse(s))
+    return list(BracketedFormatter("[", "]").parse(s))
 
 
 assert_that(parse(""), contains())
