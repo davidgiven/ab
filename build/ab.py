@@ -577,19 +577,20 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
         dest = self.targetof(dest)
         outs += [dest]
 
-        destf = filenameof(dest)
+        destf = self.templateexpand(filenameof(dest))
 
         srcs = filenamesof([src])
         assert (
             len(srcs) == 1
         ), "a dependency of an exported file must have exactly one output file"
+        srcf = self.templateexpand(srcs[0])
 
         subrule = simplerule(
             name=f"{self.localname}/{destf}",
             cwd=self.cwd,
             ins=[srcs[0]],
             outs=[destf],
-            commands=["$(CP) -H %s %s" % (srcs[0], destf)],
+            commands=["$(CP) -H %s %s" % (srcf, destf)],
             label="",
         )
         subrule.materialise()
