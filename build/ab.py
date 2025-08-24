@@ -111,11 +111,12 @@ class BracketedFormatter(string.Formatter):
 
     def parse(self, format_string):
         while format_string:
-            left, *right = format_string.split("$" + self.op, 1)
-            if not right:
-                yield (left, None, None, None)
+            m = re.search(f"(?:[^$]|^)()\\$\\{self.op}()", format_string)
+            if not m:
+                yield (format_string, None, None, None)
                 break
-            right = right[0]
+            left = format_string[:m.start(1)]
+            right = format_string[m.end(2):]
 
             offset = len(right) + 1
             try:
