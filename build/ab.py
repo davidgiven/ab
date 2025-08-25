@@ -26,6 +26,7 @@ targets = {}
 unmaterialisedTargets = {}  # dict, not set, to get consistent ordering
 materialisingStack = []
 defaultGlobals = {}
+outputTargets = set()
 
 RE_FORMAT_SPEC = re.compile(
     r"(?:(?P<fill>[\s\S])?(?P<align>[<>=^]))?"
@@ -39,7 +40,9 @@ RE_FORMAT_SPEC = re.compile(
     r"(?P<type>[bcdeEfFgGnosxX%])?"
 )
 
-CommandFormatSpec = namedtuple("CommandFormatSpec", RE_FORMAT_SPEC.groupindex.keys())
+CommandFormatSpec = namedtuple(
+    "CommandFormatSpec", RE_FORMAT_SPEC.groupindex.keys()
+)
 
 sys.path += ["."]
 old_import = builtins.__import__
@@ -116,7 +119,12 @@ class BracketedFormatter(string.Formatter):
         while format_string:
             m = re.search(f"(?:[^$]|^)()\\$\\{self.op}()", format_string)
             if not m:
-                yield (self._undo_escaped_dollar(format_string), None, None, None)
+                yield (
+                    self._undo_escaped_dollar(format_string),
+                    None,
+                    None,
+                    None,
+                )
                 break
             left = format_string[: m.start(1)]
             right = format_string[m.end(2) :]
@@ -132,7 +140,12 @@ class BracketedFormatter(string.Formatter):
             expr = right[0 : offset - 1]
             format_string = right[offset:]
 
-            yield (self._undo_escaped_dollar(left) if left else None, expr, None, None)
+            yield (
+                self._undo_escaped_dollar(left) if left else None,
+                expr,
+                None,
+                None,
+            )
 
 
 class GlobalFormatter(BracketedFormatter):
@@ -183,7 +196,9 @@ def Rule(func):
                 name = "+" + name
             t = Target(cwd, join(cwd, name))
 
-            assert t.name not in targets, f"target {t.name} has already been defined"
+            assert (
+                t.name not in targets
+            ), f"target {t.name} has already been defined"
             targets[t.name] = t
         elif replaces:
             t = replaces
@@ -215,7 +230,9 @@ def Rule(func):
 
 
 def _isiterable(xs):
-    return isinstance(xs, Iterable) and not isinstance(xs, (str, bytes, bytearray))
+    return isinstance(xs, Iterable) and not isinstance(
+        xs, (str, bytes, bytearray)
+    )
 
 
 class Target:
@@ -262,7 +279,9 @@ class Target:
                     value = list(value)
                 if type(value) != list:
                     value = [value]
-                return " ".join([selfi.templateexpand(f) for f in filenamesof(value)])
+                return " ".join(
+                    [selfi.templateexpand(f) for f in filenamesof(value)]
+                )
 
         s = Formatter().format(s)
         return substituteGlobalVariables(s)
@@ -303,7 +322,9 @@ class Target:
             cwdStack.append(self.cwd)
             if "kwargs" in self.binding.arguments.keys():
                 # If the caller wants kwargs, return all arguments except the standard ones.
-                cbargs = {k: v for k, v in self.args.items() if k not in {"dir"}}
+                cbargs = {
+                    k: v for k, v in self.args.items() if k not in {"dir"}
+                }
             else:
                 # Otherwise, just call the callback with the ones it asks for.
                 cbargs = {}
@@ -399,7 +420,9 @@ def targetof(value, cwd=None):
             try:
                 loadbuildfile(path)
             except ModuleNotFoundError:
-                error(f"no such build file '{path}' while trying to resolve '{value}'")
+                error(
+                    f"no such build file '{path}' while trying to resolve '{value}'"
+                )
             assert (
                 value in targets
             ), f"build file at '{path}' doesn't contain '+{target}' when trying to resolve '{value}'"
@@ -509,6 +532,10 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
     fins = [self.templateexpand(f) for f in set(filenamesof(ins))]
     fouts = [self.templateexpand(f) for f in filenamesof(outs)]
 
+    global outputTargets
+    outputTargets.update(fouts)
+    outputTargets.add(name)
+
     emit("")
     if VERBOSE_NINJA_FILE:
         for k, v in self.args.items():
@@ -520,10 +547,17 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
 
         sandbox = join(self.dir, "sandbox")
         emit(f"rm -rf {sandbox}", into=rule)
-        emit(f"{G.PYTHON} build/_sandbox.py --link -s", sandbox, *fins, into=rule)
+        emit(
+            f"{G.PYTHON} build/_sandbox.py --link -s", sandbox, *fins, into=rule
+        )
         for c in cmds:
             emit(f"(cd {sandbox} &&", c, ")", into=rule)
-        emit(f"{G.PYTHON} build/_sandbox.py --export -s", sandbox, *fouts, into=rule)
+        emit(
+            f"{G.PYTHON} build/_sandbox.py --export -s",
+            sandbox,
+            *fouts,
+            into=rule,
+        )
 
         ruletext = "".join(rule)
         if len(ruletext) > 7000:
@@ -593,6 +627,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
         outs += [dest]
 
         destf = self.templateexpand(filenameof(dest))
+        outputTargets.update([destf])
 
         srcs = filenamesof([src])
         assert (
@@ -606,7 +641,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
             ins=[srcs[0]],
             outs=[destf],
             commands=["$(CP) -H %s %s" % (srcf, destf)],
-            label="",
+            label="EXPORT",
         )
         subrule.materialise()
 
@@ -666,7 +701,7 @@ def main():
 
     with open(outputdir + "/build.targets", "wt") as fp:
         fp.write("ninja-targets =")
-        fp.write(substituteGlobalVariables(" ".join(targets.keys())))
+        fp.write(substituteGlobalVariables(" ".join(outputTargets)))
 
 
 main()

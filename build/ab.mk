@@ -70,22 +70,19 @@ define newline
 endef
 
 pkg-config-hash = $(shell ($(PKG_CONFIG) --list-all && $(HOST_PKG_CONFIG) --list-all) | md5sum)
-build-files = $(shell find . -name .obj -prune -o -name 'build.py') $(wildcard build/*.py) $(wildcard config.py)
+build-files = $(shell find . -name .obj -prune -o \( -name 'build.py' -a -type f \) -print) $(wildcard build/*.py) $(wildcard config.py)
 build-file-timestamps = $(shell ls -l $(build-files) | md5sum)
 
 # Wipe the build file (forcing a regeneration) if the make environment is different.
 # (Conveniently, this includes the pkg-config hash calculated above.)
 
-ignored-variables = MAKE_RESTARTS .VARIABLES
+ignored-variables = MAKE_RESTARTS .VARIABLES MAKECMDGOALS MAKEFLAGS MFLAGS
 $(shell mkdir -p $(OBJ))
 $(file >$(OBJ)/newvars.txt,$(foreach v,$(filter-out $(ignored-variables),$(.VARIABLES)),$(v)=$($(v))$(newline)))
 $(shell touch $(OBJ)/vars.txt)
 #$(shell diff -u $(OBJ)/vars.txt $(OBJ)/newvars.txt > /dev/stderr)
 $(shell cmp -s $(OBJ)/newvars.txt $(OBJ)/vars.txt || (rm -f $(OBJ)/build.ninja && echo "Environment changed --- regenerating" > /dev/stderr))
 $(shell mv $(OBJ)/newvars.txt $(OBJ)/vars.txt)
-
-MAKEFLAGS += -rR
-#.DELETE_ON_ERROR:
 
 .PHONY: update-ab
 update-ab:
@@ -107,6 +104,8 @@ $(OBJ)/build.ninja $(OBJ)/build.targets &:
 		-v $(OBJ)/vars.txt \
 		|| (rm -f $@ && false)
 
-+all &: $(OBJ)/build.ninja
+include $(OBJ)/build.targets
+.PHONY: $(ninja-targets)
+$(ninja-targets) &: $(OBJ)/build.ninja
 	@echo "NINJA"
-	$(hide) $(NINJA) -f $(OBJ)/build.ninja
+	+$(hide) $(NINJA) -f $(OBJ)/build.ninja $@
