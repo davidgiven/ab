@@ -134,6 +134,29 @@ class BracketedFormatter(string.Formatter):
 
             yield (self._undo_escaped_dollar(left) if left else None, expr, None, None)
 
+class GlobalFormatter(BracketedFormatter):
+    def __init__(self):
+        super().__init__("(", ")")
+
+    def get_field(self, name, a1, a2):
+        return (
+            getattr(G, name),
+            False,
+        )
+
+    def format_field(self, value, format_spec):
+        if not value:
+            return ""
+        return str(value)
+
+globalFormatter = GlobalFormatter()
+
+def substituteGlobalVariables(value):
+    while True:
+        oldValue = value
+        value = globalFormatter.format(value)
+        if value == oldValue:
+            return value
 
 def Rule(func):
     sig = inspect.signature(func)
@@ -216,7 +239,7 @@ class Target:
         return f"Target('{self.name}')"
 
     def templateexpand(selfi, s):
-        class LocalFormatter(BracketedFormatter):
+        class Formatter(BracketedFormatter):
             def __init__(self):
                 super().__init__("[", "]")
 
@@ -237,24 +260,8 @@ class Target:
                     value = [value]
                 return " ".join([selfi.templateexpand(f) for f in filenamesof(value)])
 
-        class GlobalFormatter(BracketedFormatter):
-            def __init__(self):
-                super().__init__("(", ")")
-
-            def get_field(self, name, a1, a2):
-                return (
-                    getattr(G, name),
-                    False,
-                )
-
-            def format_field(self, value, format_spec):
-                if not value:
-                    return ""
-                return str(value)
-
-        s = LocalFormatter().format(s)
-        s = GlobalFormatter().format(s)
-        return s
+        s = Formatter().format(s)
+        return substituteGlobalVariables(s)
 
     def materialise(self, replacing=False):
         if self not in unmaterialisedTargets:
@@ -651,9 +658,7 @@ def main():
 
     with open(outputdir + "/build.targets", "wt") as fp:
         fp.write("ninja-targets =")
-        for k, v in targets.items():
-            fp.write(" ")
-            fp.write(k)
+        fp.write(substituteGlobalVariables(" ".join(targets.keys())))
 
 
 main()
