@@ -69,6 +69,14 @@ define newline
 
 endef
 
+define check_for_command
+  $(shell command -v $1 >/dev/null || (echo "Required command '$1' missing" >/dev/stderr && kill $$PPID))
+endef
+
+$(call check_for_command,ninja)
+$(call check_for_command,cmp)
+$(call check_for_command,$(PYTHON))
+
 pkg-config-hash = $(shell ($(PKG_CONFIG) --list-all && $(HOST_PKG_CONFIG) --list-all) | md5sum)
 build-files = $(shell find . -name .obj -prune -o \( -name 'build.py' -a -type f \) -print) $(wildcard build/*.py) $(wildcard config.py)
 build-file-timestamps = $(shell ls -l $(build-files) | md5sum)
