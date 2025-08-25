@@ -44,6 +44,7 @@ def test(self, name, deps: Targets = []):
             + "-DCXX=cxx "
             + "-DCC=cc "
             + "-DCFLAGS=cflags "
+            + "-DCXXFLAGS=cxxflags "
             + "-DLDFLAGS=ldflags "
             + "-DCP=cp "
             + "-DAR=ar "
