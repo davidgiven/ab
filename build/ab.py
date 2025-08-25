@@ -647,6 +647,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
 
     self.ins = []
     self.outs = deps + outs
+    outputTargets.add(name)
 
     emit("")
     emit(
