@@ -134,6 +134,7 @@ class BracketedFormatter(string.Formatter):
 
             yield (self._undo_escaped_dollar(left) if left else None, expr, None, None)
 
+
 class GlobalFormatter(BracketedFormatter):
     def __init__(self):
         super().__init__("(", ")")
@@ -149,7 +150,9 @@ class GlobalFormatter(BracketedFormatter):
             return ""
         return str(value)
 
+
 globalFormatter = GlobalFormatter()
+
 
 def substituteGlobalVariables(value):
     while True:
@@ -157,6 +160,7 @@ def substituteGlobalVariables(value):
         value = globalFormatter.format(value)
         if value == oldValue:
             return value
+
 
 def Rule(func):
     sig = inspect.signature(func)
@@ -490,7 +494,7 @@ def filenameof(x):
 def emit(*args, into=None):
     s = " ".join(args) + "\n"
     if into is not None:
-        into += s
+        into += [s]
     else:
         ninjaFp.write(s)
 
@@ -514,7 +518,6 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
         os.makedirs(self.dir, exist_ok=True)
         rule = []
 
-        emit("set -e", into=rule)
         sandbox = join(self.dir, "sandbox")
         emit(f"rm -rf {sandbox}", into=rule)
         emit(f"{G.PYTHON} build/_sandbox.py --link -s", sandbox, *fins, into=rule)
@@ -523,16 +526,21 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
         emit(f"{G.PYTHON} build/_sandbox.py --export -s", sandbox, *fouts, into=rule)
 
         ruletext = "".join(rule)
-        rulehash = hashlib.sha1(ruletext.encode()).hexdigest()
-        rulef = join(self.dir, f"rule-{rulehash}.sh")
-        with open(rulef, "wt") as fp:
-            fp.write(ruletext)
+        if len(ruletext) > 7000:
+            rulehash = hashlib.sha1(ruletext.encode()).hexdigest()
 
-        emit("build", name, ":phony", *fouts)
-        emit("build", *fouts, ":rule", *fins, rulef)
+            rulef = join(self.dir, f"rule-{rulehash}.sh")
+            with open(rulef, "wt") as fp:
+                fp.write(ruletext)
+
+            emit("build", *fouts, ":rule", *fins, rulef)
+            emit(" command=sh", rulef)
+        else:
+            emit("build", *fouts, ":rule", *fins)
+            emit(" command=", "&&".join([s.strip() for s in rule]))
         if label:
             emit(" description=", label)
-        emit(" command=sh", rulef)
+        emit("build", name, ":phony", *fouts)
 
     else:
         assert len(cmds) == 0, "rules with no outputs cannot have commands"
