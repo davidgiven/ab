@@ -15,12 +15,14 @@ HOSTCC ?= gcc
 HOSTCXX ?= g++
 HOSTAR ?= ar
 HOSTCFLAGS ?= -g -Og
+HOSTCXXFLAGS ?= $(HOSTCFLAGS)
 HOSTLDFLAGS ?= -g
 
 CC ?= $(HOSTCC)
 CXX ?= $(HOSTCXX)
 AR ?= $(HOSTAR)
 CFLAGS ?= $(HOSTCFLAGS)
+CXXFLAGS ?= $(CFLAGS)
 LDFLAGS ?= $(HOSTLDFLAGS)
 
 NINJA ?= ninja
@@ -68,7 +70,7 @@ define newline
 endef
 
 pkg-config-hash = $(shell ($(PKG_CONFIG) --list-all && $(HOST_PKG_CONFIG) --list-all) | md5sum)
-build-files = $(shell find . -prune -name .obj -name 'build.py') $(wildcard build/*.py) $(wildcard config.py)
+build-files = $(shell find . -name .obj -prune -o -name 'build.py') $(wildcard build/*.py) $(wildcard config.py)
 build-file-timestamps = $(shell ls -l $(build-files) | md5sum)
 
 # Wipe the build file (forcing a regeneration) if the make environment is different.
@@ -105,7 +107,6 @@ $(OBJ)/build.ninja $(OBJ)/build.targets &:
 		-v $(OBJ)/vars.txt \
 		|| (rm -f $@ && false)
 
-include $(OBJ)/build.targets
-$(ninja-targets) &: $(OBJ)/build.ninja
++all &: $(OBJ)/build.ninja
 	@echo "NINJA"
 	$(hide) $(NINJA) -f $(OBJ)/build.ninja

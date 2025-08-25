@@ -22,7 +22,7 @@ else:
 
 Toolchain.CC = ["$(CC) -c -o $[outs[0]] $[ins[0]] $(CFLAGS) $[cflags]"]
 Toolchain.CPP = ["$(CC) -E -P -o $[outs] $[cflags] -x c $[ins]"]
-Toolchain.CXX = ["$(CXX) -c -o $[outs[0]] $[ins[0]] $(CFLAGS) $[cflags]"]
+Toolchain.CXX = ["$(CXX) -c -o $[outs[0]] $[ins[0]] $(CXXFLAGS) $[cflags]"]
 Toolchain.AR = ["$(AR) cqs $[outs[0]] $[ins]"]
 Toolchain.ARXX = ["$(AR) cqs $[outs[0]] $[ins]"]
 Toolchain.CLINK = [
