@@ -40,9 +40,7 @@ RE_FORMAT_SPEC = re.compile(
     r"(?P<type>[bcdeEfFgGnosxX%])?"
 )
 
-CommandFormatSpec = namedtuple(
-    "CommandFormatSpec", RE_FORMAT_SPEC.groupindex.keys()
-)
+CommandFormatSpec = namedtuple("CommandFormatSpec", RE_FORMAT_SPEC.groupindex.keys())
 
 sys.path += ["."]
 old_import = builtins.__import__
@@ -107,20 +105,17 @@ def error(message):
     raise ABException(message)
 
 
+def _undo_escaped_dollar(s, op):
+    return s.replace(f"$${op}", f"${op}")
+
+
 class BracketedFormatter(string.Formatter):
-    def __init__(self, op, cl):
-        self.op = op
-        self.cl = cl
-
-    def _undo_escaped_dollar(self, s):
-        return s.replace(f"$${self.op}", f"${self.op}")
-
     def parse(self, format_string):
         while format_string:
-            m = re.search(f"(?:[^$]|^)()\\$\\{self.op}()", format_string)
+            m = re.search(f"(?:[^$]|^)()\\$\\[()", format_string)
             if not m:
                 yield (
-                    self._undo_escaped_dollar(format_string),
+                    _undo_escaped_dollar(format_string, "["),
                     None,
                     None,
                     None,
@@ -133,7 +128,7 @@ class BracketedFormatter(string.Formatter):
             try:
                 ast.parse(right)
             except SyntaxError as e:
-                if not str(e).startswith(f"unmatched '{self.cl}'"):
+                if not str(e).startswith(f"unmatched ']'"):
                     raise e
                 offset = e.offset
 
@@ -141,16 +136,35 @@ class BracketedFormatter(string.Formatter):
             format_string = right[offset:]
 
             yield (
-                self._undo_escaped_dollar(left) if left else None,
+                _undo_escaped_dollar(left, "[") if left else None,
                 expr,
                 None,
                 None,
             )
 
 
-class GlobalFormatter(BracketedFormatter):
-    def __init__(self):
-        super().__init__("(", ")")
+class GlobalFormatter(string.Formatter):
+    def parse(self, format_string):
+        while format_string:
+            m = re.search(f"(?:[^$]|^)()\\$\\(([^)]*)\\)()", format_string)
+            if not m:
+                yield (
+                    _undo_escaped_dollar(format_string, "("),
+                    None,
+                    None,
+                    None,
+                )
+                break
+            left = format_string[: m.start(1)]
+            var = m[2]
+            format_string = format_string[m.end(3) :]
+
+            yield (
+                _undo_escaped_dollar(left, "(") if left else None,
+                var,
+                None,
+                None,
+            )
 
     def get_field(self, name, a1, a2):
         return (
@@ -196,9 +210,7 @@ def Rule(func):
                 name = "+" + name
             t = Target(cwd, join(cwd, name))
 
-            assert (
-                t.name not in targets
-            ), f"target {t.name} has already been defined"
+            assert t.name not in targets, f"target {t.name} has already been defined"
             targets[t.name] = t
         elif replaces:
             t = replaces
@@ -230,9 +242,7 @@ def Rule(func):
 
 
 def _isiterable(xs):
-    return isinstance(xs, Iterable) and not isinstance(
-        xs, (str, bytes, bytearray)
-    )
+    return isinstance(xs, Iterable) and not isinstance(xs, (str, bytes, bytearray))
 
 
 class Target:
@@ -261,9 +271,6 @@ class Target:
 
     def templateexpand(selfi, s):
         class Formatter(BracketedFormatter):
-            def __init__(self):
-                super().__init__("[", "]")
-
             def get_field(self, name, a1, a2):
                 return (
                     eval(name, selfi.callback.__globals__, selfi.args),
@@ -279,9 +286,7 @@ class Target:
                     value = list(value)
                 if type(value) != list:
                     value = [value]
-                return " ".join(
-                    [selfi.templateexpand(f) for f in filenamesof(value)]
-                )
+                return " ".join([selfi.templateexpand(f) for f in filenamesof(value)])
 
         s = Formatter().format(s)
         return substituteGlobalVariables(s)
@@ -322,9 +327,7 @@ class Target:
             cwdStack.append(self.cwd)
             if "kwargs" in self.binding.arguments.keys():
                 # If the caller wants kwargs, return all arguments except the standard ones.
-                cbargs = {
-                    k: v for k, v in self.args.items() if k not in {"dir"}
-                }
+                cbargs = {k: v for k, v in self.args.items() if k not in {"dir"}}
             else:
                 # Otherwise, just call the callback with the ones it asks for.
                 cbargs = {}
@@ -420,9 +423,7 @@ def targetof(value, cwd=None):
             try:
                 loadbuildfile(path)
             except ModuleNotFoundError:
-                error(
-                    f"no such build file '{path}' while trying to resolve '{value}'"
-                )
+                error(f"no such build file '{path}' while trying to resolve '{value}'")
             assert (
                 value in targets
             ), f"build file at '{path}' doesn't contain '+{target}' when trying to resolve '{value}'"
@@ -547,9 +548,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
 
         sandbox = join(self.dir, "sandbox")
         emit(f"rm -rf {sandbox}", into=rule)
-        emit(
-            f"{G.PYTHON} build/_sandbox.py --link -s", sandbox, *fins, into=rule
-        )
+        emit(f"{G.PYTHON} build/_sandbox.py --link -s", sandbox, *fins, into=rule)
         for c in cmds:
             emit(f"(cd {sandbox} &&", c, ")", into=rule)
         emit(

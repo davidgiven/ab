@@ -1,4 +1,4 @@
-from build.ab import BracketedFormatter
+from build.ab import BracketedFormatter, GlobalFormatter
 from hamcrest import (
     assert_that,
     contains,
@@ -6,7 +6,11 @@ from hamcrest import (
 
 
 def parse(s):
-    return list(BracketedFormatter("[", "]").parse(s))
+    return list(BracketedFormatter().parse(s))
+
+
+def gparse(s):
+    return list(GlobalFormatter().parse(s))
 
 
 assert_that(parse(""), contains())
@@ -33,3 +37,11 @@ assert_that(parse("$[']']"), contains((None, "']'", None, None)))
 assert_that(parse("$['$[]']"), contains((None, "'$[]'", None, None)))
 
 assert_that(parse("$$[foo]"), contains(("$[foo]", None, None, None)))
+assert_that(parse("zzz$$[foo]"), contains(("zzz$[foo]", None, None, None)))
+assert_that(parse("zzz$$[foo]zzz"), contains(("zzz$[foo]zzz", None, None, None)))
+assert_that(parse("$$[foo]zzz"), contains(("$[foo]zzz", None, None, None)))
+
+assert_that(gparse("$$(foo)"), contains(("$(foo)", None, None, None)))
+assert_that(gparse("zzz$$(foo)"), contains(("zzz$(foo)", None, None, None)))
+assert_that(gparse("zzz$$(foo)zzz"), contains(("zzz$(foo)zzz", None, None, None)))
+assert_that(gparse("$$(foo)zzz"), contains(("$(foo)zzz", None, None, None)))
