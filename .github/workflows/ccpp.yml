@@ -25,12 +25,12 @@ jobs:
           distribution.tar.xz
 
   build-macos-current:
-    runs-on: maxos-latest
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
 
     - name: brew
-      run: brew install protobuf openjdk
+      run: brew install protobuf openjdk make
 
     - name: make
       run: gmake
