@@ -1,8 +1,5 @@
-from build.ab import BracketedFormatter, GlobalFormatter
-from hamcrest import (
-    assert_that,
-    contains,
-)
+from build.ab import BracketedFormatter, substituteGlobalVariables
+from hamcrest import assert_that, contains, equal_to
 
 
 def parse(s):
@@ -38,10 +35,14 @@ assert_that(parse("$['$[]']"), contains((None, "'$[]'", None, None)))
 
 assert_that(parse("$$[foo]"), contains(("$[foo]", None, None, None)))
 assert_that(parse("zzz$$[foo]"), contains(("zzz$[foo]", None, None, None)))
-assert_that(parse("zzz$$[foo]zzz"), contains(("zzz$[foo]zzz", None, None, None)))
+assert_that(
+    parse("zzz$$[foo]zzz"), contains(("zzz$[foo]zzz", None, None, None))
+)
 assert_that(parse("$$[foo]zzz"), contains(("$[foo]zzz", None, None, None)))
 
-assert_that(gparse("$$(foo)"), contains(("$(foo)", None, None, None)))
-assert_that(gparse("zzz$$(foo)"), contains(("zzz$(foo)", None, None, None)))
-assert_that(gparse("zzz$$(foo)zzz"), contains(("zzz$(foo)zzz", None, None, None)))
-assert_that(gparse("$$(foo)zzz"), contains(("$(foo)zzz", None, None, None)))
+assert_that(substituteGlobalVariables("$$(foo)"), equal_to("$(foo)"))
+assert_that(substituteGlobalVariables("zzz$$(foo)"), equal_to("zzz$(foo)"))
+assert_that(
+    substituteGlobalVariables("zzz$$(foo)zzz"), equal_to("zzz$(foo)zzz")
+)
+assert_that(substituteGlobalVariables("$$(foo)zzz"), equal_to("$(foo)zzz"))
