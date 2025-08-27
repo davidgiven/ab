@@ -1,4 +1,4 @@
-from build.ab import export, filenamesof, targetnamesof, targetof
+from build.ab import export, filenamesof, targetnamesof, targetof, targets
 from build.protobuf import proto, protocc, protolib
 from hamcrest import (
     assert_that,
@@ -27,7 +27,7 @@ assert_that(
 )
 assert_that(
     filenamesof(re1.outs),
-    contains_inanyorder("$(OBJ)/tests/protobuf/+protolib/protolib.descriptor"),
+    contains_inanyorder("OBJ/tests/protobuf/+protolib/protolib.descriptor"),
 )
 assert_that(re1.args, has_item("protodeps"))
 assert_that(
@@ -45,7 +45,7 @@ assert_that(
 assert_that(
     filenamesof(re2.outs),
     contains_inanyorder(
-        "$(OBJ)/tests/protobuf/+protolib2/protolib2.descriptor"
+        "OBJ/tests/protobuf/+protolib2/protolib2.descriptor"
     ),
 )
 assert_that(re2.args, has_item("protodeps"))
@@ -87,7 +87,7 @@ assert_that(
 )
 assert_that(
     rec.args["caller_cflags"],
-    contains_inanyorder("-I$(OBJ)/tests/protobuf/+protolib_c_hdr"),
+    contains_inanyorder("-IOBJ/tests/protobuf/+protolib_c_hdr"),
 )
 
 ret = targetof(
@@ -96,7 +96,7 @@ ret = targetof(
 assert_that(
     ret.args["cflags"],
     contains_inanyorder(
-        "-I$(OBJ)/tests/protobuf/+protolib_c_hdr",
-        "-I$(OBJ)/tests/protobuf/+protolib_c_srcs/tests/protobuf",
+        "-IOBJ/tests/protobuf/+protolib_c_hdr",
+        "-IOBJ/tests/protobuf/+protolib_c_srcs/tests/protobuf",
     ),
 )

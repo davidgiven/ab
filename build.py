@@ -15,6 +15,7 @@ simplerule(
         "./build/_sandbox.py",
         "./build/ab.mk",
         "./build/ab.py",
+        "./build/ab.ninja",
         "./build/c.py",
         "./build/java.py",
         "./build/pkg.py",

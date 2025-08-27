@@ -7,19 +7,16 @@ from build.ab import (
     filenamesof,
     filenameof,
     emit,
+    G,
 )
 from build.utils import targetswithtraitsof, collectattrs, filenamesmatchingof
 from build.zip import zip
 from os.path import *
 import re
 
-emit(
-    """
-JAR ?= jar
-JAVAC ?= javac
-JFLAGS ?= -g
-"""
-)
+G.setdefault("JAR", "jar")
+G.setdefault("JAVAC", "javac")
+G.setdefault("JFLAGS", "")
 
 
 def _batched(items, n):
@@ -48,8 +45,6 @@ def externaljar(self, name, paths):
         if isfile(f):
             simplerule(
                 replaces=self,
-                ins=[],
-                outs=[],
                 commands=[],
                 label="EXTERNALJAR",
                 args={"jar": f, "caller_deps": [self]},
@@ -77,9 +72,7 @@ def mavenjar(self, name, artifact, repo="https://repo.maven.apache.org/maven2"):
         path = f"{repo}/{domain}/{artifact}/{artifact}.jar"
         localname = f"{artifact}.jar"
     else:
-        assert (
-            False
-        ), "only artifact IDs with 2 or 3 elements are supported so far"
+        assert False, "only artifact IDs with 2 or 3 elements are supported so far"
 
     r = simplerule(
         replaces=self,
@@ -100,9 +93,7 @@ def httpjar(self, name, url):
         replaces=self,
         ins=[],
         outs=[f"={self.localname}.jar"],
-        commands=[
-            "curl --location --fail-with-body -s -S -o $[outs[0]] " + url
-        ],
+        commands=["curl --location --fail-with-body -s -S -o $[outs[0]] " + url],
         label="HTTPDOWNLOAD",
         args={"caller_deps": [self]},
     )
@@ -140,7 +131,7 @@ def javalibrary(
                 [
                     "(mkdir $[dir]/src/" + str(i),
                     "cd $[dir]/src/" + str(i),
-                    "$(JAR) xf $(abspath " + f + "))",
+                    f"$(JAR) xf {abspath(f)})",
                 ]
             )
             for i, f in enumerate(filenamesof(srcdeps))
@@ -222,9 +213,7 @@ def javalink(
         + (
             []
             if not externaljars
-            else [
-                "Class-Path: " + " ".join([f"$(CWD)/{f}" for f in externaljars])
-            ]
+            else ["Class-Path: " + " ".join([f"$(CWD)/{f}" for f in externaljars])]
         )
         + [f"{k}={v}" for k, v in manifest.items()]
     )
@@ -243,7 +232,7 @@ def javalink(
             + " > $[dir]/manifest.mf"
         ]
         + [
-            "(cd $[dir]/objs && $(JAR) xf $(abspath " + j + "))"
+            f"(cd $[dir]/objs && $(JAR) xf {abspath(j)})"
             for j in filenamesof(internaldeps)
         ]
         + [

@@ -14,9 +14,7 @@ from build.utils import objectify, itemsof
 from build.java import javalibrary, javaprogram, externaljar, srcjar, mavenjar
 from build.yacc import bison, flex
 
-mavenjar(
-    name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6"
-)
+mavenjar(name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6")
 
 
 @Rule
@@ -26,7 +24,7 @@ def test(self, name, deps: Targets = []):
         ins=[
             "./" + self.localname + "/build.py",
         ],
-        outs=["=build.mk"],
+        outs=["=build.ninja", "=build.targets"],
         deps=[
             "build/ab.py",
             "build/c.py",
@@ -37,12 +35,24 @@ def test(self, name, deps: Targets = []):
         ]
         + deps,
         commands=[
-            "PKG_CONFIG=pkg-config "
-            + "HOST_PKG_CONFIG=pkg-config "
-            + "PKG_CONFIG_PATH=tests/pkg/pkg-repo "
+            "PKG_CONFIG_PATH=tests/pkg/pkg-repo "
             + "python3 -X pycache_prefix=$(OBJ) build/ab.py "
+            + "-DPKG_CONFIG=pkg-config "
+            + "-DHOST_PKG_CONFIG=pkg-config "
+            + "-DPYTHON=python "
+            + "-DOSX=no "
+            + "-DCXX=cxx "
+            + "-DCC=cc "
+            + "-DCFLAGS=cflags "
+            + "-DCXXFLAGS=cxxflags "
+            + "-DLDFLAGS=ldflags "
+            + "-DCP=cp "
+            + "-DAR=ar "
+            + "-DEXT=.exe "
+            + "-DOBJ=OBJ "
             + " -q"
-            + " -o $[outs[0]] $[ins[0]]"
+            + " -o $[dir]"
+            + " $[ins[0]]"
         ],
         label="TEST",
     )
@@ -89,9 +99,7 @@ hostcxxprogram(
     deps=[".+cheaders_compile_test"],
 )
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
-protolib(
-    name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"]
-)
+protolib(name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"])
 protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_protolib"])
 proto(
     name="proto_compile_test2_proto",
@@ -114,9 +122,7 @@ externaljar(
     name="external_jar",
     paths=["/usr/share/java/guava.jar", "/usr/share/java/guava/guava.jar"],
 )
-srcjar(
-    name="javalibrary_srcjar", items=itemsof("./javalibrary_compile_test.java")
-)
+srcjar(name="javalibrary_srcjar", items=itemsof("./javalibrary_compile_test.java"))
 javalibrary(
     name="javalibrary_compile_test",
     deps=[".+external_jar", ".+javalibrary_srcjar"],
@@ -129,9 +135,7 @@ javaprogram(
 )
 
 flex(name="flex_compile_test.flex", src="./flex_compile_test.l")
-bison(
-    name="bison_compile_test.bison", src="./bison_compile_test.y", stem="y.tab"
-)
+bison(name="bison_compile_test.bison", src="./bison_compile_test.y", stem="y.tab")
 cprogram(
     name="bison_compile_test",
     srcs=[".+bison_compile_test.bison", ".+flex_compile_test.flex"],

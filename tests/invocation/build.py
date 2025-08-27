@@ -33,7 +33,7 @@ assert_that(r1.name, equal_to("tests/invocation/+r1"))
 assert_that(filenamesof(r1.ins), empty())
 assert_that(
     filenamesof(r1.outs),
-    contains_inanyorder("$(OBJ)/tests/invocation/+r1/r1.txt"),
+    contains_inanyorder("OBJ/tests/invocation/+r1/r1.txt"),
 )
 
 # Set functionality: Invocations are comparable by long name.
