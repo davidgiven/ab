@@ -55,7 +55,6 @@ class Environment(types.SimpleNamespace):
 
 
 G = Environment()
-G.setdefault("AB_NO_SANDBOX", "")
 
 
 class PathFinderImpl(PathFinder):
@@ -559,7 +558,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
         os.makedirs(self.dir, exist_ok=True)
         rule = []
 
-        if G.AB_NO_SANDBOX:
+        if G.AB_SANDBOX == "yes":
             sandbox = join(self.dir, "sandbox")
             emit(f"rm -rf {sandbox}", into=rule)
             emit(
@@ -575,7 +574,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
             )
         else:
             for c in cmds:
-                emit("(", c, ")", into=rule)
+                emit(c, into=rule)
 
         ruletext = "".join(rule)
         if len(ruletext) > 7000:
@@ -592,7 +591,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
             emit("build", *fouts, ":rule", *fins)
             emit(
                 " command=",
-                " && ".join([s.strip() for s in rule]).replace("$", "$$"),
+                "&&".join([s.strip() for s in rule]).replace("$", "$$"),
             )
         if label:
             emit(" description=", label)
@@ -701,6 +700,7 @@ def main():
         if "=" in line:
             name, value = line.split("=", 1)
             G.setdefault(name.strip(), value.strip())
+    G.setdefault("AB_SANDBOX", "yes")
 
     global ninjaFp, shellFp, outputdir
     outputdir = args.outputdir
