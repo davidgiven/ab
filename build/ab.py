@@ -542,6 +542,15 @@ def shell(*args):
     shellFp.write(s)
 
 
+def add_commanddb_entry(commands, file):
+    global commandsDb
+    commandsDb += [{
+        "directory": os.getcwd(),
+                "command": (" && ".join(commands)),
+                "file": file
+    }
+        ]
+
 def emit_rule(self, ins, outs, cmds=[], label=None):
     name = self.name
     fins = [self.templateexpand(f) for f in set(filenamesof(ins))]
@@ -616,6 +625,7 @@ def simplerule(
     outs: Targets = [],
     deps: Targets = [],
     commands=[],
+    add_to_commanddb=False,
     label="RULE",
 ):
     self.ins = ins
@@ -636,16 +646,17 @@ def simplerule(
         coreCommands += [self.templateexpand(c)]
     cs += coreCommands
 
-    infiles = filenamesof(ins)
-    if len(infiles) > 0:
-        global commandsDb
-        commandsDb += [
-            {
-                "directory": ".",
-                "command": (" && ".join(coreCommands)),
-                "file": infiles[0],
-            }
-        ]
+    if add_to_commanddb:
+        infiles = filenamesof(ins)
+        if len(infiles) > 0:
+            global commandsDb
+            commandsDb += [
+                {
+                    "directory": os.getcwd(),
+                    "command": (" && ".join(coreCommands)),
+                    "file": infiles[0],
+                }
+            ]
 
     emit_rule(
         self=self,
