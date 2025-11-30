@@ -36,7 +36,7 @@ def test(self, name, deps: Targets = []):
         + deps,
         commands=[
             "PKG_CONFIG_PATH=tests/pkg/pkg-repo "
-            + "python3 -X pycache_prefix=$(OBJ) build/ab.py "
+            + "$(PYTHON) -X pycache_prefix=$(OBJ) build/ab.py "
             + "-DPKG_CONFIG=pkg-config "
             + "-DHOST_PKG_CONFIG=pkg-config "
             + "-DPYTHON=python "
@@ -154,6 +154,7 @@ tests = [
     test(name="dependency"),
     test(name="dot", deps=["./dot/module.with.dot/build.py"]),
     test(name="export"),
+    test(name="glob", deps=["./glob/testfile.exclude.py", "./glob/testfile.include", "./glob/subdir/testfile.q"]),
     test(name="formatter"),
     test(name="invocation"),
     test(name="pkg", deps=["tests/pkg/pkg-repo/ab-sample-pkg.pc"]),
