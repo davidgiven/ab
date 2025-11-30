@@ -26,3 +26,8 @@ assert_that(
     glob(["*.q"], dir="./subdir", relative_to="./subdir"),
     contains_inanyorder("testfile.q"),
 )
+
+assert_that(
+    glob(dir="./subdir", relative_to="./subdir"),
+    contains_inanyorder("testfile.q"),
+)

@@ -68,7 +68,7 @@ def _glob_matches(path, pattern):
     return r.match(path)
 
 
-def glob(include=[], exclude=[], dir=None, relative_to="."):
+def glob(include=["*"], exclude=[], dir=None, relative_to="."):
     if not dir:
         dir = getcwd()
     if dir.startswith("./"):
