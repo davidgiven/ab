@@ -31,7 +31,7 @@ jobs:
 
     - name: brew
       run: |
-        brew install protobuf@33 openjdk make
+        brew install protobuf@33 openjdk make flex
         pip3 install --break-system-packages PyHamcrest
 
     - name: make
