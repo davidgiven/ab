@@ -8,6 +8,7 @@ from build.c import (
     hostcxxprogram,
     cppfile,
 )
+from build.d import dprogram
 from build.protobuf import proto, protocc, protojava, protolib
 from build.zip import zip
 from build.utils import objectify, itemsof
@@ -147,6 +148,11 @@ cprogram(
     ldflags=["-lfl"],
 )
 
+dprogram(
+    name="dprogram_compile_test",
+    srcs=["./dprogram_compile_test.d"]
+)
+
 tests = [
     test(name="args"),
     test(name="clibrary"),
@@ -175,6 +181,7 @@ tests = [
     ".+java_proto_compile_test",
     ".+bison_compile_test",
     ".+zip_test",
+    ".+dprogram_compile_test",
 ]
 
 

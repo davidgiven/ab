@@ -17,6 +17,7 @@ simplerule(
         "./build/ab.py",
         "./build/ab.ninja",
         "./build/c.py",
+        "./build/d.py",
         "./build/java.py",
         "./build/pkg.py",
         "./build/protobuf.py",
