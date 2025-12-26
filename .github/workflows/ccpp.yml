@@ -35,4 +35,4 @@ jobs:
         pip3 install PyHamcrest
 
     - name: make
-      run: gmake
+      run: gmake CXXFLAGS=-std=c++17
