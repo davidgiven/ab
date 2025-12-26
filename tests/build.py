@@ -137,7 +137,7 @@ javalibrary(
 )
 externaljar(
     name="javalibrary_external_compile_test",
-    paths=[abspath(filenameof(".+javalibrary_compile_test"))],
+    paths=[abspath("tests/javalibrary_compile_test.jar")],
 )
 javaprogram(
     name="javaprogram_compile_test",
