@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableList;
 public class javalibrary_compile_test {
     @Beta
     public void method() {
-        var n = ImmutableList.of();
+        ImmutableList<Object> n = ImmutableList.of();
         System.out.println("method!");
     }
 }
