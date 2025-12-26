@@ -30,7 +30,9 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: brew
-      run: brew install protobuf openjdk make
+      run: |
+        brew install protobuf openjdk make
+        pip install hamcrest
 
     - name: make
       run: gmake
