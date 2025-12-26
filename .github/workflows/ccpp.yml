@@ -32,7 +32,7 @@ jobs:
     - name: brew
       run: |
         brew install protobuf openjdk make
-        pip3 install PyHamcrest
+        pip3 install --user PyHamcrest
 
     - name: make
       run: gmake CXXFLAGS=-std=c++17
