@@ -32,7 +32,7 @@ jobs:
     - name: brew
       run: |
         brew install protobuf openjdk make
-        pip install hamcrest
+        pip install PyHamcrest
 
     - name: make
       run: gmake
