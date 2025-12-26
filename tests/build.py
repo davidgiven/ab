@@ -1,4 +1,4 @@
-from build.ab import simplerule, Rule, Target, export, Targets
+from build.ab import simplerule, Rule, export, Targets, filenameof
 from build.c import (
     cprogram,
     cxxprogram,
@@ -13,8 +13,12 @@ from build.zip import zip
 from build.utils import objectify, itemsof
 from build.java import javalibrary, javaprogram, externaljar, srcjar, mavenjar
 from build.yacc import bison, flex
+from os.path import *
 
-mavenjar(name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6")
+mavenjar(
+    name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6"
+)
+mavenjar(name="libguava-java", artifact="com.google.guava:guava:33.5.0-jre")
 
 
 @Rule
@@ -103,7 +107,9 @@ hostcxxprogram(
     deps=[".+cheaders_compile_test"],
 )
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
-protolib(name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"])
+protolib(
+    name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"]
+)
 protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_protolib"])
 proto(
     name="proto_compile_test2_proto",
@@ -122,24 +128,34 @@ protojava(
 )
 zip(name="zip_test", flags="-0", items={"this/is/a/file.txt": "./README.md"})
 objectify(name="objectify_test", src="./README.md", symbol="readme")
-externaljar(
-    name="external_jar",
-    paths=["/usr/share/java/guava.jar", "/usr/share/java/guava/guava.jar"],
+srcjar(
+    name="javalibrary_srcjar", items=itemsof("./javalibrary_compile_test.java")
 )
-srcjar(name="javalibrary_srcjar", items=itemsof("./javalibrary_compile_test.java"))
 javalibrary(
     name="javalibrary_compile_test",
-    deps=[".+external_jar", ".+javalibrary_srcjar"],
+    deps=[".+libguava-java", ".+javalibrary_srcjar"],
+)
+externaljar(
+    name="javalibrary_external_compile_test",
+    paths=[abspath(filenameof(".+javalibrary_compile_test"))],
 )
 javaprogram(
     name="javaprogram_compile_test",
     srcitems=itemsof("./java_compile_test.java"),
-    deps=[".+javalibrary_compile_test", ".+external_jar"],
+    deps=[".+javalibrary_compile_test", ".+libguava-java"],
+    mainclass="com.cowlark.ab.java_compile_test",
+)
+javaprogram(
+    name="javaprogram_external_compile_test",
+    srcitems=itemsof("./java_compile_test.java"),
+    deps=[".+javalibrary_external_compile_test", ".+libguava-java"],
     mainclass="com.cowlark.ab.java_compile_test",
 )
 
 flex(name="flex_compile_test.flex", src="./flex_compile_test.l")
-bison(name="bison_compile_test.bison", src="./bison_compile_test.y", stem="y.tab")
+bison(
+    name="bison_compile_test.bison", src="./bison_compile_test.y", stem="y.tab"
+)
 cprogram(
     name="bison_compile_test",
     srcs=[".+bison_compile_test.bison", ".+flex_compile_test.flex"],
@@ -154,7 +170,14 @@ tests = [
     test(name="dependency"),
     test(name="dot", deps=["./dot/module.with.dot/build.py"]),
     test(name="export"),
-    test(name="glob", deps=["./glob/testfile.exclude.py", "./glob/testfile.include", "./glob/subdir/testfile.q"]),
+    test(
+        name="glob",
+        deps=[
+            "./glob/testfile.exclude.py",
+            "./glob/testfile.include",
+            "./glob/subdir/testfile.q",
+        ],
+    ),
     test(name="formatter"),
     test(name="invocation"),
     test(name="pkg", deps=["tests/pkg/pkg-repo/ab-sample-pkg.pc"]),
@@ -169,6 +192,7 @@ tests = [
     ".+cxxprogram_compile_test",
     ".+hostcxxprogram_compile_test",
     ".+javaprogram_compile_test",
+    ".+javaprogram_external_compile_test",
     ".+javalibrary_compile_test",
     ".+objectify_test",
     ".+cc_proto_compile_test",
