@@ -17,7 +17,7 @@ from build.pkg import package
 from os.path import *
 
 mavenjar(
-    name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6"
+    name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:4.33.2"
 )
 mavenjar(name="libguava-java", artifact="com.google.guava:guava:33.5.0-jre")
 
