@@ -8,14 +8,16 @@ from build.c import (
     hostcxxprogram,
     cppfile,
 )
-from build.d import dprogram
+from build.d import dprogram, dlibrary
 from build.protobuf import proto, protocc, protojava, protolib
 from build.zip import zip
 from build.utils import objectify, itemsof
 from build.java import javalibrary, javaprogram, externaljar, srcjar, mavenjar
 from build.yacc import bison, flex
 
-mavenjar(name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6")
+mavenjar(
+    name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6"
+)
 
 
 @Rule
@@ -104,7 +106,9 @@ hostcxxprogram(
     deps=[".+cheaders_compile_test"],
 )
 proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
-protolib(name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"])
+protolib(
+    name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"]
+)
 protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_protolib"])
 proto(
     name="proto_compile_test2_proto",
@@ -127,7 +131,9 @@ externaljar(
     name="external_jar",
     paths=["/usr/share/java/guava.jar", "/usr/share/java/guava/guava.jar"],
 )
-srcjar(name="javalibrary_srcjar", items=itemsof("./javalibrary_compile_test.java"))
+srcjar(
+    name="javalibrary_srcjar", items=itemsof("./javalibrary_compile_test.java")
+)
 javalibrary(
     name="javalibrary_compile_test",
     deps=[".+external_jar", ".+javalibrary_srcjar"],
@@ -140,7 +146,9 @@ javaprogram(
 )
 
 flex(name="flex_compile_test.flex", src="./flex_compile_test.l")
-bison(name="bison_compile_test.bison", src="./bison_compile_test.y", stem="y.tab")
+bison(
+    name="bison_compile_test.bison", src="./bison_compile_test.y", stem="y.tab"
+)
 cprogram(
     name="bison_compile_test",
     srcs=[".+bison_compile_test.bison", ".+flex_compile_test.flex"],
@@ -148,9 +156,26 @@ cprogram(
     ldflags=["-lfl"],
 )
 
+dlibrary(
+    name="dlibrary_compile_test_foo",
+    srcs=[
+        "./dlibrary_compile_test_foo.d",
+    ],
+)
+
+dlibrary(
+    name="dlibrary_compile_test_bar",
+    srcs=[
+        "./dlibrary_compile_test.d",
+        "./dlibrary_compile_test_bar.d",
+    ],
+    deps=[".+dlibrary_compile_test_foo"],
+)
+
 dprogram(
     name="dprogram_compile_test",
-    srcs=["./dprogram_compile_test.d"]
+    srcs=["./dprogram_compile_test.d"],
+    deps=[".+dlibrary_compile_test_bar"],
 )
 
 tests = [
@@ -160,7 +185,14 @@ tests = [
     test(name="dependency"),
     test(name="dot", deps=["./dot/module.with.dot/build.py"]),
     test(name="export"),
-    test(name="glob", deps=["./glob/testfile.exclude.py", "./glob/testfile.include", "./glob/subdir/testfile.q"]),
+    test(
+        name="glob",
+        deps=[
+            "./glob/testfile.exclude.py",
+            "./glob/testfile.include",
+            "./glob/subdir/testfile.q",
+        ],
+    ),
     test(name="formatter"),
     test(name="invocation"),
     test(name="pkg", deps=["tests/pkg/pkg-repo/ab-sample-pkg.pc"]),
@@ -182,6 +214,7 @@ tests = [
     ".+bison_compile_test",
     ".+zip_test",
     ".+dprogram_compile_test",
+    ".+dlibrary_compile_test_foo",
 ]
 
 
