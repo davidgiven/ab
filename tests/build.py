@@ -1,4 +1,4 @@
-from build.ab import simplerule, Rule, Target, export, Targets
+from build.ab import simplerule, Rule, export, Targets, filenameof
 from build.c import (
     cprogram,
     cxxprogram,
@@ -14,10 +14,15 @@ from build.zip import zip
 from build.utils import objectify, itemsof
 from build.java import javalibrary, javaprogram, externaljar, srcjar, mavenjar
 from build.yacc import bison, flex
+from build.pkg import package
+from os.path import *
 
 mavenjar(
-    name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6"
+    name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:4.33.2"
 )
+mavenjar(name="libguava-java", artifact="com.google.guava:guava:33.5.0-jre")
+
+package(name="libprotobuf", package="protobuf")
 
 
 @Rule
@@ -109,7 +114,11 @@ proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
 protolib(
     name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"]
 )
-protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_protolib"])
+protocc(
+    name="cc_proto_compile_test",
+    srcs=[".+proto_compile_test_protolib"],
+    deps=[".+libprotobuf"],
+)
 proto(
     name="proto_compile_test2_proto",
     srcs=["./proto_compile_test2.proto"],
@@ -118,7 +127,7 @@ proto(
 protocc(
     name="cc_proto_compile_test2",
     srcs=[".+proto_compile_test2_proto"],
-    deps=[".+cc_proto_compile_test"],
+    deps=[".+cc_proto_compile_test", ".+libprotobuf"],
 )
 protojava(
     name="java_proto_compile_test",
@@ -127,21 +136,27 @@ protojava(
 )
 zip(name="zip_test", flags="-0", items={"this/is/a/file.txt": "./README.md"})
 objectify(name="objectify_test", src="./README.md", symbol="readme")
-externaljar(
-    name="external_jar",
-    paths=["/usr/share/java/guava.jar", "/usr/share/java/guava/guava.jar"],
-)
 srcjar(
     name="javalibrary_srcjar", items=itemsof("./javalibrary_compile_test.java")
 )
 javalibrary(
     name="javalibrary_compile_test",
-    deps=[".+external_jar", ".+javalibrary_srcjar"],
+    deps=[".+libguava-java", ".+javalibrary_srcjar"],
+)
+externaljar(
+    name="javalibrary_external_compile_test",
+    paths=[abspath("tests/javalibrary_compile_test.jar")],
 )
 javaprogram(
     name="javaprogram_compile_test",
     srcitems=itemsof("./java_compile_test.java"),
-    deps=[".+javalibrary_compile_test", ".+external_jar"],
+    deps=[".+javalibrary_compile_test", ".+libguava-java"],
+    mainclass="com.cowlark.ab.java_compile_test",
+)
+javaprogram(
+    name="javaprogram_external_compile_test",
+    srcitems=itemsof("./java_compile_test.java"),
+    deps=[".+javalibrary_external_compile_test", ".+libguava-java"],
     mainclass="com.cowlark.ab.java_compile_test",
 )
 
@@ -207,6 +222,7 @@ tests = [
     ".+cxxprogram_compile_test",
     ".+hostcxxprogram_compile_test",
     ".+javaprogram_compile_test",
+    ".+javaprogram_external_compile_test",
     ".+javalibrary_compile_test",
     ".+objectify_test",
     ".+cc_proto_compile_test",

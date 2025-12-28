@@ -526,6 +526,7 @@ def filenamesof(items):
 
 
 def filenameof(x):
+    x = targetof(x)
     xs = filenamesof(x.outs)
     assert (
         len(xs) == 1
