@@ -168,7 +168,6 @@ cprogram(
     name="bison_compile_test",
     srcs=[".+bison_compile_test.bison", ".+flex_compile_test.flex"],
     deps=[".+cc_proto_compile_test2"],
-    ldflags=["-lfl"],
 )
 
 dlibrary(
