@@ -8,17 +8,21 @@ from build.c import (
     hostcxxprogram,
     cppfile,
 )
+from build.d import dprogram, dlibrary
 from build.protobuf import proto, protocc, protojava, protolib
 from build.zip import zip
 from build.utils import objectify, itemsof
 from build.java import javalibrary, javaprogram, externaljar, srcjar, mavenjar
 from build.yacc import bison, flex
+from build.pkg import package
 from os.path import *
 
 mavenjar(
-    name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:3.19.6"
+    name="libprotobuf-java", artifact="com.google.protobuf:protobuf-java:4.33.2"
 )
 mavenjar(name="libguava-java", artifact="com.google.guava:guava:33.5.0-jre")
+
+package(name="libprotobuf", package="protobuf")
 
 
 @Rule
@@ -110,7 +114,11 @@ proto(name="proto_compile_test_proto", srcs=["./proto_compile_test.proto"])
 protolib(
     name="proto_compile_test_protolib", srcs=[".+proto_compile_test_proto"]
 )
-protocc(name="cc_proto_compile_test", srcs=[".+proto_compile_test_protolib"])
+protocc(
+    name="cc_proto_compile_test",
+    srcs=[".+proto_compile_test_protolib"],
+    deps=[".+libprotobuf"],
+)
 proto(
     name="proto_compile_test2_proto",
     srcs=["./proto_compile_test2.proto"],
@@ -119,7 +127,7 @@ proto(
 protocc(
     name="cc_proto_compile_test2",
     srcs=[".+proto_compile_test2_proto"],
-    deps=[".+cc_proto_compile_test"],
+    deps=[".+cc_proto_compile_test", ".+libprotobuf"],
 )
 protojava(
     name="java_proto_compile_test",
@@ -163,6 +171,28 @@ cprogram(
     ldflags=["-lfl"],
 )
 
+dlibrary(
+    name="dlibrary_compile_test_foo",
+    srcs=[
+        "./dlibrary_compile_test_foo.d",
+    ],
+)
+
+dlibrary(
+    name="dlibrary_compile_test_bar",
+    srcs=[
+        "./dlibrary_compile_test.d",
+        "./dlibrary_compile_test_bar.d",
+    ],
+    deps=[".+dlibrary_compile_test_foo"],
+)
+
+dprogram(
+    name="dprogram_compile_test",
+    srcs=["./dprogram_compile_test.d"],
+    deps=[".+dlibrary_compile_test_bar"],
+)
+
 tests = [
     test(name="args"),
     test(name="clibrary"),
@@ -199,6 +229,8 @@ tests = [
     ".+java_proto_compile_test",
     ".+bison_compile_test",
     ".+zip_test",
+    ".+dprogram_compile_test",
+    ".+dlibrary_compile_test_foo",
 ]
 
 
