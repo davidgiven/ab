@@ -72,7 +72,9 @@ def mavenjar(self, name, artifact, repo="https://repo.maven.apache.org/maven2"):
         path = f"{repo}/{domain}/{artifact}/{artifact}.jar"
         localname = f"{artifact}.jar"
     else:
-        assert False, "only artifact IDs with 2 or 3 elements are supported so far"
+        assert (
+            False
+        ), "only artifact IDs with 2 or 3 elements are supported so far"
 
     r = simplerule(
         replaces=self,
@@ -93,7 +95,9 @@ def httpjar(self, name, url):
         replaces=self,
         ins=[],
         outs=[f"={self.localname}.jar"],
-        commands=["curl --location --fail-with-body -s -S -o $[outs[0]] " + url],
+        commands=[
+            "curl --location --fail-with-body -s -S -o $[outs[0]] " + url
+        ],
         label="HTTPDOWNLOAD",
         args={"caller_deps": [self]},
     )
@@ -213,7 +217,9 @@ def javalink(
         + (
             []
             if not externaljars
-            else ["Class-Path: " + " ".join([f"$(CWD)/{f}" for f in externaljars])]
+            else [
+                "Class-Path: " + " ".join([f"$(CWD)/{f}" for f in externaljars])
+            ]
         )
         + [f"{k}={v}" for k, v in manifest.items()]
     )
