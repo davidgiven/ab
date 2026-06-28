@@ -10,7 +10,7 @@ jobs:
 
     - uses: awalsh128/cache-apt-pkgs-action@latest
       with:
-        packages: python3-hamcrest protobuf-compiler libprotobuf-dev zip libguava-java libprotobuf-java flex bison libfl-dev ldc
+        packages: python3-hamcrest protobuf-compiler libprotobuf-dev zip libguava-java libprotobuf-java flex bison libfl-dev ldc bubblewrap
 
     - name: make
       run: |
@@ -31,7 +31,7 @@ jobs:
 
     - name: brew
       run: |
-        brew install protobuf@33 openjdk make flex ldc
+        brew install protobuf@33 openjdk make flex ldc bubblewrap
         brew link flex
         pip3 install --break-system-packages PyHamcrest
 
