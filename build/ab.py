@@ -18,6 +18,7 @@ import re
 import string
 import sys
 import types
+import shlex
 
 VERBOSE_NINJA_FILE = False
 
@@ -430,7 +431,7 @@ def targetof(value, cwd=None):
 
         # At this point we have the fully qualified name of a rule.
 
-        (path, target) = value.rsplit("+", 1)
+        path, target = value.rsplit("+", 1)
         value = join(path, "+" + target)
         if value not in targets:
             # Load the new build file.
@@ -574,46 +575,57 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
 
     if outs:
         os.makedirs(self.dir, exist_ok=True)
+
+        # Write the actual commands to a shell script.
+
         rule = []
-
-        if G.AB_SANDBOX == "yes":
-            sandbox = join(self.dir, "sandbox")
-            emit(f"rm -rf {sandbox}", into=rule)
-            emit(
-                f"{G.PYTHON} build/_sandbox.py --link -s",
-                sandbox,
-                *fins,
-                into=rule,
-            )
-            for c in cmds:
-                emit(f"(cd {sandbox} &&", c, ")", into=rule)
-            emit(
-                f"{G.PYTHON} build/_sandbox.py --export -s",
-                sandbox,
-                *fouts,
-                into=rule,
-            )
-        else:
-            for c in cmds:
-                emit(c, into=rule)
-
+        for c in cmds:
+            emit(f"( {c} )", into=rule)
         ruletext = "".join(rule)
-        if len(ruletext) > 7000:
-            rulehash = hashlib.sha1(ruletext.encode()).hexdigest()
+        rulehash = hashlib.sha1(ruletext.encode()).hexdigest()
 
-            rulef = join(self.dir, f"rule-{rulehash}.sh")
-            with open(rulef, "wt") as fp:
-                fp.write("set -e\n")
-                fp.write(ruletext)
+        rulef = join(self.dir, f"rule-{rulehash}.sh")
+        with open(rulef, "wt") as fp:
+            fp.write("set -e\n")
+            fp.write(ruletext)
 
-            emit("build", *fouts, ":rule", *fins)
-            emit(" command=sh", rulef)
+        # Generate the invocation of the shell script, either directly or through bubblewrap.
+
+        rule = []
+        if G.AB_SANDBOX == "yes":
+            bwrap = join(self.dir, "bwrap.args")
+            with open(bwrap, "wb") as fp:
+                cwd = os.getcwd()
+
+                def robind(f):
+                    ff = join(cwd, f)
+                    ffb = f"{ff}\0".encode("utf-8")
+                    fp.write(b"--ro-bind\0")
+                    fp.write(ffb)
+                    fp.write(ffb)
+
+                fp.write(b"--dev-bind\0/\0/\0")
+                fp.write(b"--bind\0")
+                fp.write(f"{cwd}/{self.dir}/sandbox".encode("utf-8") + b"\0")
+                fp.write(f"{cwd}".encode("utf-8") + b"\0")
+                for f in fins + [rulef]:
+                    robind(f)
+            emit(f"rm -rf ", f"{self.dir}/sandbox", into=rule)
+            emit(f"mkdir -p ", f"{self.dir}/sandbox", into=rule)
+
+            emit(G.BWRAP, f"--args 3 3<", bwrap, "sh", rulef, into=rule)
+            for f in fouts:
+                emit(f"cp {self.dir}/sandbox/{f} {f}", into=rule)
         else:
-            emit("build", *fouts, ":rule", *fins)
-            emit(
-                " command=",
-                "&&".join([s.strip() for s in rule]).replace("$", "$$"),
-            )
+            emit(f"sh", rulef, into=rule)
+
+        # Now generate the ninja build rule.
+
+        emit("build", *fouts, ":rule", *fins)
+        emit(
+            " command=",
+            "&&".join([s.strip() for s in rule]).replace("$", "$$"),
+        )
         if label:
             emit(" description=", label)
         emit("build", name, ":phony", *fouts)
