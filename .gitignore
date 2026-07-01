@@ -2,6 +2,8 @@
 __pycache__/
 .obj/
 .ninja_log
+.idea/
 compile_commands.json
 distribution.tar.xz
+ab.iml
 
