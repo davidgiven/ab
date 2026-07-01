@@ -12,12 +12,21 @@ DOCKERFILES = \
 define run-docker
     docker build -t $1 -f tests/docker/Dockerfile.$(strip $1) .
     docker run \
+        --privileged \
         --device=/dev/kvm \
         --rm \
         --attach STDOUT \
 		--attach STDERR \
         $1 \
         make
+    docker run \
+        --privileged \
+        --device=/dev/kvm \
+        --rm \
+        --attach STDOUT \
+		--attach STDERR \
+        $1 \
+        make AB_SANDBOX=no
 
 endef
 
