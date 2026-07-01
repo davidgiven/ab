@@ -13,10 +13,10 @@ jobs:
 
     - uses: awalsh128/cache-apt-pkgs-action@latest
       with:
-        packages: python3-hamcrest protobuf-compiler libprotobuf-dev zip libguava-java libprotobuf-java flex bison libfl-dev bubblewrap
+        packages: python3-hamcrest protobuf-compiler libprotobuf-dev zip libguava-java libprotobuf-java flex bison libfl-dev
 
     - name: make
-      run: make
+      run: make AB_SANDBOX=no
 
     - name: date
       run: |
