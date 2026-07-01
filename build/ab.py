@@ -580,7 +580,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
 
         rule = []
         for c in cmds:
-            emit(f"({c})", into=rule)
+            emit(f"( {c} )", into=rule)
         ruletext = "".join(rule)
         rulehash = hashlib.sha1(ruletext.encode()).hexdigest()
 
