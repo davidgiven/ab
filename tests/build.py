@@ -46,6 +46,7 @@ def test(self, name, deps: Targets = []):
             "PKG_CONFIG_PATH=tests/pkg/pkg-repo "
             + "$(PYTHON) -X pycache_prefix=$(OBJ) build/ab.py "
             + "-DAR=ar "
+            + "-DBWRAP=bwrap "
             + "-DCC=cc "
             + "-DCFLAGS=cflags "
             + "-DCP=cp "

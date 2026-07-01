@@ -15,7 +15,7 @@ from os.path import *
 import re
 
 G.setdefault("JAR", "jar")
-G.setdefault("JAVAC", "javac")
+G.setdefault("JAVA", "java")
 G.setdefault("JFLAGS", "")
 
 
@@ -62,17 +62,19 @@ def mavenjar(self, name, artifact, repo="https://repo.maven.apache.org/maven2"):
 
     values = artifact.split(":")
     if len(values) == 3:
-        (group, artifact, version) = values
+        group, artifact, version = values
         domain = group.replace(".", "/")
         path = f"{repo}/{domain}/{artifact}/{version}/{artifact}-{version}.jar"
         localname = f"{artifact}-{version}.jar"
     elif len(values) == 2:
-        (group, artifact) = values
+        group, artifact = values
         domain = group.replace(".", "/")
         path = f"{repo}/{domain}/{artifact}/{artifact}.jar"
         localname = f"{artifact}.jar"
     else:
-        assert False, "only artifact IDs with 2 or 3 elements are supported so far"
+        assert (
+            False
+        ), "only artifact IDs with 2 or 3 elements are supported so far"
 
     r = simplerule(
         replaces=self,
@@ -93,7 +95,9 @@ def httpjar(self, name, url):
         replaces=self,
         ins=[],
         outs=[f"={self.localname}.jar"],
-        commands=["curl --location --fail-with-body -s -S -o $[outs[0]] " + url],
+        commands=[
+            "curl --location --fail-with-body -s -S -o $[outs[0]] " + url
+        ],
         label="HTTPDOWNLOAD",
         args={"caller_deps": [self]},
     )
@@ -119,60 +123,20 @@ def javalibrary(
     classpath = filenamesof(internaldeps) + externaljars
     srcfiles = filenamesmatchingof(srcitems.values(), "*.java")
 
-    cs = (
-        # Setup.
+    command = " ".join(
         [
-            "rm -rf $[dir]/src $[dir]/objs $[dir]/files.txt $[outs[0]]",
-            "mkdir -p $[dir]/src $[dir]/objs",
+            "$(JAVA) build/JavaSrcC.java $(JFLAGS) -o $[outs[0]] ",
+            (" -cp " + ":".join(classpath)) if classpath else "",
         ]
-        # Decompress any srcjars into directories of their own.
-        + [
-            " && ".join(
-                [
-                    "(mkdir $[dir]/src/" + str(i),
-                    "cd $[dir]/src/" + str(i),
-                    f"$(JAR) xf {abspath(f)})",
-                ]
-            )
-            for i, f in enumerate(filenamesof(srcdeps))
-        ]
-        # Copy any source data items.
-        + [
-            f"mkdir -p $[dir]/objs/{dirname(dest)} && cp {filenameof(src)} $[dir]/objs/{dest}"
-            for dest, src in dataitems.items()
-        ]
-        # Construct the list of filenames(which can be too long to go on
-        # the command line).
-        + [
-            "echo " + (" ".join(batch)) + " >> $[dir]/files.txt"
-            for batch in _batched(srcfiles, 100)
-        ]
-        + [
-            # Find any source files in the srcjars(which we don't know
-            # statically).
-            "find $[dir]/src -name '*.java' >> $[dir]/files.txt",
-            # Actually do the compilation.
-            " ".join(
-                [
-                    "if [ -s $[dir]/files.txt ]; then",
-                    "$(JAVAC)",
-                    "$(JFLAGS)",
-                    "-d $[dir]/objs",
-                    (" -cp " + ":".join(classpath)) if classpath else "",
-                    "@$[dir]/files.txt",
-                    "; fi",
-                ]
-            ),
-            # jar up the result.
-            "$(JAR) --create --no-compress --file $[outs[0]] -C $[dir]/objs .",
-        ]
+        + [abspath(f) for f in filenamesof(srcdeps)]
+        + [abspath(f) for f in filenamesof(srcfiles)]
     )
 
     simplerule(
         replaces=self,
-        ins=list(srcitems.values()) + deps,
+        ins=externaljars + srcdeps + srcfiles + deps + ["build/JavaSrcC.java"],
         outs=[f"={self.localname}.jar"],
-        commands=cs,
+        commands=[command],
         label="JAVALIBRARY",
         args={"caller_deps": externaldeps + internaldeps},
     )
@@ -213,7 +177,9 @@ def javalink(
         + (
             []
             if not externaljars
-            else ["Class-Path: " + " ".join([f"$(CWD)/{f}" for f in externaljars])]
+            else [
+                "Class-Path: " + " ".join([f"$(CWD)/{f}" for f in externaljars])
+            ]
         )
         + [f"{k}={v}" for k, v in manifest.items()]
     )
