@@ -53,6 +53,15 @@ def externaljar(self, name, paths):
     error(f"None of {paths} exist")
 
 
+simplerule(
+    name="javasrcc",
+    ins=["./JavaSrcC.java"],
+    outs=["=javasrcc.jar"],
+    commands=["$(JAVA) $[ins[0]] -o $[outs[0]] $[ins[0]]"],
+    label="JAVABOOTSTRAP",
+)
+
+
 @Rule
 def mavenjar(self, name, artifact, repo="https://repo.maven.apache.org/maven2"):
     # Artifact name looks like this:
@@ -125,7 +134,7 @@ def javalibrary(
 
     command = " ".join(
         [
-            "$(JAVA) build/JavaSrcC.java $(JFLAGS) -o $[outs[0]] ",
+            "$(JAVA) -cp $[ins[0]] JavaSrcC $(JFLAGS) -o $[outs[0]] ",
             (" -cp " + ":".join(classpath)) if classpath else "",
         ]
         + [abspath(f) for f in filenamesof(srcdeps)]
@@ -134,7 +143,7 @@ def javalibrary(
 
     simplerule(
         replaces=self,
-        ins=externaljars + srcdeps + srcfiles + deps + ["build/JavaSrcC.java"],
+        ins=["build+javasrcc"] + externaljars + srcdeps + srcfiles + deps,
         outs=[f"={self.localname}.jar"],
         commands=[command],
         label="JAVALIBRARY",
